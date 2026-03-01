@@ -1279,33 +1279,6 @@
                 <div class="scorecard-section" id="scorecardImplications"></div>
                 <div class="scorecard-section" id="scorecardSources"></div>
             </div>
-            <div class="radar-section">
-                <div class="radar-header">
-                    <div>
-                        <h3 class="radar-title">Strategic Radar Map</h3>
-                        <p class="radar-subtitle">Phenomena plotted by category (angle) and time horizon (distance).</p>
-                    </div>
-                </div>
-                <div class="radar-wrapper">
-                    <div class="radar-canvas-container">
-                        <div class="radar-zoom-controls">
-                            <button class="radar-zoom-btn" id="radarZoomIn" title="Zoom in">+</button>
-                            <button class="radar-zoom-btn" id="radarZoomOut" title="Zoom out">&minus;</button>
-                            <button class="radar-zoom-btn" id="radarZoomReset" title="Reset zoom" style="font-size:0.75rem;">&#8634;</button>
-                        </div>
-                        <div class="radar-canvas" id="radarCanvas"></div>
-                    </div>
-                    <div class="radar-legend" id="radarLegend"></div>
-                </div>
-                <div class="radar-summary" id="radarSummary"></div>
-            </div>
-            <div id="phenomenaList"></div>
-
-            <div class="sources-section" id="sourcesSection">
-                <h3 class="sources-title">Sources</h3>
-                <div id="sourcesList"></div>
-            </div>
-
             <!-- ── Real-time Signal Monitor ──────────────────────────────── -->
             <div class="live-panel" id="signalMonitorPanel" style="display:none;">
                 <div class="live-panel-header">
@@ -1368,6 +1341,33 @@
                         Low (&lt;5 mentions)
                     </div>
                 </div>
+            </div>
+
+            <div class="radar-section">
+                <div class="radar-header">
+                    <div>
+                        <h3 class="radar-title">Strategic Radar Map</h3>
+                        <p class="radar-subtitle">Phenomena plotted by category (angle) and time horizon (distance).</p>
+                    </div>
+                </div>
+                <div class="radar-wrapper">
+                    <div class="radar-canvas-container">
+                        <div class="radar-zoom-controls">
+                            <button class="radar-zoom-btn" id="radarZoomIn" title="Zoom in">+</button>
+                            <button class="radar-zoom-btn" id="radarZoomOut" title="Zoom out">&minus;</button>
+                            <button class="radar-zoom-btn" id="radarZoomReset" title="Reset zoom" style="font-size:0.75rem;">&#8634;</button>
+                        </div>
+                        <div class="radar-canvas" id="radarCanvas"></div>
+                    </div>
+                    <div class="radar-legend" id="radarLegend"></div>
+                </div>
+                <div class="radar-summary" id="radarSummary"></div>
+            </div>
+            <div id="phenomenaList"></div>
+
+            <div class="sources-section" id="sourcesSection">
+                <h3 class="sources-title">Sources</h3>
+                <div id="sourcesList"></div>
             </div>
         </div>
 
@@ -2859,13 +2859,20 @@
         // ── Signal Monitor ──────────────────────────────────────────────────
         async function fetchSignalData(topic) {
             const encoded = encodeURIComponent(topic);
-            const url = 'https://api.gdeltproject.org/api/v2/timeline/timeline?query=' + encoded
-                      + '&mode=timelinetone&format=json&smoothing=5&timespan=30d';
+            const toneUrl = 'https://api.gdeltproject.org/api/v2/timeline/timeline?query=' + encoded
+                          + '&mode=timelinetone&format=json&smoothing=5&timespan=30d';
+            const volUrl  = 'https://api.gdeltproject.org/api/v2/timeline/timeline?query=' + encoded
+                          + '&mode=timelinevolraw&format=json&timespan=30d';
             try {
-                const res = await fetch(url, { mode: 'cors' });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const data = await res.json();
-                renderSignalBars(data);
+                const [toneRes, volRes] = await Promise.all([
+                    fetch(toneUrl, { mode: 'cors' }),
+                    fetch(volUrl,  { mode: 'cors' }),
+                ]);
+                const [toneData, volData] = await Promise.all([
+                    toneRes.ok ? toneRes.json() : Promise.resolve(null),
+                    volRes.ok  ? volRes.json()  : Promise.resolve(null),
+                ]);
+                renderSignalBars(toneData, volData);
             } catch(e) {
                 document.getElementById('signalBarsContainer').innerHTML =
                     '<div class="live-panel-error">Unable to load signal data right now — GDELT may be temporarily rate-limited. Will retry automatically.</div>';
@@ -2879,47 +2886,87 @@
             fetchSignalData(topic);
         }
 
-        function renderSignalBars(data) {
-            var container  = document.getElementById('signalBarsContainer');
-            var summaryEl  = document.getElementById('signalSummary');
-            var points = [];
-            try {
-                if (data && data.timeline && data.timeline.length > 0) {
-                    points = data.timeline[0].series || [];
-                }
-            } catch(e) {}
+        function renderSignalBars(toneData, volData) {
+            var container = document.getElementById('signalBarsContainer');
+            var summaryEl = document.getElementById('signalSummary');
 
-            if (points.length === 0) {
+            var tonePoints = [];
+            var volPoints  = [];
+            try { if (toneData && toneData.timeline && toneData.timeline.length > 0) tonePoints = toneData.timeline[0].series || []; } catch(e) {}
+            try { if (volData  && volData.timeline  && volData.timeline.length  > 0) volPoints  = volData.timeline[0].series  || []; } catch(e) {}
+
+            if (tonePoints.length === 0 && volPoints.length === 0) {
                 container.innerHTML = '<div class="live-panel-error">No signal data available for this topic yet — GDELT coverage grows with news volume.</div>';
                 summaryEl.style.display = 'none';
                 return;
             }
 
-            var tones      = points.map(function(p) { return parseFloat(p.value) || 0; });
-            var avgTone    = tones.reduce(function(a,b) { return a + b; }, 0) / tones.length;
-            var recent     = points.slice(-7);
-            var older      = points.slice(-14, -7);
-            var recentAvg  = recent.length ? recent.map(function(p){ return parseFloat(p.value)||0; }).reduce(function(a,b){return a+b;},0) / recent.length : avgTone;
-            var olderAvg   = older.length  ? older.map(function(p){ return parseFloat(p.value)||0; }).reduce(function(a,b){return a+b;},0) / older.length  : avgTone;
-            var volumePct  = Math.min(100, Math.round((points.length / 30) * 100));
-            var tonePct    = Math.min(100, Math.max(0, Math.round(((avgTone + 10) / 20) * 100)));
-            var velocityRaw = recent.length - older.length;
-            var velocityPct = Math.min(100, Math.max(0, 50 + velocityRaw * 5));
-            var toneDelta  = recentAvg - olderAvg;
-            var toneTrendPct = Math.min(100, Math.max(0, 50 + toneDelta * 5));
-            var toneStr    = avgTone > 0.5 ? 'Positive' : avgTone < -0.5 ? 'Negative' : 'Neutral';
-            var toneClass  = avgTone > 0.5 ? 'positive' : avgTone < -0.5 ? 'negative' : 'neutral';
-            var velStr     = velocityRaw > 0 ? 'Accelerating ▲' : velocityRaw < 0 ? 'Decelerating ▼' : 'Stable ●';
-            var velClass   = velocityRaw > 0 ? 'positive' : velocityRaw < 0 ? 'negative' : 'neutral';
-            var trendStr   = toneDelta > 0.2 ? 'Improving' : toneDelta < -0.2 ? 'Worsening' : 'Flat';
-            var trendClass = toneDelta > 0.2 ? 'positive' : toneDelta < -0.2 ? 'negative' : 'neutral';
+            // === Media Volume (from raw article counts) ===
+            var volValues   = volPoints.map(function(p) { return parseInt(p.value) || 0; });
+            var totalVol    = volValues.reduce(function(a,b) { return a + b; }, 0);
+            var avgDailyVol = volPoints.length ? totalVol / volPoints.length : 0;
+            var volLabel, volPct, volClass;
+            if (avgDailyVol > 200)      { volLabel = 'High';     volPct = 90; volClass = 'positive'; }
+            else if (avgDailyVol > 50)  { volLabel = 'Moderate'; volPct = 60; volClass = 'neutral';  }
+            else if (avgDailyVol > 10)  { volLabel = 'Low';      volPct = 30; volClass = 'neutral';  }
+            else                        { volLabel = 'Very Low'; volPct = 10; volClass = 'negative'; }
+
+            // === Sentiment Tone (GDELT tone: ~-10 to +10; ±2 is a meaningful threshold) ===
+            var tones   = tonePoints.map(function(p) { return parseFloat(p.value) || 0; });
+            var avgTone = tones.length ? tones.reduce(function(a,b) { return a + b; }, 0) / tones.length : 0;
+            var toneStr, toneClass, tonePct;
+            if (avgTone > 2)       { toneStr = 'Positive';       toneClass = 'positive'; tonePct = 75; }
+            else if (avgTone < -2) { toneStr = 'Negative';       toneClass = 'negative'; tonePct = 25; }
+            else                   { toneStr = 'Mixed / Neutral'; toneClass = 'neutral';  tonePct = 50; }
+
+            // === Signal Velocity (compare article volume: recent 7 days vs prior 7 days) ===
+            var recentVols  = volPoints.slice(-7).map(function(p) { return parseInt(p.value) || 0; });
+            var olderVols   = volPoints.slice(-14, -7).map(function(p) { return parseInt(p.value) || 0; });
+            var recentVolSum = recentVols.reduce(function(a,b) { return a + b; }, 0);
+            var olderVolSum  = olderVols.reduce(function(a,b) { return a + b; }, 0);
+            var velStr, velClass, velocityPct;
+            if (olderVolSum === 0) {
+                velStr = 'Steady'; velClass = 'neutral'; velocityPct = 50;
+            } else {
+                var velChange = (recentVolSum - olderVolSum) / olderVolSum;
+                if (velChange > 0.2)       { velStr = 'Accelerating ▲'; velClass = 'positive'; velocityPct = 80; }
+                else if (velChange < -0.2) { velStr = 'Decelerating ▼'; velClass = 'negative'; velocityPct = 20; }
+                else                       { velStr = 'Steady';          velClass = 'neutral';  velocityPct = 50; }
+            }
+
+            // === Tone Trend (compare avg tone: recent 7 days vs prior 7 days; ±1 threshold) ===
+            var recentTones = tonePoints.slice(-7).map(function(p) { return parseFloat(p.value) || 0; });
+            var olderTones  = tonePoints.slice(-14, -7).map(function(p) { return parseFloat(p.value) || 0; });
+            var recentAvg   = recentTones.length ? recentTones.reduce(function(a,b){return a+b;},0) / recentTones.length : avgTone;
+            var olderAvg    = olderTones.length  ? olderTones.reduce(function(a,b){return a+b;},0) / olderTones.length  : avgTone;
+            var toneDelta   = recentAvg - olderAvg;
+            var trendStr, trendClass, toneTrendPct;
+            if (toneDelta > 1)       { trendStr = 'Improving'; trendClass = 'positive'; toneTrendPct = 75; }
+            else if (toneDelta < -1) { trendStr = 'Worsening'; trendClass = 'negative'; toneTrendPct = 25; }
+            else                     { trendStr = 'Flat';       trendClass = 'neutral';  toneTrendPct = 50; }
+
+            // === Data Freshness (calculated from actual date range in the data) ===
+            var refPoints    = volPoints.length ? volPoints : tonePoints;
+            var daysOfData   = 0;
+            var freshnessPct = 0;
+            if (refPoints.length >= 2) {
+                var rawFirst = refPoints[0].date.slice(0, 8);
+                var rawLast  = refPoints[refPoints.length - 1].date.slice(0, 8);
+                var d1 = new Date(rawFirst.slice(0,4) + '-' + rawFirst.slice(4,6) + '-' + rawFirst.slice(6,8));
+                var d2 = new Date(rawLast.slice(0,4)  + '-' + rawLast.slice(4,6)  + '-' + rawLast.slice(6,8));
+                daysOfData   = Math.round((d2 - d1) / 86400000) + 1;
+                freshnessPct = Math.min(100, Math.round((daysOfData / 30) * 100));
+            } else {
+                daysOfData   = refPoints.length;
+                freshnessPct = refPoints.length > 0 ? 20 : 0;
+            }
 
             var bars = [
-                { label: 'Media Volume',    pct: volumePct,    cls: 'neutral',   val: volumePct + '%' },
+                { label: 'Media Volume',    pct: volPct,       cls: volClass,    val: volLabel },
                 { label: 'Sentiment Tone',  pct: tonePct,      cls: toneClass,   val: toneStr },
                 { label: 'Signal Velocity', pct: velocityPct,  cls: velClass,    val: velStr },
                 { label: 'Tone Trend',      pct: toneTrendPct, cls: trendClass,  val: trendStr },
-                { label: 'Data Freshness',  pct: 92,           cls: 'purple',    val: '92%' },
+                { label: 'Data Freshness',  pct: freshnessPct, cls: 'purple',    val: daysOfData + ' days' },
             ];
 
             container.innerHTML = '<div class="signal-bars">'
@@ -2932,9 +2979,12 @@
                 }).join('')
                 + '</div>';
 
-            summaryEl.innerHTML = 'Based on <strong>' + points.length + '</strong> GDELT data points over the last 30 days: '
-                + 'media volume is at <strong>' + volumePct + '%</strong>, overall sentiment is <strong>' + toneStr.toLowerCase() + '</strong> '
-                + '(avg tone ' + avgTone.toFixed(2) + '), and signal momentum is <strong>' + velStr.toLowerCase() + '</strong>.';
+            summaryEl.innerHTML = 'Based on <strong>' + daysOfData + ' days</strong> of GDELT data: '
+                + 'media volume is <strong>' + volLabel.toLowerCase() + '</strong>'
+                + (avgDailyVol > 0 ? ' (~' + Math.round(avgDailyVol) + ' articles/day)' : '') + ', '
+                + 'overall sentiment is <strong>' + toneStr.toLowerCase() + '</strong> '
+                + '(avg tone ' + avgTone.toFixed(2) + '), '
+                + 'and signal momentum is <strong>' + velStr.replace(' ▲','').replace(' ▼','').toLowerCase() + '</strong>.';
             summaryEl.style.display = '';
         }
 
@@ -2942,7 +2992,7 @@
         async function fetchNewsData(topic) {
             var encoded = encodeURIComponent(topic);
             var url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + encoded
-                    + '&mode=artlist&maxrecords=12&format=json';
+                    + '&mode=artlist&maxrecords=12&format=json&sourcelang=eng';
             try {
                 var res = await fetch(url, { mode: 'cors' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -2994,7 +3044,7 @@
                 var res = await fetch(url, { mode: 'cors' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 var geoJson = await res.json();
-                _ensureLeaflet(function() { _renderMap(geoJson); });
+                _ensureLeaflet(function() { _renderMap(geoJson, topic); });
             } catch(e) {
                 document.getElementById('gdeltMapContainer').innerHTML =
                     '<div class="live-panel-error" style="padding:40px;text-align:center;">Unable to load map data. Will retry automatically.</div>';
@@ -3019,7 +3069,57 @@
             document.head.appendChild(script);
         }
 
-        function _renderMap(geoJson) {
+        async function _fetchHotspotArticles(topic, locationName) {
+            try {
+                var query = encodeURIComponent(topic + ' ' + locationName);
+                var url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + query
+                        + '&mode=artlist&maxrecords=5&format=json&sourcelang=eng';
+                var res = await fetch(url, { mode: 'cors' });
+                if (!res.ok) return null;
+                var data = await res.json();
+                return (data && data.articles) ? data.articles : [];
+            } catch(e) {
+                return null;
+            }
+        }
+
+        function _buildHotspotBasePopup(locationName, mentions, tone, topdoc) {
+            var toneColor = tone > 2 ? '#4ade80' : tone < -2 ? '#f87171' : '#94a3b8';
+            var toneLabel = tone > 2 ? 'Positive' : tone < -2 ? 'Negative' : 'Neutral';
+            return '<div style="font-family:sans-serif;min-width:220px;">'
+                 + '<div style="font-weight:700;font-size:1rem;margin-bottom:6px;">' + _esc(locationName) + '</div>'
+                 + '<div style="display:flex;gap:12px;font-size:0.82rem;color:#ccc;margin-bottom:8px;">'
+                 + '<span>📰 <strong>' + mentions + '</strong> mentions</span>'
+                 + '<span style="color:' + toneColor + ';">● ' + toneLabel + ' (' + tone.toFixed(1) + ')</span>'
+                 + '</div>'
+                 + (topdoc ? '<div style="margin-bottom:8px;"><a href="' + _esc(topdoc) + '" target="_blank" rel="noopener noreferrer" style="color:#00aeef;font-size:0.82rem;">Top article ↗</a></div>' : '');
+        }
+
+        function _buildHotspotArticlesHtml(articles) {
+            if (!articles || articles.length === 0) {
+                return '<div style="color:#888;font-size:0.78rem;padding-top:6px;border-top:1px solid rgba(255,255,255,0.12);">No recent English articles found for this location.</div>';
+            }
+            var html = '<div style="border-top:1px solid rgba(255,255,255,0.15);padding-top:8px;margin-top:4px;">'
+                     + '<div style="font-weight:600;color:#00aeef;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Media Sources</div>';
+            articles.forEach(function(a) {
+                var domain = '';
+                try { domain = new URL(a.url).hostname.replace('www.', ''); } catch(e) {}
+                var title  = (a.title || 'Untitled').slice(0, 70) + ((a.title || '').length > 70 ? '…' : '');
+                var tone   = parseFloat(a.tone) || 0;
+                var toneColor = tone > 2 ? '#4ade80' : tone < -2 ? '#f87171' : '#94a3b8';
+                html += '<div style="margin-bottom:6px;line-height:1.35;">'
+                      + '<a href="' + _esc(a.url) + '" target="_blank" rel="noopener noreferrer" '
+                      + 'style="text-decoration:none;">'
+                      + '<span style="color:#00aeef;font-size:0.75rem;">' + _esc(domain) + '</span>'
+                      + '<span style="color:' + toneColor + ';font-size:0.7rem;margin-left:4px;">●</span>'
+                      + '<br><span style="color:#e2e8f0;font-size:0.8rem;">' + _esc(title) + '</span>'
+                      + '</a></div>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function _renderMap(geoJson, topic) {
             var container = document.getElementById('gdeltMapContainer');
             var features  = (geoJson && geoJson.features) ? geoJson.features : [];
             if (features.length === 0) {
@@ -3040,22 +3140,39 @@
             var lats = [], lngs = [];
             features.forEach(function(f) {
                 if (!f.geometry || !f.geometry.coordinates) return;
-                var lng  = f.geometry.coordinates[0];
-                var lat  = f.geometry.coordinates[1];
+                var lng      = f.geometry.coordinates[0];
+                var lat      = f.geometry.coordinates[1];
                 var props    = f.properties || {};
                 var mentions = parseInt(props.mentions) || 1;
                 var tone     = parseFloat(props.tone) || 0;
                 var color    = mentions >= 15 ? '#ef4444' : mentions >= 5 ? '#f59e0b' : '#3b82f6';
                 var radius   = Math.min(18, Math.max(5, mentions * 1.2));
-                var circle   = L.circleMarker([lat, lng], {
+                var locationName = props.name || props.country || 'Location';
+
+                var circle = L.circleMarker([lat, lng], {
                     radius: radius, fillColor: color,
                     color: 'rgba(255,255,255,0.25)', weight: 1, fillOpacity: 0.75,
                 });
-                var popup = '<strong>' + _esc(props.name || props.country || 'Location') + '</strong><br>'
-                          + 'Mentions: ' + mentions + '<br>'
-                          + 'Avg tone: ' + tone.toFixed(1)
-                          + (props.topdoc ? '<br><a href="' + _esc(props.topdoc) + '" target="_blank" rel="noopener noreferrer" style="color:#00aeef;">Top article ↗</a>' : '');
-                circle.bindPopup(popup).addTo(_leafletMap);
+
+                var basePopup   = _buildHotspotBasePopup(locationName, mentions, tone, props.topdoc);
+                var loadingHtml = basePopup + '<div style="color:#888;font-size:0.78rem;padding-top:6px;border-top:1px solid rgba(255,255,255,0.12);">Loading media sources…</div></div>';
+
+                circle.bindPopup(loadingHtml, { maxWidth: 340 });
+
+                // Fetch articles the first time the popup opens
+                var articlesFetched = false;
+                circle.on('popupopen', function() {
+                    if (articlesFetched) return;
+                    articlesFetched = true;
+                    _fetchHotspotArticles(topic, locationName).then(function(articles) {
+                        var fullHtml = _buildHotspotBasePopup(locationName, mentions, tone, props.topdoc)
+                                     + _buildHotspotArticlesHtml(articles)
+                                     + '</div>';
+                        circle.setPopupContent(fullHtml);
+                    });
+                });
+
+                circle.addTo(_leafletMap);
                 lats.push(lat); lngs.push(lng);
             });
 
