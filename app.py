@@ -7,6 +7,7 @@ import os
 import re
 import json
 import time
+import urllib.parse
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -452,7 +453,7 @@ def gdelt_signal():
     if not topic:
         return jsonify({'error': 'topic parameter required'}), 400
 
-    encoded = httpx.QueryParams({'query': topic}).get('query')  # URL-safe string
+    encoded = urllib.parse.quote_plus(topic)
     # Build the two GDELT URLs
     tone_url = (f'{GDELT_BASE}/timeline/timeline?query={encoded}'
                 '&mode=timelinetone&format=json&smoothing=5&timespan=30d')
@@ -476,7 +477,7 @@ def gdelt_news():
     if not topic:
         return jsonify({'error': 'topic parameter required'}), 400
 
-    encoded = httpx.QueryParams({'query': topic}).get('query')
+    encoded = urllib.parse.quote_plus(topic)
     url = (f'{GDELT_BASE}/doc/doc?query={encoded}'
            '&mode=artlist&maxrecords=10&format=json&sourcelang=eng&sort=DateDesc')
 
@@ -495,7 +496,7 @@ def gdelt_geo():
     if not topic:
         return jsonify({'error': 'topic parameter required'}), 400
 
-    encoded = httpx.QueryParams({'query': topic}).get('query')
+    encoded = urllib.parse.quote_plus(topic)
     url = (f'{GDELT_BASE}/geo/geo?query={encoded}'
            '&mode=pointdata&format=geojson&timespan=1d')
 
@@ -516,7 +517,7 @@ def gdelt_hotspot_articles():
         return jsonify({'error': 'topic parameter required'}), 400
 
     query   = f'{topic} {location}'.strip()
-    encoded = httpx.QueryParams({'query': query}).get('query')
+    encoded = urllib.parse.quote_plus(query)
     url = (f'{GDELT_BASE}/doc/doc?query={encoded}'
            '&mode=artlist&maxrecords=5&format=json&sourcelang=eng')
 
