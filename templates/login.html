@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Foresight Scanner - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --lockton-black: #000000;
+            --lockton-white: #ffffff;
+            --lockton-jet: #363636;
+            --lockton-silver: #888888;
+            --lockton-blue: #00aeef;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, var(--lockton-black) 0%, var(--lockton-jet) 55%, #141414 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--lockton-white);
+        }
+        .login-box {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: var(--lockton-blue);
+            margin-bottom: 8px;
+            text-shadow: 0 0 18px rgba(0, 174, 239, 0.35);
+        }
+        .subtitle {
+            color: var(--lockton-silver);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--lockton-silver);
+            margin-bottom: 6px;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 1rem;
+            border: 2px solid rgba(0, 174, 239, 0.4);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--lockton-blue);
+            box-shadow: 0 0 20px rgba(0, 174, 239, 0.25);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--lockton-black);
+            background: linear-gradient(135deg, var(--lockton-blue), #7bd2f7);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 174, 239, 0.3);
+        }
+        .error {
+            background: rgba(255, 33, 71, 0.12);
+            border: 1px solid rgba(255, 33, 71, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            color: #ffb3c1;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>Strategic Foresight Scanner</h1>
+        <p class="subtitle">Enter the access password to continue</p>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="POST" action="/login">
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter password" required autofocus>
+            </div>
+            <button type="submit" class="login-btn">Sign In</button>
+        </form>
+    </div>
+</body>
+</html>
