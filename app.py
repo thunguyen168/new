@@ -21,8 +21,9 @@ app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(32))
 # ── GDELT proxy cache ────────────────────────────────────────────────────────
 # Simple in-memory cache: {cache_key: (timestamp, data)}
 _gdelt_cache: dict = {}
-_GDELT_CACHE_TTL = 300  # seconds (5 minutes, matches the front-end refresh interval)
-_GDELT_TIMEOUT   = 20.0  # seconds per outbound request
+_GDELT_CACHE_TTL  = 300   # seconds (5 minutes, matches the front-end refresh interval)
+_GDELT_STALE_TTL  = 1800  # seconds (30 minutes): serve stale data rather than an error
+_GDELT_TIMEOUT    = 30.0  # seconds per outbound request
 
 GDELT_BASE = 'https://api.gdeltproject.org/api/v2'
 
@@ -31,26 +32,40 @@ def _gdelt_get(url: str, cache_key: str):
     """Fetch a GDELT URL with caching and error handling.
 
     Returns (data_dict_or_list, error_string_or_None).
+    On failure, returns stale cached data (up to _GDELT_STALE_TTL old) so
+    the UI keeps showing the last known values instead of an error banner.
     """
     now = time.monotonic()
-    if cache_key in _gdelt_cache:
-        ts, cached = _gdelt_cache[cache_key]
+    cached_entry = _gdelt_cache.get(cache_key)
+
+    # Return fresh cached data immediately
+    if cached_entry:
+        ts, cached = cached_entry
         if now - ts < _GDELT_CACHE_TTL:
             return cached, None
 
+    # Attempt a live fetch
+    err: str | None = None
     try:
         resp = httpx.get(url, timeout=_GDELT_TIMEOUT, follow_redirects=True)
         resp.raise_for_status()
         data = resp.json()
+        _gdelt_cache[cache_key] = (now, data)
+        return data, None
     except httpx.TimeoutException:
-        return None, 'GDELT request timed out'
+        err = 'GDELT request timed out'
     except httpx.HTTPStatusError as exc:
-        return None, f'GDELT returned HTTP {exc.response.status_code}'
+        err = f'GDELT returned HTTP {exc.response.status_code}'
     except Exception as exc:
-        return None, str(exc)
+        err = str(exc)
 
-    _gdelt_cache[cache_key] = (now, data)
-    return data, None
+    # On error, serve stale cached data if it is not too old
+    if cached_entry:
+        ts, cached = cached_entry
+        if now - ts < _GDELT_STALE_TTL:
+            return cached, None
+
+    return None, err
 
 # Site password
 SITE_PASSWORD = "Lockton2026!!"

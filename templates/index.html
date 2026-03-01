@@ -2995,15 +2995,28 @@
         // ── News Feed ────────────────────────────────────────────────────────
         async function fetchNewsData(topic) {
             var url = '/api/gdelt/news?topic=' + encodeURIComponent(topic);
-            try {
-                var res = await fetch(url);
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                var data = await res.json();
-                if (data.error) throw new Error(data.error);
-                renderNewsFeed(data);
-            } catch(e) {
+            var maxAttempts = 3;
+            var data = null, lastErr = null;
+            for (var attempt = 0; attempt < maxAttempts; attempt++) {
+                if (attempt > 0) {
+                    await new Promise(function(r) { setTimeout(r, attempt * 2000); });
+                }
+                try {
+                    var res = await fetch(url);
+                    if (!res.ok) { lastErr = new Error('HTTP ' + res.status); continue; }
+                    data = await res.json();
+                    if (data.error) { lastErr = new Error(data.error); data = null; continue; }
+                    lastErr = null;
+                    break;
+                } catch(e) {
+                    lastErr = e;
+                }
+            }
+            if (lastErr || !data) {
                 document.getElementById('newsFeedList').innerHTML =
                     '<div class="live-panel-error">Unable to load news feed right now. Will retry automatically.</div>';
+            } else {
+                renderNewsFeed(data);
             }
             document.getElementById('newsLastUpdated').textContent = 'Updated ' + _fmtNow();
         }
@@ -3050,15 +3063,28 @@
         // ── Geographic Hotspot Map ───────────────────────────────────────────
         async function fetchGeoData(topic) {
             var url = '/api/gdelt/geo?topic=' + encodeURIComponent(topic);
-            try {
-                var res = await fetch(url);
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                var geoJson = await res.json();
-                if (geoJson.error) throw new Error(geoJson.error);
-                _ensureLeaflet(function() { _renderMap(geoJson, topic); });
-            } catch(e) {
+            var maxAttempts = 3;
+            var geoJson = null, lastErr = null;
+            for (var attempt = 0; attempt < maxAttempts; attempt++) {
+                if (attempt > 0) {
+                    await new Promise(function(r) { setTimeout(r, attempt * 2000); });
+                }
+                try {
+                    var res = await fetch(url);
+                    if (!res.ok) { lastErr = new Error('HTTP ' + res.status); continue; }
+                    geoJson = await res.json();
+                    if (geoJson.error) { lastErr = new Error(geoJson.error); geoJson = null; continue; }
+                    lastErr = null;
+                    break;
+                } catch(e) {
+                    lastErr = e;
+                }
+            }
+            if (lastErr || !geoJson) {
                 document.getElementById('gdeltMapContainer').innerHTML =
                     '<div class="live-panel-error" style="padding:40px;text-align:center;">Unable to load map data. Will retry automatically.</div>';
+            } else {
+                _ensureLeaflet(function() { _renderMap(geoJson, topic); });
             }
             document.getElementById('mapLastUpdated').textContent = 'Updated ' + _fmtNow();
         }
