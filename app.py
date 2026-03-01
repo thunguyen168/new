@@ -6,6 +6,7 @@ A simple, fast version that works within web hosting limits.
 import os
 import re
 import json
+import time
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -15,6 +16,40 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(32))
+
+# ── GDELT proxy cache ────────────────────────────────────────────────────────
+# Simple in-memory cache: {cache_key: (timestamp, data)}
+_gdelt_cache: dict = {}
+_GDELT_CACHE_TTL = 300  # seconds (5 minutes, matches the front-end refresh interval)
+_GDELT_TIMEOUT   = 20.0  # seconds per outbound request
+
+GDELT_BASE = 'https://api.gdeltproject.org/api/v2'
+
+
+def _gdelt_get(url: str, cache_key: str):
+    """Fetch a GDELT URL with caching and error handling.
+
+    Returns (data_dict_or_list, error_string_or_None).
+    """
+    now = time.monotonic()
+    if cache_key in _gdelt_cache:
+        ts, cached = _gdelt_cache[cache_key]
+        if now - ts < _GDELT_CACHE_TTL:
+            return cached, None
+
+    try:
+        resp = httpx.get(url, timeout=_GDELT_TIMEOUT, follow_redirects=True)
+        resp.raise_for_status()
+        data = resp.json()
+    except httpx.TimeoutException:
+        return None, 'GDELT request timed out'
+    except httpx.HTTPStatusError as exc:
+        return None, f'GDELT returned HTTP {exc.response.status_code}'
+    except Exception as exc:
+        return None, str(exc)
+
+    _gdelt_cache[cache_key] = (now, data)
+    return data, None
 
 # Site password
 SITE_PASSWORD = "Lockton2026!!"
@@ -407,6 +442,89 @@ def scan_topic():
         return jsonify({'error': 'Search timed out. Please try again.'}), 500
     except Exception as e:
         return jsonify({'error': f'Error: {str(e)}'}), 500
+
+
+@app.route('/api/gdelt/signal')
+@require_auth
+def gdelt_signal():
+    """Proxy GDELT timeline tone + volume data for a topic."""
+    topic = request.args.get('topic', '').strip()
+    if not topic:
+        return jsonify({'error': 'topic parameter required'}), 400
+
+    encoded = httpx.QueryParams({'query': topic}).get('query')  # URL-safe string
+    # Build the two GDELT URLs
+    tone_url = (f'{GDELT_BASE}/timeline/timeline?query={encoded}'
+                '&mode=timelinetone&format=json&smoothing=5&timespan=30d')
+    vol_url  = (f'{GDELT_BASE}/timeline/timeline?query={encoded}'
+                '&mode=timelinevolraw&format=json&timespan=30d')
+
+    tone_data, tone_err = _gdelt_get(tone_url, f'signal:tone:{topic}')
+    vol_data,  vol_err  = _gdelt_get(vol_url,  f'signal:vol:{topic}')
+
+    if tone_err and vol_err:
+        return jsonify({'error': tone_err}), 502
+
+    return jsonify({'tone': tone_data, 'volume': vol_data})
+
+
+@app.route('/api/gdelt/news')
+@require_auth
+def gdelt_news():
+    """Proxy GDELT article list for a topic."""
+    topic = request.args.get('topic', '').strip()
+    if not topic:
+        return jsonify({'error': 'topic parameter required'}), 400
+
+    encoded = httpx.QueryParams({'query': topic}).get('query')
+    url = (f'{GDELT_BASE}/doc/doc?query={encoded}'
+           '&mode=artlist&maxrecords=10&format=json&sourcelang=eng&sort=DateDesc')
+
+    data, err = _gdelt_get(url, f'news:{topic}')
+    if err:
+        return jsonify({'error': err}), 502
+
+    return jsonify(data)
+
+
+@app.route('/api/gdelt/geo')
+@require_auth
+def gdelt_geo():
+    """Proxy GDELT geographic hotspot GeoJSON for a topic."""
+    topic = request.args.get('topic', '').strip()
+    if not topic:
+        return jsonify({'error': 'topic parameter required'}), 400
+
+    encoded = httpx.QueryParams({'query': topic}).get('query')
+    url = (f'{GDELT_BASE}/geo/geo?query={encoded}'
+           '&mode=pointdata&format=geojson&timespan=1d')
+
+    data, err = _gdelt_get(url, f'geo:{topic}')
+    if err:
+        return jsonify({'error': err}), 502
+
+    return jsonify(data)
+
+
+@app.route('/api/gdelt/hotspot-articles')
+@require_auth
+def gdelt_hotspot_articles():
+    """Proxy GDELT article list for a topic + location (hotspot popups)."""
+    topic    = request.args.get('topic', '').strip()
+    location = request.args.get('location', '').strip()
+    if not topic:
+        return jsonify({'error': 'topic parameter required'}), 400
+
+    query   = f'{topic} {location}'.strip()
+    encoded = httpx.QueryParams({'query': query}).get('query')
+    url = (f'{GDELT_BASE}/doc/doc?query={encoded}'
+           '&mode=artlist&maxrecords=5&format=json&sourcelang=eng')
+
+    data, err = _gdelt_get(url, f'hotspot:{query}')
+    if err:
+        return jsonify({'error': err}), 502
+
+    return jsonify(data)
 
 
 @app.route('/health')
