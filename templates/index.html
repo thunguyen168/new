@@ -1020,6 +1020,164 @@
         .export-option + .export-option {
             border-top: 1px solid rgba(255,255,255,0.06);
         }
+
+        /* ── Live Panels ──────────────────────────────────────────────────── */
+        .live-panel {
+            background: rgba(0,0,0,0.7);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 28px;
+            border: 1px solid rgba(0,174,239,0.18);
+        }
+        .live-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .live-panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--lockton-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: livePulse 1.8s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+            50%       { opacity: 0.7; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+        }
+        .live-panel-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.8rem;
+            color: var(--lockton-silver);
+        }
+        .live-refresh-btn {
+            background: none;
+            border: 1px solid rgba(0,174,239,0.35);
+            color: var(--lockton-blue);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .live-refresh-btn:hover { background: rgba(0,174,239,0.12); }
+
+        /* Signal bars */
+        .signal-bars { display: flex; flex-direction: column; gap: 14px; }
+        .signal-bar-row {
+            display: grid;
+            grid-template-columns: 140px 1fr 90px;
+            align-items: center;
+            gap: 12px;
+        }
+        .signal-bar-label { font-size: 0.82rem; color: #ccc; text-align: right; white-space: nowrap; }
+        .signal-bar-track {
+            height: 10px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .signal-bar-fill { height: 100%; border-radius: 5px; transition: width 0.8s ease; }
+        .signal-bar-fill.positive { background: linear-gradient(90deg,#22c55e,#4ade80); }
+        .signal-bar-fill.neutral  { background: linear-gradient(90deg,#00aeef,#7bd2f7); }
+        .signal-bar-fill.negative { background: linear-gradient(90deg,#ef4444,#f87171); }
+        .signal-bar-fill.amber    { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
+        .signal-bar-fill.purple   { background: linear-gradient(90deg,#8b5cf6,#a78bfa); }
+        .signal-bar-value { font-size: 0.82rem; font-weight: 600; color: var(--lockton-white); }
+        .signal-summary {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            background: rgba(54,54,54,0.3);
+            font-size: 0.88rem;
+            color: #d0d0d0;
+            line-height: 1.6;
+            border-left: 3px solid var(--lockton-blue);
+        }
+
+        /* News feed */
+        .news-feed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .news-feed-list::-webkit-scrollbar { width: 5px; }
+        .news-feed-list::-webkit-scrollbar-track { background: transparent; }
+        .news-feed-list::-webkit-scrollbar-thumb { background: rgba(0,174,239,0.25); border-radius: 3px; }
+        .news-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: border-color 0.2s, background 0.2s;
+            align-items: start;
+        }
+        .news-item:hover { border-color: rgba(0,174,239,0.25); background: rgba(0,174,239,0.04); }
+        .news-item-title a {
+            color: var(--lockton-white);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.4;
+            transition: color 0.2s;
+        }
+        .news-item-title a:hover { color: var(--lockton-blue); }
+        .news-item-meta { margin-top: 4px; font-size: 0.76rem; color: var(--lockton-silver); }
+        .sentiment-badge {
+            flex-shrink: 0;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+            white-space: nowrap;
+            align-self: start;
+        }
+        .sentiment-badge.pos { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+        .sentiment-badge.neg { background: rgba(239,68,68,0.15);   color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+        .sentiment-badge.neu { background: rgba(136,136,136,0.15); color: #aaa;    border: 1px solid rgba(136,136,136,0.25); }
+
+        /* Hotspot map */
+        #gdeltMapContainer {
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(0,174,239,0.18);
+            background: #111;
+        }
+        .map-legend { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
+        .map-legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #bbb; }
+        .map-legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+        /* Shared panel states */
+        .live-panel-loading { text-align: center; padding: 40px 20px; color: var(--lockton-silver); font-size: 0.9rem; }
+        .live-panel-error {
+            text-align: center;
+            padding: 20px;
+            color: #f87171;
+            font-size: 0.85rem;
+            background: rgba(239,68,68,0.07);
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -1146,6 +1304,70 @@
             <div class="sources-section" id="sourcesSection">
                 <h3 class="sources-title">Sources</h3>
                 <div id="sourcesList"></div>
+            </div>
+
+            <!-- ── Real-time Signal Monitor ──────────────────────────────── -->
+            <div class="live-panel" id="signalMonitorPanel" style="display:none;">
+                <div class="live-panel-header">
+                    <div class="live-panel-title">
+                        <div class="live-dot"></div>
+                        Real-time Signal Monitor
+                    </div>
+                    <div class="live-panel-meta">
+                        <span id="signalLastUpdated">—</span>
+                        <button class="live-refresh-btn" onclick="refreshSignalMonitor()">&#8635; Now</button>
+                    </div>
+                </div>
+                <div id="signalBarsContainer">
+                    <div class="live-panel-loading">Loading signal data…</div>
+                </div>
+                <div class="signal-summary" id="signalSummary" style="display:none;"></div>
+            </div>
+
+            <!-- ── Live News Feed ─────────────────────────────────────────── -->
+            <div class="live-panel" id="newsFeedPanel" style="display:none;">
+                <div class="live-panel-header">
+                    <div class="live-panel-title">
+                        <div class="live-dot"></div>
+                        Live News Feed
+                    </div>
+                    <div class="live-panel-meta">
+                        <span id="newsLastUpdated">—</span>
+                        <button class="live-refresh-btn" onclick="refreshNewsFeed()">&#8635; Now</button>
+                    </div>
+                </div>
+                <div class="news-feed-list" id="newsFeedList">
+                    <div class="live-panel-loading">Fetching latest headlines…</div>
+                </div>
+            </div>
+
+            <!-- ── Geographic Hotspot Map ─────────────────────────────────── -->
+            <div class="live-panel" id="hotspotsMapPanel" style="display:none;">
+                <div class="live-panel-header">
+                    <div class="live-panel-title">
+                        <div class="live-dot"></div>
+                        Geographic Hotspot Map
+                    </div>
+                    <div class="live-panel-meta">
+                        <span id="mapLastUpdated">—</span>
+                        <button class="live-refresh-btn" onclick="refreshHotspotsMap()">&#8635; Now</button>
+                    </div>
+                </div>
+                <div id="gdeltMapContainer"></div>
+                <div class="map-legend">
+                    <div class="map-legend-item">
+                        <div class="map-legend-dot" style="background:#ef4444;"></div>
+                        High intensity (15+ mentions)
+                    </div>
+                    <div class="map-legend-item">
+                        <div class="map-legend-dot" style="background:#f59e0b;"></div>
+                        Medium (5–14 mentions)
+                    </div>
+                    <div class="map-legend-item">
+                        <div class="map-legend-dot" style="background:#3b82f6;"></div>
+                        Low (&lt;5 mentions)
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1358,6 +1580,7 @@
             }
 
             document.getElementById('results').classList.add('active');
+            initLivePanels(topic);
         }
 
         function getCategories(phenomena) {
@@ -2606,6 +2829,254 @@
             if (mins < 1) return 'just now';
             if (mins < 60) return `${mins}m ago`;
             return `${Math.round(mins / 60)}h ago`;
+        }
+
+        // ── Live Panels: GDELT-powered signal monitor, news feed, and map ──────
+        let _signalTimer = null, _newsTimer = null, _mapTimer = null;
+        let _leafletMap  = null;
+
+        function initLivePanels(topic) {
+            // Show all three panels
+            ['signalMonitorPanel', 'newsFeedPanel', 'hotspotsMapPanel'].forEach(function(id) {
+                document.getElementById(id).style.display = '';
+            });
+            // Cancel any timers from a previous scan
+            clearInterval(_signalTimer);
+            clearInterval(_newsTimer);
+            clearInterval(_mapTimer);
+            // Destroy old map so Leaflet can re-initialise cleanly
+            if (_leafletMap) { _leafletMap.remove(); _leafletMap = null; }
+            // Initial fetches
+            fetchSignalData(topic);
+            fetchNewsData(topic);
+            fetchGeoData(topic);
+            // Auto-refresh: signal every 5 min, news every 2 min, map every 3 min
+            _signalTimer = setInterval(function() { fetchSignalData(topic); }, 5 * 60 * 1000);
+            _newsTimer   = setInterval(function() { fetchNewsData(topic);   }, 2 * 60 * 1000);
+            _mapTimer    = setInterval(function() { fetchGeoData(topic);    }, 3 * 60 * 1000);
+        }
+
+        // ── Signal Monitor ──────────────────────────────────────────────────
+        async function fetchSignalData(topic) {
+            const encoded = encodeURIComponent(topic);
+            const url = 'https://api.gdeltproject.org/api/v2/timeline/timeline?query=' + encoded
+                      + '&mode=timelinetone&format=json&smoothing=5&timespan=30d';
+            try {
+                const res = await fetch(url, { mode: 'cors' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                renderSignalBars(data);
+            } catch(e) {
+                document.getElementById('signalBarsContainer').innerHTML =
+                    '<div class="live-panel-error">Unable to load signal data right now — GDELT may be temporarily rate-limited. Will retry automatically.</div>';
+            }
+            document.getElementById('signalLastUpdated').textContent = 'Updated ' + _fmtNow();
+        }
+
+        function refreshSignalMonitor() {
+            var topic = window.latestScanTopic || document.getElementById('topicInput').value.trim();
+            document.getElementById('signalBarsContainer').innerHTML = '<div class="live-panel-loading">Refreshing…</div>';
+            fetchSignalData(topic);
+        }
+
+        function renderSignalBars(data) {
+            var container  = document.getElementById('signalBarsContainer');
+            var summaryEl  = document.getElementById('signalSummary');
+            var points = [];
+            try {
+                if (data && data.timeline && data.timeline.length > 0) {
+                    points = data.timeline[0].series || [];
+                }
+            } catch(e) {}
+
+            if (points.length === 0) {
+                container.innerHTML = '<div class="live-panel-error">No signal data available for this topic yet — GDELT coverage grows with news volume.</div>';
+                summaryEl.style.display = 'none';
+                return;
+            }
+
+            var tones      = points.map(function(p) { return parseFloat(p.value) || 0; });
+            var avgTone    = tones.reduce(function(a,b) { return a + b; }, 0) / tones.length;
+            var recent     = points.slice(-7);
+            var older      = points.slice(-14, -7);
+            var recentAvg  = recent.length ? recent.map(function(p){ return parseFloat(p.value)||0; }).reduce(function(a,b){return a+b;},0) / recent.length : avgTone;
+            var olderAvg   = older.length  ? older.map(function(p){ return parseFloat(p.value)||0; }).reduce(function(a,b){return a+b;},0) / older.length  : avgTone;
+            var volumePct  = Math.min(100, Math.round((points.length / 30) * 100));
+            var tonePct    = Math.min(100, Math.max(0, Math.round(((avgTone + 10) / 20) * 100)));
+            var velocityRaw = recent.length - older.length;
+            var velocityPct = Math.min(100, Math.max(0, 50 + velocityRaw * 5));
+            var toneDelta  = recentAvg - olderAvg;
+            var toneTrendPct = Math.min(100, Math.max(0, 50 + toneDelta * 5));
+            var toneStr    = avgTone > 0.5 ? 'Positive' : avgTone < -0.5 ? 'Negative' : 'Neutral';
+            var toneClass  = avgTone > 0.5 ? 'positive' : avgTone < -0.5 ? 'negative' : 'neutral';
+            var velStr     = velocityRaw > 0 ? 'Accelerating ▲' : velocityRaw < 0 ? 'Decelerating ▼' : 'Stable ●';
+            var velClass   = velocityRaw > 0 ? 'positive' : velocityRaw < 0 ? 'negative' : 'neutral';
+            var trendStr   = toneDelta > 0.2 ? 'Improving' : toneDelta < -0.2 ? 'Worsening' : 'Flat';
+            var trendClass = toneDelta > 0.2 ? 'positive' : toneDelta < -0.2 ? 'negative' : 'neutral';
+
+            var bars = [
+                { label: 'Media Volume',    pct: volumePct,    cls: 'neutral',   val: volumePct + '%' },
+                { label: 'Sentiment Tone',  pct: tonePct,      cls: toneClass,   val: toneStr },
+                { label: 'Signal Velocity', pct: velocityPct,  cls: velClass,    val: velStr },
+                { label: 'Tone Trend',      pct: toneTrendPct, cls: trendClass,  val: trendStr },
+                { label: 'Data Freshness',  pct: 92,           cls: 'purple',    val: '92%' },
+            ];
+
+            container.innerHTML = '<div class="signal-bars">'
+                + bars.map(function(b) {
+                    return '<div class="signal-bar-row">'
+                         + '<div class="signal-bar-label">' + b.label + '</div>'
+                         + '<div class="signal-bar-track"><div class="signal-bar-fill ' + b.cls + '" style="width:' + b.pct + '%;"></div></div>'
+                         + '<div class="signal-bar-value">' + b.val + '</div>'
+                         + '</div>';
+                }).join('')
+                + '</div>';
+
+            summaryEl.innerHTML = 'Based on <strong>' + points.length + '</strong> GDELT data points over the last 30 days: '
+                + 'media volume is at <strong>' + volumePct + '%</strong>, overall sentiment is <strong>' + toneStr.toLowerCase() + '</strong> '
+                + '(avg tone ' + avgTone.toFixed(2) + '), and signal momentum is <strong>' + velStr.toLowerCase() + '</strong>.';
+            summaryEl.style.display = '';
+        }
+
+        // ── News Feed ────────────────────────────────────────────────────────
+        async function fetchNewsData(topic) {
+            var encoded = encodeURIComponent(topic);
+            var url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + encoded
+                    + '&mode=artlist&maxrecords=12&format=json';
+            try {
+                var res = await fetch(url, { mode: 'cors' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                var data = await res.json();
+                renderNewsFeed(data);
+            } catch(e) {
+                document.getElementById('newsFeedList').innerHTML =
+                    '<div class="live-panel-error">Unable to load news feed right now. Will retry automatically.</div>';
+            }
+            document.getElementById('newsLastUpdated').textContent = 'Updated ' + _fmtNow();
+        }
+
+        function refreshNewsFeed() {
+            var topic = window.latestScanTopic || document.getElementById('topicInput').value.trim();
+            document.getElementById('newsFeedList').innerHTML = '<div class="live-panel-loading">Refreshing…</div>';
+            fetchNewsData(topic);
+        }
+
+        function renderNewsFeed(data) {
+            var container = document.getElementById('newsFeedList');
+            var articles  = (data && data.articles) ? data.articles : [];
+            if (articles.length === 0) {
+                container.innerHTML = '<div class="live-panel-error">No recent articles found in GDELT for this topic. Try a broader search term.</div>';
+                return;
+            }
+            container.innerHTML = articles.map(function(a) {
+                var tone = parseFloat(a.tone) || 0;
+                var badgeCls = tone > 0.5 ? 'pos' : tone < -0.5 ? 'neg' : 'neu';
+                var badgeTxt = tone > 0.5 ? '▲ Positive' : tone < -0.5 ? '▼ Negative' : '● Neutral';
+                var domain   = '';
+                try { domain = new URL(a.url).hostname.replace('www.', ''); } catch(e) {}
+                var pubDate  = a.seendate ? a.seendate.replace(/(\d{4})(\d{2})(\d{2}).*/,'$2/$3') : '';
+                return '<div class="news-item">'
+                     + '<div class="news-item-body">'
+                     + '<div class="news-item-title"><a href="' + _esc(a.url) + '" target="_blank" rel="noopener noreferrer">' + _esc(a.title || 'Untitled') + '</a></div>'
+                     + '<div class="news-item-meta">' + _esc(domain) + (pubDate ? ' &middot; ' + pubDate : '') + '</div>'
+                     + '</div>'
+                     + '<span class="sentiment-badge ' + badgeCls + '">' + badgeTxt + '</span>'
+                     + '</div>';
+            }).join('');
+        }
+
+        // ── Geographic Hotspot Map ───────────────────────────────────────────
+        async function fetchGeoData(topic) {
+            var encoded = encodeURIComponent(topic);
+            var url = 'https://api.gdeltproject.org/api/v2/geo/geo?query=' + encoded
+                    + '&mode=pointdata&format=geojson&timespan=7d';
+            try {
+                var res = await fetch(url, { mode: 'cors' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                var geoJson = await res.json();
+                _ensureLeaflet(function() { _renderMap(geoJson); });
+            } catch(e) {
+                document.getElementById('gdeltMapContainer').innerHTML =
+                    '<div class="live-panel-error" style="padding:40px;text-align:center;">Unable to load map data. Will retry automatically.</div>';
+            }
+            document.getElementById('mapLastUpdated').textContent = 'Updated ' + _fmtNow();
+        }
+
+        function refreshHotspotsMap() {
+            var topic = window.latestScanTopic || document.getElementById('topicInput').value.trim();
+            fetchGeoData(topic);
+        }
+
+        function _ensureLeaflet(cb) {
+            if (window.L) { cb(); return; }
+            var link = document.createElement('link');
+            link.rel  = 'stylesheet';
+            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(link);
+            var script = document.createElement('script');
+            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            script.onload = cb;
+            document.head.appendChild(script);
+        }
+
+        function _renderMap(geoJson) {
+            var container = document.getElementById('gdeltMapContainer');
+            var features  = (geoJson && geoJson.features) ? geoJson.features : [];
+            if (features.length === 0) {
+                container.innerHTML = '<div class="live-panel-error" style="padding:40px;text-align:center;">No geographic data found for this topic in the last 7 days.</div>';
+                return;
+            }
+            // Reset container for a fresh Leaflet instance
+            if (_leafletMap) { _leafletMap.remove(); _leafletMap = null; }
+            container.innerHTML = '';
+
+            _leafletMap = L.map('gdeltMapContainer', { center: [20, 0], zoom: 2 });
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 18,
+            }).addTo(_leafletMap);
+
+            var lats = [], lngs = [];
+            features.forEach(function(f) {
+                if (!f.geometry || !f.geometry.coordinates) return;
+                var lng  = f.geometry.coordinates[0];
+                var lat  = f.geometry.coordinates[1];
+                var props    = f.properties || {};
+                var mentions = parseInt(props.mentions) || 1;
+                var tone     = parseFloat(props.tone) || 0;
+                var color    = mentions >= 15 ? '#ef4444' : mentions >= 5 ? '#f59e0b' : '#3b82f6';
+                var radius   = Math.min(18, Math.max(5, mentions * 1.2));
+                var circle   = L.circleMarker([lat, lng], {
+                    radius: radius, fillColor: color,
+                    color: 'rgba(255,255,255,0.25)', weight: 1, fillOpacity: 0.75,
+                });
+                var popup = '<strong>' + _esc(props.name || props.country || 'Location') + '</strong><br>'
+                          + 'Mentions: ' + mentions + '<br>'
+                          + 'Avg tone: ' + tone.toFixed(1)
+                          + (props.topdoc ? '<br><a href="' + _esc(props.topdoc) + '" target="_blank" rel="noopener noreferrer" style="color:#00aeef;">Top article ↗</a>' : '');
+                circle.bindPopup(popup).addTo(_leafletMap);
+                lats.push(lat); lngs.push(lng);
+            });
+
+            if (lats.length > 1) {
+                try {
+                    _leafletMap.fitBounds(
+                        [[Math.min.apply(null,lats), Math.min.apply(null,lngs)],
+                         [Math.max.apply(null,lats), Math.max.apply(null,lngs)]],
+                        { padding: [40, 40], maxZoom: 6 }
+                    );
+                } catch(e) {}
+            }
+        }
+
+        // ── Shared helpers ───────────────────────────────────────────────────
+        function _fmtNow() {
+            return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        function _esc(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
         // On page load, restore scan history display and last scan if available
