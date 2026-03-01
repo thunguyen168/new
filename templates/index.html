@@ -2850,10 +2850,10 @@
             fetchSignalData(topic);
             fetchNewsData(topic);
             fetchGeoData(topic);
-            // Auto-refresh: signal every 5 min, news every 2 min, map every 3 min
+            // Auto-refresh: signal every 5 min, news every 5 min, map every 5 min
             _signalTimer = setInterval(function() { fetchSignalData(topic); }, 5 * 60 * 1000);
-            _newsTimer   = setInterval(function() { fetchNewsData(topic);   }, 2 * 60 * 1000);
-            _mapTimer    = setInterval(function() { fetchGeoData(topic);    }, 3 * 60 * 1000);
+            _newsTimer   = setInterval(function() { fetchNewsData(topic);   }, 5 * 60 * 1000);
+            _mapTimer    = setInterval(function() { fetchGeoData(topic);    }, 5 * 60 * 1000);
         }
 
         // ── Signal Monitor ──────────────────────────────────────────────────
@@ -2863,19 +2863,34 @@
                           + '&mode=timelinetone&format=json&smoothing=5&timespan=30d';
             const volUrl  = 'https://api.gdeltproject.org/api/v2/timeline/timeline?query=' + encoded
                           + '&mode=timelinevolraw&format=json&timespan=30d';
-            try {
-                const [toneRes, volRes] = await Promise.all([
-                    fetch(toneUrl, { mode: 'cors' }),
-                    fetch(volUrl,  { mode: 'cors' }),
-                ]);
-                const [toneData, volData] = await Promise.all([
-                    toneRes.ok ? toneRes.json() : Promise.resolve(null),
-                    volRes.ok  ? volRes.json()  : Promise.resolve(null),
-                ]);
-                renderSignalBars(toneData, volData);
-            } catch(e) {
+            const maxAttempts = 3;
+            let toneData = null, volData = null, lastErr = null;
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                if (attempt > 0) {
+                    await new Promise(function(r) { setTimeout(r, attempt * 2000); });
+                }
+                try {
+                    const [toneRes, volRes] = await Promise.all([
+                        fetch(toneUrl, { mode: 'cors' }),
+                        fetch(volUrl,  { mode: 'cors' }),
+                    ]);
+                    if (!toneRes.ok && !volRes.ok) {
+                        lastErr = new Error('HTTP ' + toneRes.status);
+                        continue;
+                    }
+                    toneData = toneRes.ok ? await toneRes.json() : null;
+                    volData  = volRes.ok  ? await volRes.json()  : null;
+                    lastErr  = null;
+                    break;
+                } catch(e) {
+                    lastErr = e;
+                }
+            }
+            if (lastErr) {
                 document.getElementById('signalBarsContainer').innerHTML =
-                    '<div class="live-panel-error">Unable to load signal data right now — GDELT may be temporarily rate-limited. Will retry automatically.</div>';
+                    '<div class="live-panel-error">Unable to load signal data — GDELT is temporarily unavailable. Retrying in 5 minutes.</div>';
+            } else {
+                renderSignalBars(toneData, volData);
             }
             document.getElementById('signalLastUpdated').textContent = 'Updated ' + _fmtNow();
         }
@@ -2992,7 +3007,7 @@
         async function fetchNewsData(topic) {
             var encoded = encodeURIComponent(topic);
             var url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + encoded
-                    + '&mode=artlist&maxrecords=12&format=json&sourcelang=eng';
+                    + '&mode=artlist&maxrecords=10&format=json&sourcelang=eng&sort=DateDesc';
             try {
                 var res = await fetch(url, { mode: 'cors' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -3014,6 +3029,15 @@
         function renderNewsFeed(data) {
             var container = document.getElementById('newsFeedList');
             var articles  = (data && data.articles) ? data.articles : [];
+            // Client-side guard: keep only English-language articles, newest-first, max 10
+            articles = articles.filter(function(a) {
+                return !a.language || a.language === '' || /^en/i.test(a.language);
+            });
+            articles.sort(function(a, b) {
+                var da = a.seendate || '', db = b.seendate || '';
+                return db.localeCompare(da);
+            });
+            articles = articles.slice(0, 10);
             if (articles.length === 0) {
                 container.innerHTML = '<div class="live-panel-error">No recent articles found in GDELT for this topic. Try a broader search term.</div>';
                 return;
@@ -3039,7 +3063,7 @@
         async function fetchGeoData(topic) {
             var encoded = encodeURIComponent(topic);
             var url = 'https://api.gdeltproject.org/api/v2/geo/geo?query=' + encoded
-                    + '&mode=pointdata&format=geojson&timespan=7d';
+                    + '&mode=pointdata&format=geojson&timespan=1d';
             try {
                 var res = await fetch(url, { mode: 'cors' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -3121,9 +3145,13 @@
 
         function _renderMap(geoJson, topic) {
             var container = document.getElementById('gdeltMapContainer');
-            var features  = (geoJson && geoJson.features) ? geoJson.features : [];
+            var allFeatures = (geoJson && geoJson.features) ? geoJson.features : [];
+            // Keep only hotspots with ≥5 mentions in the past 24 hours
+            var features = allFeatures.filter(function(f) {
+                return parseInt((f.properties || {}).mentions) >= 5;
+            });
             if (features.length === 0) {
-                container.innerHTML = '<div class="live-panel-error" style="padding:40px;text-align:center;">No geographic data found for this topic in the last 7 days.</div>';
+                container.innerHTML = '<div class="live-panel-error" style="padding:40px;text-align:center;">No hotspots with 5+ mentions found for this topic in the last 24 hours.</div>';
                 return;
             }
             // Reset container for a fresh Leaflet instance
