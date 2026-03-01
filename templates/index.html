@@ -2858,39 +2858,28 @@
 
         // ── Signal Monitor ──────────────────────────────────────────────────
         async function fetchSignalData(topic) {
-            const encoded = encodeURIComponent(topic);
-            const toneUrl = 'https://api.gdeltproject.org/api/v2/timeline/timeline?query=' + encoded
-                          + '&mode=timelinetone&format=json&smoothing=5&timespan=30d';
-            const volUrl  = 'https://api.gdeltproject.org/api/v2/timeline/timeline?query=' + encoded
-                          + '&mode=timelinevolraw&format=json&timespan=30d';
+            const url = '/api/gdelt/signal?topic=' + encodeURIComponent(topic);
             const maxAttempts = 3;
-            let toneData = null, volData = null, lastErr = null;
+            let payload = null, lastErr = null;
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
                 if (attempt > 0) {
                     await new Promise(function(r) { setTimeout(r, attempt * 2000); });
                 }
                 try {
-                    const [toneRes, volRes] = await Promise.all([
-                        fetch(toneUrl, { mode: 'cors' }),
-                        fetch(volUrl,  { mode: 'cors' }),
-                    ]);
-                    if (!toneRes.ok && !volRes.ok) {
-                        lastErr = new Error('HTTP ' + toneRes.status);
-                        continue;
-                    }
-                    toneData = toneRes.ok ? await toneRes.json() : null;
-                    volData  = volRes.ok  ? await volRes.json()  : null;
+                    const res = await fetch(url);
+                    if (!res.ok) { lastErr = new Error('HTTP ' + res.status); continue; }
+                    payload  = await res.json();
                     lastErr  = null;
                     break;
                 } catch(e) {
                     lastErr = e;
                 }
             }
-            if (lastErr) {
+            if (lastErr || (payload && payload.error)) {
                 document.getElementById('signalBarsContainer').innerHTML =
                     '<div class="live-panel-error">Unable to load signal data — GDELT is temporarily unavailable. Retrying in 5 minutes.</div>';
             } else {
-                renderSignalBars(toneData, volData);
+                renderSignalBars(payload.tone, payload.volume);
             }
             document.getElementById('signalLastUpdated').textContent = 'Updated ' + _fmtNow();
         }
@@ -3005,13 +2994,12 @@
 
         // ── News Feed ────────────────────────────────────────────────────────
         async function fetchNewsData(topic) {
-            var encoded = encodeURIComponent(topic);
-            var url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + encoded
-                    + '&mode=artlist&maxrecords=10&format=json&sourcelang=eng&sort=DateDesc';
+            var url = '/api/gdelt/news?topic=' + encodeURIComponent(topic);
             try {
-                var res = await fetch(url, { mode: 'cors' });
+                var res = await fetch(url);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 var data = await res.json();
+                if (data.error) throw new Error(data.error);
                 renderNewsFeed(data);
             } catch(e) {
                 document.getElementById('newsFeedList').innerHTML =
@@ -3061,13 +3049,12 @@
 
         // ── Geographic Hotspot Map ───────────────────────────────────────────
         async function fetchGeoData(topic) {
-            var encoded = encodeURIComponent(topic);
-            var url = 'https://api.gdeltproject.org/api/v2/geo/geo?query=' + encoded
-                    + '&mode=pointdata&format=geojson&timespan=1d';
+            var url = '/api/gdelt/geo?topic=' + encodeURIComponent(topic);
             try {
-                var res = await fetch(url, { mode: 'cors' });
+                var res = await fetch(url);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 var geoJson = await res.json();
+                if (geoJson.error) throw new Error(geoJson.error);
                 _ensureLeaflet(function() { _renderMap(geoJson, topic); });
             } catch(e) {
                 document.getElementById('gdeltMapContainer').innerHTML =
@@ -3095,12 +3082,12 @@
 
         async function _fetchHotspotArticles(topic, locationName) {
             try {
-                var query = encodeURIComponent(topic + ' ' + locationName);
-                var url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + query
-                        + '&mode=artlist&maxrecords=5&format=json&sourcelang=eng';
-                var res = await fetch(url, { mode: 'cors' });
+                var url = '/api/gdelt/hotspot-articles?topic=' + encodeURIComponent(topic)
+                        + '&location=' + encodeURIComponent(locationName);
+                var res = await fetch(url);
                 if (!res.ok) return null;
                 var data = await res.json();
+                if (data.error) return null;
                 return (data && data.articles) ? data.articles : [];
             } catch(e) {
                 return null;
