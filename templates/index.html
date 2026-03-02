@@ -1023,6 +1023,42 @@
         }
 
         /* ============================================================
+           View Tabs
+           ============================================================ */
+
+        .view-tabs {
+            display: flex;
+            margin-bottom: 28px;
+            border-bottom: 2px solid rgba(0, 174, 239, 0.18);
+        }
+
+        .view-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 26px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--lockton-silver);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .view-tab:hover { color: var(--lockton-white); }
+
+        .view-tab.active {
+            color: var(--lockton-blue);
+            border-bottom-color: var(--lockton-blue);
+        }
+
+        .view-tab-icon { font-size: 1.05rem; }
+
+        /* ============================================================
            Global Intelligence Dashboard
            ============================================================ */
 
@@ -1402,9 +1438,20 @@
             <p class="subtitle">Identify emerging trends, signals, and risk factors</p>
         </header>
 
+        <!-- View switcher tabs -->
+        <div class="view-tabs" id="viewTabs">
+            <button class="view-tab active" id="tab-intelligence" data-view="intelligence" onclick="switchView('intelligence')">
+                <span class="view-tab-icon">&#127758;</span> Intelligence Dashboard
+            </button>
+            <button class="view-tab" id="tab-scanner" data-view="scanner" onclick="switchView('scanner')">
+                <span class="view-tab-icon">&#128269;</span> Foresight Scanner
+            </button>
+        </div>
+
         <!-- ======================================================
-             Global Intelligence Dashboard
+             Intelligence Dashboard view
              ====================================================== -->
+        <div id="view-intelligence">
         <div class="intel-dashboard" id="intelDashboard">
 
             <div class="intel-dashboard-header">
@@ -1485,7 +1532,12 @@
             </div>
 
         </div><!-- /.intel-dashboard -->
+        </div><!-- /#view-intelligence -->
 
+        <!-- ======================================================
+             Foresight Scanner view (hidden by default)
+             ====================================================== -->
+        <div id="view-scanner" style="display:none;">
         <div class="intel-section-divider"><span>Strategic Foresight Scanner</span></div>
 
         <div class="search-box">
@@ -1624,6 +1676,8 @@
                 </div>
             </div>
         </div>
+
+        </div><!-- /#view-scanner -->
 
         <footer>
             <p style="margin-bottom:12px;color:#aaa;font-size:0.85rem;line-height:1.6;">This report was generated using a Generative AI tool for internal exploratory analysis only.<br>
@@ -1777,6 +1831,29 @@
             loadRegionalNews();
         }
 
+        function switchView(view) {
+            const intelView   = document.getElementById('view-intelligence');
+            const scannerView = document.getElementById('view-scanner');
+
+            if (view === 'intelligence') {
+                intelView.style.display   = '';
+                scannerView.style.display = 'none';
+                // Leaflet needs a size hint after becoming visible
+                if (_worldMap) setTimeout(() => _worldMap.invalidateSize(), 60);
+            } else {
+                intelView.style.display   = 'none';
+                scannerView.style.display = '';
+            }
+
+            // Update tab active states
+            document.querySelectorAll('.view-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.view === view);
+            });
+
+            // Persist selection across page interactions
+            try { sessionStorage.setItem('foresightActiveView', view); } catch (e) {}
+        }
+
         function renderInsights(intel) {
             document.getElementById('insightsContent').innerHTML =
                 `<div class="world-brief-text">${intel.world_brief || 'No brief available.'}</div>`;
@@ -1901,6 +1978,13 @@
 
         // Initialise dashboard on page load
         document.addEventListener('DOMContentLoaded', function () {
+            // Restore last active view (default: intelligence dashboard)
+            const savedView = (function() {
+                try { return sessionStorage.getItem('foresightActiveView') || 'intelligence'; }
+                catch (e) { return 'intelligence'; }
+            })();
+            switchView(savedView);
+
             initWorldMap();
             loadIntelligence();
             loadRegionalNews();
