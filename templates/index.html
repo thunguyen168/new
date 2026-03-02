@@ -1248,15 +1248,20 @@
 
         .theater-row {
             display: flex;
+            flex-direction: column;
+            gap: 3px;
+            font-size: 0.8rem;
+        }
+
+        .theater-header {
+            display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.8rem;
         }
 
         .theater-region {
             color: var(--lockton-white);
             font-weight: 600;
-            min-width: 100px;
             flex-shrink: 0;
         }
 
@@ -1311,9 +1316,15 @@
 
         .risk-item {
             display: flex;
-            align-items: flex-start;
-            gap: 8px;
+            flex-direction: column;
+            gap: 3px;
             font-size: 0.8rem;
+        }
+
+        .risk-item-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .risk-severity {
@@ -1322,15 +1333,14 @@
             font-size: 0.68rem;
             font-weight: 700;
             flex-shrink: 0;
-            margin-top: 1px;
         }
 
         .sev-HIGH   { background: rgba(244,67,54,0.2);  color: #e57373; }
         .sev-MEDIUM { background: rgba(255,193,7,0.2);  color: #ffd54f; }
         .sev-LOW    { background: rgba(76,175,80,0.2);  color: #81c784; }
 
-        .risk-item-text { color: #d0d0d0; line-height: 1.4; }
         .risk-item-title { font-weight: 600; color: var(--lockton-white); }
+        .risk-item-desc  { color: #d0d0d0; line-height: 1.4; font-size: 0.78rem; }
 
         /* Regional Newsfeed */
         .newsfeed-section {
@@ -1870,9 +1880,11 @@
             const overall = posture.overall || 'NORMAL';
             const theatersHtml = (posture.theaters || []).map(t =>
                 `<div class="theater-row">
-                    <span class="theater-region">${t.region}</span>
-                    <span class="theater-status status-${t.status || 'NORMAL'}">${t.status || 'NORMAL'}</span>
-                    <span class="theater-note">${t.note || ''}</span>
+                    <div class="theater-header">
+                        <span class="theater-region">${t.region}</span>
+                        <span class="theater-status status-${t.status || 'NORMAL'}">${t.status || 'NORMAL'}</span>
+                    </div>
+                    ${t.note ? `<div class="theater-note">${t.note}</div>` : ''}
                 </div>`
             ).join('');
 
@@ -1894,11 +1906,11 @@
 
             const risksHtml = (risk.top_risks || []).map(r =>
                 `<div class="risk-item">
-                    <span class="risk-severity sev-${r.severity || 'MEDIUM'}">${r.severity || 'MEDIUM'}</span>
-                    <span class="risk-item-text">
+                    <div class="risk-item-header">
+                        <span class="risk-severity sev-${r.severity || 'MEDIUM'}">${r.severity || 'MEDIUM'}</span>
                         <span class="risk-item-title">${r.title}</span>
-                        ${r.description ? ' &mdash; ' + r.description : ''}
-                    </span>
+                    </div>
+                    ${r.description ? `<div class="risk-item-desc">${r.description}</div>` : ''}
                 </div>`
             ).join('');
 
@@ -1916,10 +1928,11 @@
 
         function buildGaugeSvg(score, color) {
             // Semicircle arc: 0% = left (180°), 100% = right (0°), radius 34, centre (42,40)
+            // cy - r*sin maps math angles correctly so the arc opens upward in SVG coords
             const r = 34, cx = 42, cy = 40;
             function pt(deg) {
                 const rad = (deg * Math.PI) / 180;
-                return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+                return [cx + r * Math.cos(rad), cy - r * Math.sin(rad)];
             }
             const [lx, ly] = pt(180); // left end (score 0)
             const [rx, ry] = pt(0);   // right end (score 100)
@@ -1927,8 +1940,9 @@
 
             const fgAngle = 180 - (score / 100) * 180;
             const [fx, fy] = pt(fgAngle);
+            // Always small-arc (0) — the filled portion never exceeds 180° on a semicircle gauge
             const fgPath = score > 0
-                ? `M ${lx} ${ly} A ${r} ${r} 0 ${score > 50 ? 1 : 0} 1 ${fx} ${fy}`
+                ? `M ${lx} ${ly} A ${r} ${r} 0 0 1 ${fx} ${fy}`
                 : '';
 
             return `<svg class="risk-gauge" width="84" height="46" viewBox="0 0 84 46">
