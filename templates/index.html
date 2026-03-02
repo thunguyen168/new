@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Foresight Scanner</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
     <style>
         * {
             margin: 0;
@@ -1021,6 +1022,377 @@
             border-top: 1px solid rgba(255,255,255,0.06);
         }
 
+        /* ============================================================
+           Global Intelligence Dashboard
+           ============================================================ */
+
+        .intel-dashboard {
+            margin-bottom: 36px;
+        }
+
+        .intel-dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .intel-dashboard-title {
+            font-size: 1.3rem;
+            color: var(--lockton-blue);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .intel-controls {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .intel-refresh-btn {
+            padding: 7px 16px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--lockton-blue);
+            background: rgba(0, 174, 239, 0.1);
+            border: 1px solid rgba(0, 174, 239, 0.4);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .intel-refresh-btn:hover { background: rgba(0, 174, 239, 0.2); }
+        .intel-refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .intel-timestamp {
+            font-size: 0.76rem;
+            color: var(--lockton-silver);
+        }
+
+        /* Map */
+        .intel-map-wrapper {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 174, 239, 0.2);
+            margin-bottom: 14px;
+            height: 360px;
+        }
+
+        #worldMap {
+            height: 100%;
+            width: 100%;
+            background: #08080f;
+        }
+
+        .map-overlay-label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 500;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(0, 174, 239, 0.3);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 0.72rem;
+            color: var(--lockton-silver);
+            pointer-events: none;
+        }
+
+        /* Three panels row */
+        .intel-panels-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .intel-panels-row { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 580px) {
+            .intel-panels-row { grid-template-columns: 1fr; }
+        }
+
+        .intel-panel {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .intel-panel-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(0, 174, 239, 0.07);
+            border-bottom: 1px solid rgba(0, 174, 239, 0.14);
+        }
+
+        .intel-panel-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--lockton-blue);
+        }
+
+        .intel-panel-content {
+            padding: 14px;
+            flex: 1;
+            min-height: 160px;
+            overflow-y: auto;
+        }
+
+        .intel-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100px;
+            color: var(--lockton-silver);
+            font-size: 0.82rem;
+            gap: 10px;
+        }
+
+        .intel-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0, 174, 239, 0.2);
+            border-top-color: var(--lockton-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .intel-error {
+            color: #ff6b6b;
+            font-size: 0.82rem;
+            padding: 8px 0;
+            line-height: 1.5;
+        }
+
+        /* World Brief */
+        .world-brief-text {
+            font-size: 0.88rem;
+            color: #d6d6d6;
+            line-height: 1.65;
+        }
+
+        /* Strategic Posture */
+        .posture-overall {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .posture-NORMAL   { background: rgba(76,175,80,0.2);  color: #81c784; border: 1px solid rgba(76,175,80,0.4); }
+        .posture-ELEVATED { background: rgba(255,193,7,0.2);  color: #ffd54f; border: 1px solid rgba(255,193,7,0.4); }
+        .posture-HEIGHTENED { background: rgba(255,152,0,0.2); color: #ffb74d; border: 1px solid rgba(255,152,0,0.4); }
+        .posture-CRITICAL { background: rgba(244,67,54,0.2);  color: #e57373; border: 1px solid rgba(244,67,54,0.4); }
+
+        .posture-summary {
+            font-size: 0.82rem;
+            color: #c0c0c0;
+            line-height: 1.55;
+            margin-bottom: 12px;
+        }
+
+        .theater-list { display: flex; flex-direction: column; gap: 6px; }
+
+        .theater-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.8rem;
+        }
+
+        .theater-region {
+            color: var(--lockton-white);
+            font-weight: 600;
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+
+        .theater-status {
+            padding: 1px 7px;
+            border-radius: 8px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .status-NORMAL    { background: rgba(76,175,80,0.2);  color: #81c784; }
+        .status-ELEVATED  { background: rgba(255,193,7,0.2);  color: #ffd54f; }
+        .status-HEIGHTENED{ background: rgba(255,152,0,0.2);  color: #ffb74d; }
+        .status-CRITICAL  { background: rgba(244,67,54,0.2);  color: #e57373; }
+
+        .theater-note { color: var(--lockton-silver); font-size: 0.78rem; line-height: 1.4; }
+
+        /* Risk Gauge */
+        .risk-gauge-container {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+
+        .risk-gauge { flex-shrink: 0; }
+
+        .risk-score-info { flex: 1; }
+
+        .risk-score-value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--lockton-white);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .risk-trend { font-size: 0.78rem; font-weight: 600; }
+        .risk-trend-ESCALATING    { color: #e57373; }
+        .risk-trend-STABLE        { color: #ffd54f; }
+        .risk-trend-DE-ESCALATING { color: #81c784; }
+
+        .risk-summary {
+            font-size: 0.8rem;
+            color: #c0c0c0;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .risk-list { display: flex; flex-direction: column; gap: 5px; }
+
+        .risk-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.8rem;
+        }
+
+        .risk-severity {
+            padding: 1px 6px;
+            border-radius: 6px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .sev-HIGH   { background: rgba(244,67,54,0.2);  color: #e57373; }
+        .sev-MEDIUM { background: rgba(255,193,7,0.2);  color: #ffd54f; }
+        .sev-LOW    { background: rgba(76,175,80,0.2);  color: #81c784; }
+
+        .risk-item-text { color: #d0d0d0; line-height: 1.4; }
+        .risk-item-title { font-weight: 600; color: var(--lockton-white); }
+
+        /* Regional Newsfeed */
+        .newsfeed-section {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .newsfeed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(0, 174, 239, 0.07);
+            border-bottom: 1px solid rgba(0, 174, 239, 0.14);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .newsfeed-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--lockton-blue);
+        }
+
+        .region-select {
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 174, 239, 0.4);
+            border-radius: 8px;
+            color: var(--lockton-white);
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .region-select:focus { border-color: var(--lockton-blue); }
+
+        .newsfeed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 10px;
+            padding: 14px;
+        }
+
+        .news-card {
+            background: rgba(54, 54, 54, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 11px 13px;
+            transition: border-color 0.2s;
+        }
+
+        .news-card:hover { border-color: rgba(0, 174, 239, 0.3); }
+
+        .news-card-title a {
+            color: var(--lockton-white);
+            text-decoration: none;
+            font-size: 0.86rem;
+            font-weight: 600;
+            line-height: 1.4;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .news-card-title a:hover { color: var(--lockton-blue); }
+
+        .news-card-snippet {
+            font-size: 0.78rem;
+            color: var(--lockton-silver);
+            line-height: 1.5;
+        }
+
+        /* Section divider */
+        .intel-section-divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 28px 0 24px;
+            color: var(--lockton-silver);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .intel-section-divider::before,
+        .intel-section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
     </style>
 </head>
 <body>
@@ -1029,6 +1401,92 @@
             <h1>Strategic Foresight Scanner</h1>
             <p class="subtitle">Identify emerging trends, signals, and risk factors</p>
         </header>
+
+        <!-- ======================================================
+             Global Intelligence Dashboard
+             ====================================================== -->
+        <div class="intel-dashboard" id="intelDashboard">
+
+            <div class="intel-dashboard-header">
+                <span class="intel-dashboard-title">Global Intelligence Dashboard</span>
+                <div class="intel-controls">
+                    <button class="intel-refresh-btn" id="intelRefreshBtn" onclick="refreshIntelligence()">&#8635; Refresh</button>
+                    <span class="intel-timestamp" id="intelTimestamp"></span>
+                </div>
+            </div>
+
+            <!-- World Map -->
+            <div class="intel-map-wrapper">
+                <div id="worldMap"></div>
+                <div class="map-overlay-label">Click a region marker to filter news below</div>
+            </div>
+
+            <!-- AI Insights | AI Strategic Posture | Strategic Risk Overview -->
+            <div class="intel-panels-row">
+
+                <div class="intel-panel">
+                    <div class="intel-panel-header">
+                        <span class="intel-panel-title">AI Insights</span>
+                    </div>
+                    <div class="intel-panel-content" id="insightsContent">
+                        <div class="intel-loading">
+                            <div class="intel-spinner"></div>
+                            Loading intelligence&hellip;
+                        </div>
+                    </div>
+                </div>
+
+                <div class="intel-panel">
+                    <div class="intel-panel-header">
+                        <span class="intel-panel-title">AI Strategic Posture</span>
+                    </div>
+                    <div class="intel-panel-content" id="postureContent">
+                        <div class="intel-loading">
+                            <div class="intel-spinner"></div>
+                            Analysing posture&hellip;
+                        </div>
+                    </div>
+                </div>
+
+                <div class="intel-panel">
+                    <div class="intel-panel-header">
+                        <span class="intel-panel-title">Strategic Risk Overview</span>
+                    </div>
+                    <div class="intel-panel-content" id="riskContent">
+                        <div class="intel-loading">
+                            <div class="intel-spinner"></div>
+                            Calculating risk&hellip;
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /.intel-panels-row -->
+
+            <!-- Regional Newsfeed -->
+            <div class="newsfeed-section">
+                <div class="newsfeed-header">
+                    <span class="newsfeed-title">Regional Newsfeed</span>
+                    <select class="region-select" id="regionSelector" onchange="loadRegionalNews()">
+                        <option value="world">World News</option>
+                        <option value="us">United States</option>
+                        <option value="europe">Europe</option>
+                        <option value="middle-east">Middle East</option>
+                        <option value="africa">Africa</option>
+                        <option value="latin-america">Latin America</option>
+                        <option value="asia-pacific">Asia-Pacific</option>
+                    </select>
+                </div>
+                <div id="newsfeedContent">
+                    <div class="intel-loading" style="height:80px;">
+                        <div class="intel-spinner"></div>
+                        Loading news&hellip;
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /.intel-dashboard -->
+
+        <div class="intel-section-divider"><span>Strategic Foresight Scanner</span></div>
 
         <div class="search-box">
             <form class="search-form" id="scanForm">
@@ -1176,7 +1634,282 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.7.1/dist/pptxgen.bundle.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script>
+        // ============================================================
+        // Global Intelligence Dashboard
+        // ============================================================
+
+        let _worldMap = null;
+        const _regionMarkers = {};
+
+        // Theater region -> map marker region key mapping
+        const THEATER_REGION_MAP = {
+            'North America': 'us',
+            'Europe': 'europe',
+            'Middle East': 'middle-east',
+            'Indo-Pacific': 'asia-pacific',
+            'Africa': 'africa',
+            'Latin America': 'latin-america',
+        };
+
+        // Approximate centre coordinates for each region marker
+        const REGION_MARKER_COORDS = {
+            'us':            [44, -100],
+            'europe':        [54,   15],
+            'middle-east':   [27,   45],
+            'asia-pacific':  [20,  115],
+            'africa':        [ 3,   22],
+            'latin-america': [-15, -60],
+        };
+
+        const REGION_LABELS = {
+            'us':            'North America',
+            'europe':        'Europe',
+            'middle-east':   'Middle East',
+            'asia-pacific':  'Indo-Pacific',
+            'africa':        'Africa',
+            'latin-america': 'Latin America',
+        };
+
+        function initWorldMap() {
+            if (_worldMap) return;
+
+            _worldMap = L.map('worldMap', {
+                center: [20, 0],
+                zoom: 2,
+                zoomControl: false,
+                attributionControl: true,
+                scrollWheelZoom: false,
+            });
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 18,
+            }).addTo(_worldMap);
+
+            L.control.zoom({ position: 'bottomright' }).addTo(_worldMap);
+
+            // Add a clickable circle marker for each region
+            Object.entries(REGION_MARKER_COORDS).forEach(([regionKey, coords]) => {
+                const marker = L.circleMarker(coords, {
+                    radius: 10,
+                    fillColor: '#00aeef',
+                    color: '#00aeef',
+                    weight: 2,
+                    opacity: 0.85,
+                    fillOpacity: 0.22,
+                }).addTo(_worldMap);
+
+                marker.bindTooltip(REGION_LABELS[regionKey] || regionKey, {
+                    permanent: false,
+                    direction: 'top',
+                    className: 'leaflet-tooltip-dark',
+                });
+
+                marker.on('click', () => {
+                    document.getElementById('regionSelector').value = regionKey;
+                    loadRegionalNews();
+                    document.querySelector('.newsfeed-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
+
+                _regionMarkers[regionKey] = marker;
+            });
+        }
+
+        function _statusColor(status) {
+            return { NORMAL: '#81c784', ELEVATED: '#ffd54f', HEIGHTENED: '#ffb74d', CRITICAL: '#e57373' }[status] || '#00aeef';
+        }
+
+        function updateMapMarkers(theaters) {
+            if (!_worldMap || !theaters) return;
+            theaters.forEach(t => {
+                const markerKey = THEATER_REGION_MAP[t.region];
+                const marker = _regionMarkers[markerKey];
+                if (!marker) return;
+                const color = _statusColor(t.status);
+                marker.setStyle({ fillColor: color, color: color });
+                marker.setTooltipContent(`${t.region}: ${t.status || 'NORMAL'}`);
+            });
+        }
+
+        async function loadIntelligence() {
+            const btn = document.getElementById('intelRefreshBtn');
+            if (btn) btn.disabled = true;
+
+            ['insightsContent', 'postureContent', 'riskContent'].forEach(id => {
+                document.getElementById(id).innerHTML =
+                    '<div class="intel-loading"><div class="intel-spinner"></div>Loading&hellip;</div>';
+            });
+
+            try {
+                const resp = await fetch('/api/intelligence');
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+
+                const intel = data.intelligence;
+                renderInsights(intel);
+                renderPosture(intel.strategic_posture);
+                renderRisk(intel.strategic_risk);
+
+                if (intel.timestamp) {
+                    const d = new Date(intel.timestamp);
+                    document.getElementById('intelTimestamp').textContent =
+                        'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+
+                if (intel.strategic_posture && intel.strategic_posture.theaters) {
+                    updateMapMarkers(intel.strategic_posture.theaters);
+                }
+            } catch (err) {
+                ['insightsContent', 'postureContent', 'riskContent'].forEach(id => {
+                    document.getElementById(id).innerHTML =
+                        `<div class="intel-error">Unable to load: ${err.message}</div>`;
+                });
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function refreshIntelligence() {
+            loadIntelligence();
+            loadRegionalNews();
+        }
+
+        function renderInsights(intel) {
+            document.getElementById('insightsContent').innerHTML =
+                `<div class="world-brief-text">${intel.world_brief || 'No brief available.'}</div>`;
+        }
+
+        function renderPosture(posture) {
+            if (!posture) {
+                document.getElementById('postureContent').innerHTML =
+                    '<div class="intel-error">No posture data available.</div>';
+                return;
+            }
+            const overall = posture.overall || 'NORMAL';
+            const theatersHtml = (posture.theaters || []).map(t =>
+                `<div class="theater-row">
+                    <span class="theater-region">${t.region}</span>
+                    <span class="theater-status status-${t.status || 'NORMAL'}">${t.status || 'NORMAL'}</span>
+                    <span class="theater-note">${t.note || ''}</span>
+                </div>`
+            ).join('');
+
+            document.getElementById('postureContent').innerHTML =
+                `<div class="posture-overall posture-${overall}">&#9679; ${overall}</div>
+                 <div class="posture-summary">${posture.summary || ''}</div>
+                 <div class="theater-list">${theatersHtml}</div>`;
+        }
+
+        function renderRisk(risk) {
+            if (!risk) {
+                document.getElementById('riskContent').innerHTML =
+                    '<div class="intel-error">No risk data available.</div>';
+                return;
+            }
+            const score = Math.max(0, Math.min(100, risk.score || 0));
+            const trend  = risk.trend || 'STABLE';
+            const trendIcon = { ESCALATING: '&#8593;', STABLE: '&#8594;', 'DE-ESCALATING': '&#8595;' }[trend] || '&#8594;';
+            const gaugeColor = score >= 75 ? '#e57373' : score >= 50 ? '#ffd54f' : score >= 25 ? '#ffb74d' : '#81c784';
+
+            const risksHtml = (risk.top_risks || []).map(r =>
+                `<div class="risk-item">
+                    <span class="risk-severity sev-${r.severity || 'MEDIUM'}">${r.severity || 'MEDIUM'}</span>
+                    <span class="risk-item-text">
+                        <span class="risk-item-title">${r.title}</span>
+                        ${r.description ? ' &mdash; ' + r.description : ''}
+                    </span>
+                </div>`
+            ).join('');
+
+            document.getElementById('riskContent').innerHTML =
+                `<div class="risk-gauge-container">
+                    ${buildGaugeSvg(score, gaugeColor)}
+                    <div class="risk-score-info">
+                        <div class="risk-score-value" style="color:${gaugeColor}">${score}</div>
+                        <div class="risk-trend risk-trend-${trend}">${trendIcon} ${trend.replace('-', '\u2011')}</div>
+                    </div>
+                </div>
+                <div class="risk-summary">${risk.summary || ''}</div>
+                <div class="risk-list">${risksHtml}</div>`;
+        }
+
+        function buildGaugeSvg(score, color) {
+            // Semicircle arc gauge (left = 0, right = 100)
+            const r = 34, cx = 42, cy = 40;
+            function pt(angleDeg, radius) {
+                const rad = (angleDeg * Math.PI) / 180;
+                return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
+            }
+            const [bx1, by1] = pt(180, r);
+            const [bx2, by2] = pt(0, r);
+            const bgPath = `M ${bx1} ${by1} A ${r} ${r} 0 0 1 ${bx2} ${by2}`;
+
+            const fgAngle = 180 - (score / 100) * 180;
+            const [fx, fy] = pt(fgAngle, r);
+            const largeArc = score > 50 ? 1 : 0;
+            const fgPath = score > 0
+                ? `M ${bx1} ${by1} A ${r} ${r} 0 ${largeArc} 1 ${fx} ${fy}`
+                : '';
+
+            return `<svg class="risk-gauge" width="84" height="46" viewBox="0 0 84 46">
+                <path d="${bgPath}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="7" stroke-linecap="round"/>
+                ${fgPath ? `<path d="${fgPath}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"/>` : ''}
+            </svg>`;
+        }
+
+        async function loadRegionalNews() {
+            const region = document.getElementById('regionSelector').value;
+            document.getElementById('newsfeedContent').innerHTML =
+                '<div class="intel-loading" style="height:80px;"><div class="intel-spinner"></div>Loading news&hellip;</div>';
+
+            // Highlight selected marker
+            Object.entries(_regionMarkers).forEach(([key, m]) => {
+                m.setRadius(key === region ? 14 : 10);
+            });
+
+            try {
+                const resp = await fetch('/api/regional-news?region=' + encodeURIComponent(region));
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+                renderNews(data.articles || []);
+            } catch (err) {
+                document.getElementById('newsfeedContent').innerHTML =
+                    `<div class="intel-error" style="padding:16px;">Unable to load news: ${err.message}</div>`;
+            }
+        }
+
+        function renderNews(articles) {
+            if (!articles.length) {
+                document.getElementById('newsfeedContent').innerHTML =
+                    '<div style="padding:16px;color:var(--lockton-silver);font-size:0.85rem;">No news found for this region.</div>';
+                return;
+            }
+            const cards = articles.map(a =>
+                `<div class="news-card">
+                    <div class="news-card-title">
+                        <a href="${a.link}" target="_blank" rel="noopener noreferrer">${a.title}</a>
+                    </div>
+                    ${a.snippet ? `<div class="news-card-snippet">${a.snippet}</div>` : ''}
+                </div>`
+            ).join('');
+            document.getElementById('newsfeedContent').innerHTML =
+                `<div class="newsfeed-grid">${cards}</div>`;
+        }
+
+        // Initialise dashboard on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            initWorldMap();
+            loadIntelligence();
+            loadRegionalNews();
+        });
+
+        // ============================================================
+        // Foresight Scanner (existing code below)
+        // ============================================================
+
         function linkifyAdditionalInfo(text) {
             // Convert URLs in additional information text into hyperlinks
             // Handles patterns like "Title (https://example.com): description"
