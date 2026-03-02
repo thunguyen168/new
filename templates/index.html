@@ -1694,37 +1694,45 @@
         // Global Intelligence Dashboard
         // ============================================================
 
+        const DEFAULT_VIEW = 'intelligence';
+        const PANEL_IDS = ['insightsContent', 'postureContent', 'riskContent'];
+
         let _worldMap = null;
         const _regionMarkers = {};
 
-        // Theater region -> map marker region key mapping
+        // Theater region name -> dropdown region key
         const THEATER_REGION_MAP = {
             'North America': 'us',
-            'Europe': 'europe',
-            'Middle East': 'middle-east',
-            'Indo-Pacific': 'asia-pacific',
-            'Africa': 'africa',
+            'Europe':        'europe',
+            'Middle East':   'middle-east',
+            'Indo-Pacific':  'asia-pacific',
+            'Africa':        'africa',
             'Latin America': 'latin-america',
         };
 
-        // Approximate centre coordinates for each region marker
+        // Dropdown region key -> map centre coords + display label
         const REGION_MARKER_COORDS = {
-            'us':            [44, -100],
-            'europe':        [54,   15],
-            'middle-east':   [27,   45],
-            'asia-pacific':  [20,  115],
-            'africa':        [ 3,   22],
-            'latin-america': [-15, -60],
+            'us':            { coords: [44, -100], label: 'North America' },
+            'europe':        { coords: [54,   15], label: 'Europe'        },
+            'middle-east':   { coords: [27,   45], label: 'Middle East'   },
+            'asia-pacific':  { coords: [20,  115], label: 'Indo-Pacific'  },
+            'africa':        { coords: [ 3,   22], label: 'Africa'        },
+            'latin-america': { coords: [-15, -60], label: 'Latin America' },
         };
 
-        const REGION_LABELS = {
-            'us':            'North America',
-            'europe':        'Europe',
-            'middle-east':   'Middle East',
-            'asia-pacific':  'Indo-Pacific',
-            'africa':        'Africa',
-            'latin-america': 'Latin America',
-        };
+        // --- HTML helpers ---
+
+        function loadingHTML(height) {
+            const style = height ? ` style="height:${height}"` : '';
+            return `<div class="intel-loading"${style}><div class="intel-spinner"></div>Loading&hellip;</div>`;
+        }
+
+        function errorHTML(message, padding) {
+            const style = padding ? ` style="padding:${padding}"` : '';
+            return `<div class="intel-error"${style}>${message}</div>`;
+        }
+
+        // --- Map ---
 
         function initWorldMap() {
             if (_worldMap) return;
@@ -1745,8 +1753,7 @@
 
             L.control.zoom({ position: 'bottomright' }).addTo(_worldMap);
 
-            // Add a clickable circle marker for each region
-            Object.entries(REGION_MARKER_COORDS).forEach(([regionKey, coords]) => {
+            Object.entries(REGION_MARKER_COORDS).forEach(([regionKey, { coords, label }]) => {
                 const marker = L.circleMarker(coords, {
                     radius: 10,
                     fillColor: '#00aeef',
@@ -1756,11 +1763,7 @@
                     fillOpacity: 0.22,
                 }).addTo(_worldMap);
 
-                marker.bindTooltip(REGION_LABELS[regionKey] || regionKey, {
-                    permanent: false,
-                    direction: 'top',
-                    className: 'leaflet-tooltip-dark',
-                });
+                marker.bindTooltip(label, { permanent: false, direction: 'top' });
 
                 marker.on('click', () => {
                     document.getElementById('regionSelector').value = regionKey;
@@ -1779,8 +1782,7 @@
         function updateMapMarkers(theaters) {
             if (!_worldMap || !theaters) return;
             theaters.forEach(t => {
-                const markerKey = THEATER_REGION_MAP[t.region];
-                const marker = _regionMarkers[markerKey];
+                const marker = _regionMarkers[THEATER_REGION_MAP[t.region]];
                 if (!marker) return;
                 const color = _statusColor(t.status);
                 marker.setStyle({ fillColor: color, color: color });
@@ -1788,14 +1790,13 @@
             });
         }
 
+        // --- Intelligence loading ---
+
         async function loadIntelligence() {
             const btn = document.getElementById('intelRefreshBtn');
             if (btn) btn.disabled = true;
 
-            ['insightsContent', 'postureContent', 'riskContent'].forEach(id => {
-                document.getElementById(id).innerHTML =
-                    '<div class="intel-loading"><div class="intel-spinner"></div>Loading&hellip;</div>';
-            });
+            PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingHTML(); });
 
             try {
                 const resp = await fetch('/api/intelligence');
@@ -1817,9 +1818,8 @@
                     updateMapMarkers(intel.strategic_posture.theaters);
                 }
             } catch (err) {
-                ['insightsContent', 'postureContent', 'riskContent'].forEach(id => {
-                    document.getElementById(id).innerHTML =
-                        `<div class="intel-error">Unable to load: ${err.message}</div>`;
+                PANEL_IDS.forEach(id => {
+                    document.getElementById(id).innerHTML = errorHTML('Unable to load: ' + err.message);
                 });
             } finally {
                 if (btn) btn.disabled = false;
@@ -1831,6 +1831,8 @@
             loadRegionalNews();
         }
 
+        // --- View switcher ---
+
         function switchView(view) {
             const intelView   = document.getElementById('view-intelligence');
             const scannerView = document.getElementById('view-scanner');
@@ -1838,21 +1840,20 @@
             if (view === 'intelligence') {
                 intelView.style.display   = '';
                 scannerView.style.display = 'none';
-                // Leaflet needs a size hint after becoming visible
                 if (_worldMap) setTimeout(() => _worldMap.invalidateSize(), 60);
             } else {
                 intelView.style.display   = 'none';
                 scannerView.style.display = '';
             }
 
-            // Update tab active states
             document.querySelectorAll('.view-tab').forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.view === view);
             });
 
-            // Persist selection across page interactions
             try { sessionStorage.setItem('foresightActiveView', view); } catch (e) {}
         }
+
+        // --- Panel renderers ---
 
         function renderInsights(intel) {
             document.getElementById('insightsContent').innerHTML =
@@ -1861,8 +1862,7 @@
 
         function renderPosture(posture) {
             if (!posture) {
-                document.getElementById('postureContent').innerHTML =
-                    '<div class="intel-error">No posture data available.</div>';
+                document.getElementById('postureContent').innerHTML = errorHTML('No posture data available.');
                 return;
             }
             const overall = posture.overall || 'NORMAL';
@@ -1882,14 +1882,13 @@
 
         function renderRisk(risk) {
             if (!risk) {
-                document.getElementById('riskContent').innerHTML =
-                    '<div class="intel-error">No risk data available.</div>';
+                document.getElementById('riskContent').innerHTML = errorHTML('No risk data available.');
                 return;
             }
             const score = Math.max(0, Math.min(100, risk.score || 0));
             const trend  = risk.trend || 'STABLE';
             const trendIcon = { ESCALATING: '&#8593;', STABLE: '&#8594;', 'DE-ESCALATING': '&#8595;' }[trend] || '&#8594;';
-            const gaugeColor = score >= 75 ? '#e57373' : score >= 50 ? '#ffd54f' : score >= 25 ? '#ffb74d' : '#81c784';
+            const gaugeColor = _statusColor(score >= 75 ? 'CRITICAL' : score >= 50 ? 'ELEVATED' : score >= 25 ? 'HEIGHTENED' : 'NORMAL');
 
             const risksHtml = (risk.top_risks || []).map(r =>
                 `<div class="risk-item">
@@ -1914,21 +1913,20 @@
         }
 
         function buildGaugeSvg(score, color) {
-            // Semicircle arc gauge (left = 0, right = 100)
+            // Semicircle arc: 0% = left (180°), 100% = right (0°), radius 34, centre (42,40)
             const r = 34, cx = 42, cy = 40;
-            function pt(angleDeg, radius) {
-                const rad = (angleDeg * Math.PI) / 180;
-                return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
+            function pt(deg) {
+                const rad = (deg * Math.PI) / 180;
+                return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
             }
-            const [bx1, by1] = pt(180, r);
-            const [bx2, by2] = pt(0, r);
-            const bgPath = `M ${bx1} ${by1} A ${r} ${r} 0 0 1 ${bx2} ${by2}`;
+            const [lx, ly] = pt(180); // left end (score 0)
+            const [rx, ry] = pt(0);   // right end (score 100)
+            const bgPath = `M ${lx} ${ly} A ${r} ${r} 0 0 1 ${rx} ${ry}`;
 
             const fgAngle = 180 - (score / 100) * 180;
-            const [fx, fy] = pt(fgAngle, r);
-            const largeArc = score > 50 ? 1 : 0;
+            const [fx, fy] = pt(fgAngle);
             const fgPath = score > 0
-                ? `M ${bx1} ${by1} A ${r} ${r} 0 ${largeArc} 1 ${fx} ${fy}`
+                ? `M ${lx} ${ly} A ${r} ${r} 0 ${score > 50 ? 1 : 0} 1 ${fx} ${fy}`
                 : '';
 
             return `<svg class="risk-gauge" width="84" height="46" viewBox="0 0 84 46">
@@ -1937,15 +1935,13 @@
             </svg>`;
         }
 
+        // --- News feed ---
+
         async function loadRegionalNews() {
             const region = document.getElementById('regionSelector').value;
-            document.getElementById('newsfeedContent').innerHTML =
-                '<div class="intel-loading" style="height:80px;"><div class="intel-spinner"></div>Loading news&hellip;</div>';
+            document.getElementById('newsfeedContent').innerHTML = loadingHTML('80px');
 
-            // Highlight selected marker
-            Object.entries(_regionMarkers).forEach(([key, m]) => {
-                m.setRadius(key === region ? 14 : 10);
-            });
+            Object.entries(_regionMarkers).forEach(([key, m]) => m.setRadius(key === region ? 14 : 10));
 
             try {
                 const resp = await fetch('/api/regional-news?region=' + encodeURIComponent(region));
@@ -1953,8 +1949,7 @@
                 if (data.error) throw new Error(data.error);
                 renderNews(data.articles || []);
             } catch (err) {
-                document.getElementById('newsfeedContent').innerHTML =
-                    `<div class="intel-error" style="padding:16px;">Unable to load news: ${err.message}</div>`;
+                document.getElementById('newsfeedContent').innerHTML = errorHTML('Unable to load news: ' + err.message, '16px');
             }
         }
 
@@ -1972,17 +1967,14 @@
                     ${a.snippet ? `<div class="news-card-snippet">${a.snippet}</div>` : ''}
                 </div>`
             ).join('');
-            document.getElementById('newsfeedContent').innerHTML =
-                `<div class="newsfeed-grid">${cards}</div>`;
+            document.getElementById('newsfeedContent').innerHTML = `<div class="newsfeed-grid">${cards}</div>`;
         }
 
-        // Initialise dashboard on page load
+        // --- Init ---
+
         document.addEventListener('DOMContentLoaded', function () {
-            // Restore last active view (default: intelligence dashboard)
-            const savedView = (function() {
-                try { return sessionStorage.getItem('foresightActiveView') || 'intelligence'; }
-                catch (e) { return 'intelligence'; }
-            })();
+            let savedView = DEFAULT_VIEW;
+            try { savedView = sessionStorage.getItem('foresightActiveView') || DEFAULT_VIEW; } catch (e) {}
             switchView(savedView);
 
             initWorldMap();
