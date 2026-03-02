@@ -1418,6 +1418,62 @@
             line-height: 1.5;
         }
 
+        /* Region focus bar */
+        .region-focus-bar {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px;
+            background: rgba(0, 174, 239, 0.1);
+            border: 1px solid rgba(0, 174, 239, 0.35);
+            border-radius: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .region-focus-bar.active {
+            display: flex;
+        }
+
+        .region-focus-label {
+            font-size: 0.78rem;
+            color: var(--lockton-silver);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .region-focus-name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--lockton-blue);
+        }
+
+        .region-focus-loading {
+            font-size: 0.8rem;
+            color: var(--lockton-silver);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .global-view-btn {
+            margin-left: auto;
+            padding: 5px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--lockton-white);
+            background: rgba(0, 174, 239, 0.15);
+            border: 1px solid rgba(0, 174, 239, 0.45);
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .global-view-btn:hover {
+            background: rgba(0, 174, 239, 0.28);
+        }
+
         /* Section divider */
         .intel-section-divider {
             display: flex;
@@ -1474,7 +1530,17 @@
             <!-- World Map -->
             <div class="intel-map-wrapper">
                 <div id="worldMap"></div>
-                <div class="map-overlay-label">Click a region marker to filter news below</div>
+                <div class="map-overlay-label">Click a region marker to zoom in and view regional insights</div>
+            </div>
+
+            <!-- Region focus bar (shown when a region is selected) -->
+            <div class="region-focus-bar" id="regionFocusBar">
+                <span class="region-focus-label">Focused on</span>
+                <span class="region-focus-name" id="regionFocusName"></span>
+                <span class="region-focus-loading" id="regionFocusLoading" style="display:none;">
+                    <div class="intel-spinner"></div> Updating insights&hellip;
+                </span>
+                <button class="global-view-btn" onclick="returnToGlobalView()">&#8617; Return to Global View</button>
             </div>
 
             <!-- AI Insights | AI Strategic Posture | Strategic Risk Overview -->
@@ -1729,6 +1795,24 @@
             'latin-america': { coords: [-15, -60], label: 'Latin America' },
         };
 
+        // Zoom settings per region when clicked: [lat, lng, zoomLevel]
+        const REGION_ZOOM_CONFIG = {
+            'us':            { center: [39, -98],   zoom: 4 },
+            'europe':        { center: [52, 15],    zoom: 4 },
+            'middle-east':   { center: [27, 43],    zoom: 5 },
+            'asia-pacific':  { center: [22, 108],   zoom: 4 },
+            'africa':        { center: [2,  20],    zoom: 4 },
+            'latin-america': { center: [-12, -58],  zoom: 4 },
+        };
+
+        // Global map defaults
+        const GLOBAL_MAP_CENTER = [20, 0];
+        const GLOBAL_MAP_ZOOM   = 2;
+
+        // Track active region
+        let _activeRegion = null;
+        let _globalIntelCache = null;
+
         // --- HTML helpers ---
 
         function loadingHTML(height) {
@@ -1775,9 +1859,7 @@
                 marker.bindTooltip(label, { permanent: false, direction: 'top' });
 
                 marker.on('click', () => {
-                    document.getElementById('regionSelector').value = regionKey;
-                    loadRegionalNews();
-                    document.querySelector('.newsfeed-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    focusOnRegion(regionKey);
                 });
 
                 _regionMarkers[regionKey] = marker;
@@ -1799,6 +1881,94 @@
             });
         }
 
+        // --- Region focus / zoom ---
+
+        function focusOnRegion(regionKey) {
+            const zoomCfg = REGION_ZOOM_CONFIG[regionKey];
+            if (_worldMap && zoomCfg) {
+                _worldMap.flyTo(zoomCfg.center, zoomCfg.zoom, { animate: true, duration: 1.2 });
+            }
+
+            // Highlight selected marker, dim others
+            Object.entries(_regionMarkers).forEach(([key, m]) => {
+                m.setStyle({ opacity: key === regionKey ? 1 : 0.35, fillOpacity: key === regionKey ? 0.55 : 0.12 });
+                m.setRadius(key === regionKey ? 14 : 10);
+            });
+
+            _activeRegion = regionKey;
+            const label = REGION_MARKER_COORDS[regionKey]?.label || regionKey;
+
+            // Show focus bar
+            const bar = document.getElementById('regionFocusBar');
+            bar.classList.add('active');
+            document.getElementById('regionFocusName').textContent = label;
+
+            // Update news dropdown and load news
+            document.getElementById('regionSelector').value = regionKey;
+            loadRegionalNews();
+
+            // Load region-specific intelligence panels
+            loadRegionalIntelligence(regionKey, label);
+        }
+
+        function returnToGlobalView() {
+            _activeRegion = null;
+
+            // Reset map
+            if (_worldMap) {
+                _worldMap.flyTo(GLOBAL_MAP_CENTER, GLOBAL_MAP_ZOOM, { animate: true, duration: 1.2 });
+            }
+
+            // Reset marker styles
+            Object.values(_regionMarkers).forEach(m => {
+                m.setStyle({ opacity: 0.85, fillOpacity: 0.22 });
+                m.setRadius(10);
+            });
+
+            // Hide focus bar
+            document.getElementById('regionFocusBar').classList.remove('active');
+
+            // Restore global intelligence (use cache if available)
+            if (_globalIntelCache) {
+                renderInsights(_globalIntelCache);
+                renderPosture(_globalIntelCache.strategic_posture);
+                renderRisk(_globalIntelCache.strategic_risk);
+            } else {
+                loadIntelligence();
+            }
+
+            // Reset news to world
+            document.getElementById('regionSelector').value = 'world';
+            loadRegionalNews();
+        }
+
+        async function loadRegionalIntelligence(regionKey, regionLabel) {
+            // Show loading state in panels
+            const loadingFocusHtml = `<div class="intel-loading"><div class="intel-spinner"></div>Loading ${regionLabel} intelligence&hellip;</div>`;
+            PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingFocusHtml; });
+            document.getElementById('regionFocusLoading').style.display = 'flex';
+
+            try {
+                const resp = await fetch('/api/regional-intelligence?region=' + encodeURIComponent(regionKey), {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!resp.ok && resp.status === 401) throw new Error('Session expired. Please refresh the page.');
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+
+                const intel = data.intelligence;
+                renderInsights(intel);
+                renderPosture(intel.strategic_posture);
+                renderRisk(intel.strategic_risk);
+            } catch (err) {
+                PANEL_IDS.forEach(id => {
+                    document.getElementById(id).innerHTML = errorHTML('Unable to load regional intelligence: ' + err.message);
+                });
+            } finally {
+                document.getElementById('regionFocusLoading').style.display = 'none';
+            }
+        }
+
         // --- Intelligence loading ---
 
         async function loadIntelligence() {
@@ -1816,9 +1986,14 @@
                 if (data.error) throw new Error(data.error);
 
                 const intel = data.intelligence;
-                renderInsights(intel);
-                renderPosture(intel.strategic_posture);
-                renderRisk(intel.strategic_risk);
+                _globalIntelCache = intel;
+
+                // Only render global panels if not currently focused on a region
+                if (!_activeRegion) {
+                    renderInsights(intel);
+                    renderPosture(intel.strategic_posture);
+                    renderRisk(intel.strategic_risk);
+                }
 
                 if (intel.timestamp) {
                     const d = new Date(intel.timestamp);
@@ -1840,6 +2015,10 @@
 
         function refreshIntelligence() {
             loadIntelligence();
+            if (_activeRegion) {
+                const label = REGION_MARKER_COORDS[_activeRegion]?.label || _activeRegion;
+                loadRegionalIntelligence(_activeRegion, label);
+            }
             loadRegionalNews();
         }
 

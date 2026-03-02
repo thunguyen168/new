@@ -437,6 +437,48 @@ REGION_NEWS_QUERIES = {
     'asia-pacific': 'Asia Pacific China Japan India news today',
 }
 
+REGION_INTEL_QUERIES = {
+    'us': [
+        'United States geopolitical security risk today',
+        'North America military diplomatic tensions 2025',
+        'US economy financial risk news today',
+    ],
+    'europe': [
+        'Europe EU security geopolitical crisis today',
+        'European military NATO tensions 2025',
+        'Europe economic financial risk news today',
+    ],
+    'middle-east': [
+        'Middle East conflict security crisis today',
+        'Israel Iran Gulf tensions military 2025',
+        'Middle East geopolitical risk economy today',
+    ],
+    'africa': [
+        'Africa security conflict crisis today',
+        'Sub-Saharan Africa geopolitical risk 2025',
+        'Africa economic instability news today',
+    ],
+    'latin-america': [
+        'Latin America South America security risk today',
+        'Latin America political instability crisis 2025',
+        'South America economic risk news today',
+    ],
+    'asia-pacific': [
+        'Asia Pacific Indo-Pacific security tensions today',
+        'China Taiwan South China Sea military 2025',
+        'Asia Pacific economic geopolitical risk today',
+    ],
+}
+
+REGION_DISPLAY_NAMES = {
+    'us': 'North America',
+    'europe': 'Europe',
+    'middle-east': 'Middle East',
+    'africa': 'Africa',
+    'latin-america': 'Latin America',
+    'asia-pacific': 'Indo-Pacific',
+}
+
 
 @app.route('/api/intelligence')
 @require_auth
@@ -514,6 +556,94 @@ Return ONLY valid JSON matching the structure above, no markdown or extra text."
 
         intelligence = json.loads(extract_json_object(response.content[0].text))
         intelligence['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+        return jsonify({'success': True, 'intelligence': intelligence})
+
+    except anthropic.APIError as e:
+        return jsonify({'error': f'AI API error: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Error: {str(e)}'}), 500
+
+
+@app.route('/api/regional-intelligence')
+@require_auth
+def get_regional_intelligence():
+    """Generate AI intelligence brief focused on a specific region."""
+    region = request.args.get('region', '').lower().strip()
+
+    if region not in REGION_INTEL_QUERIES:
+        return jsonify({'error': 'Invalid region'}), 400
+
+    if not ANTHROPIC_API_KEY:
+        return jsonify({'error': 'Anthropic API key not configured'}), 500
+    if not SERPER_API_KEY and not BRAVE_API_KEY:
+        return jsonify({'error': 'No search API key configured'}), 500
+
+    region_name = REGION_DISPLAY_NAMES.get(region, region)
+
+    try:
+        unique_results = parallel_search(REGION_INTEL_QUERIES[region], num_results=7)
+
+        news_text = '\n'.join(
+            f"- {r['title']}: {r['snippet']}"
+            for r in unique_results[:20]
+        )
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=120.0)
+
+        prompt = f"""You are a strategic intelligence analyst specialising in {region_name}. Based on these current news headlines, provide a structured regional assessment focused exclusively on {region_name}.
+
+NEWS HEADLINES:
+{news_text}
+
+Provide a JSON response with exactly these three sections:
+{{
+  "world_brief": "2-3 sentence authoritative intelligence briefing on the most significant developments in {region_name} right now.",
+  "strategic_posture": {{
+    "overall": "ELEVATED",
+    "summary": "2-3 sentences assessing the current strategic posture in {region_name} — key military, diplomatic, and power dynamics specific to this region.",
+    "theaters": [
+      {{"region": "{region_name}", "status": "ELEVATED", "note": "your detailed regional assessment here"}},
+      {{"region": "Key Sub-region or Actor", "status": "NORMAL", "note": "your assessment here"}},
+      {{"region": "Key Sub-region or Actor", "status": "NORMAL", "note": "your assessment here"}}
+    ]
+  }},
+  "strategic_risk": {{
+    "score": 62,
+    "trend": "STABLE",
+    "top_risks": [
+      {{"title": "...", "severity": "HIGH", "description": "..."}},
+      {{"title": "...", "severity": "HIGH", "description": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "..."}},
+      {{"title": "...", "severity": "LOW", "description": "..."}}
+    ],
+    "summary": "1-2 sentences on the overall risk environment specifically in {region_name}."
+  }}
+}}
+
+Rules:
+- "overall" must be one of: NORMAL, ELEVATED, HEIGHTENED, CRITICAL
+- Each theater "status" must be one of: NORMAL, ELEVATED, HEIGHTENED, CRITICAL
+- "trend" must be one of: ESCALATING, STABLE, DE-ESCALATING
+- Each risk "severity" must be one of: HIGH, MEDIUM, LOW
+- "score" must be a number 0-100 reflecting the regional risk level
+- All content must be specifically about {region_name}, not global
+- Base all assessments on the provided headlines; replace all "..." placeholders with real content
+- Use real sub-regions, countries, or key actors relevant to {region_name} for the theaters list
+
+Return ONLY valid JSON matching the structure above, no markdown or extra text."""
+
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=2000,
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+
+        intelligence = json.loads(extract_json_object(response.content[0].text))
+        intelligence['timestamp'] = datetime.now(timezone.utc).isoformat()
+        intelligence['region'] = region
+        intelligence['region_name'] = region_name
 
         return jsonify({'success': True, 'intelligence': intelligence})
 
