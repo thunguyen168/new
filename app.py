@@ -409,6 +409,142 @@ def scan_topic():
         return jsonify({'error': f'Error: {str(e)}'}), 500
 
 
+REGION_NEWS_QUERIES = {
+    'world': 'major world news today international headlines',
+    'us': 'United States news today Washington politics economy',
+    'europe': 'Europe EU news today',
+    'middle-east': 'Middle East news today',
+    'africa': 'Africa news today',
+    'latin-america': 'Latin America South America news today',
+    'asia-pacific': 'Asia Pacific China Japan India news today',
+}
+
+
+@app.route('/api/intelligence')
+@require_auth
+def get_intelligence():
+    """Generate AI world brief, strategic posture, and strategic risk overview."""
+    if not ANTHROPIC_API_KEY:
+        return jsonify({'error': 'Anthropic API key not configured'}), 500
+    if not SERPER_API_KEY and not BRAVE_API_KEY:
+        return jsonify({'error': 'No search API key configured'}), 500
+
+    try:
+        queries = [
+            'global security geopolitical crisis news today',
+            'international military conflict tensions 2025',
+            'world economic financial market risk today',
+            'major breaking news international today',
+        ]
+        all_results = []
+        for query in queries:
+            results = search_web(query, num_results=7)
+            all_results.extend(results)
+
+        seen_links = set()
+        unique_results = []
+        for r in all_results:
+            if r['link'] not in seen_links:
+                seen_links.add(r['link'])
+                unique_results.append(r)
+
+        news_text = '\n'.join([
+            f"- {r['title']}: {r['snippet']}"
+            for r in unique_results[:24]
+        ])
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=120.0)
+
+        prompt = f"""You are a strategic intelligence analyst. Based on these current news headlines, provide a structured assessment.
+
+NEWS HEADLINES:
+{news_text}
+
+Provide a JSON response with exactly these three sections:
+{{
+  "world_brief": "2-3 sentence authoritative intelligence briefing summarising the most significant global developments right now.",
+  "strategic_posture": {{
+    "overall": "ELEVATED",
+    "summary": "2-3 sentences assessing the current global strategic posture - key military, diplomatic, and power dynamics.",
+    "theaters": [
+      {{"region": "North America", "status": "NORMAL", "note": "brief one-sentence assessment"}},
+      {{"region": "Europe", "status": "ELEVATED", "note": "brief one-sentence assessment"}},
+      {{"region": "Middle East", "status": "ELEVATED", "note": "brief one-sentence assessment"}},
+      {{"region": "Indo-Pacific", "status": "HEIGHTENED", "note": "brief one-sentence assessment"}},
+      {{"region": "Africa", "status": "NORMAL", "note": "brief one-sentence assessment"}},
+      {{"region": "Latin America", "status": "NORMAL", "note": "brief one-sentence assessment"}}
+    ]
+  }},
+  "strategic_risk": {{
+    "score": 62,
+    "trend": "STABLE",
+    "top_risks": [
+      {{"title": "risk name", "severity": "HIGH", "description": "one sentence about this risk"}},
+      {{"title": "risk name", "severity": "HIGH", "description": "one sentence about this risk"}},
+      {{"title": "risk name", "severity": "MEDIUM", "description": "one sentence about this risk"}},
+      {{"title": "risk name", "severity": "MEDIUM", "description": "one sentence about this risk"}},
+      {{"title": "risk name", "severity": "LOW", "description": "one sentence about this risk"}}
+    ],
+    "summary": "1-2 sentences on the overall risk environment."
+  }}
+}}
+
+Rules:
+- "overall" must be one of: NORMAL, ELEVATED, HEIGHTENED, CRITICAL
+- Each theater "status" must be one of: NORMAL, ELEVATED, HEIGHTENED, CRITICAL
+- "trend" must be one of: ESCALATING, STABLE, DE-ESCALATING
+- Each risk "severity" must be one of: HIGH, MEDIUM, LOW
+- "score" must be a number 0-100 reflecting current global risk level
+- Base all assessments on the provided headlines
+
+Return ONLY valid JSON matching the structure above, no markdown or extra text."""
+
+        response = client.messages.create(
+            model='claude-sonnet-4-20250514',
+            max_tokens=2000,
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+
+        response_text = response.content[0].text.strip()
+        if '```' in response_text:
+            parts = response_text.split('```')
+            inner = parts[1] if len(parts) > 1 else response_text
+            if inner.startswith('json'):
+                inner = inner[4:]
+            response_text = inner.strip()
+
+        start = response_text.find('{')
+        end = response_text.rfind('}')
+        if start != -1 and end != -1:
+            response_text = response_text[start:end + 1]
+
+        intelligence = json.loads(response_text)
+        intelligence['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+        return jsonify({'success': True, 'intelligence': intelligence})
+
+    except anthropic.APIError as e:
+        return jsonify({'error': f'AI API error: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Error: {str(e)}'}), 500
+
+
+@app.route('/api/regional-news')
+@require_auth
+def get_regional_news():
+    """Fetch news for a specific region."""
+    region = request.args.get('region', 'world').lower().strip()
+
+    if region not in REGION_NEWS_QUERIES:
+        region = 'world'
+
+    try:
+        results = search_web(REGION_NEWS_QUERIES[region], num_results=12)
+        return jsonify({'success': True, 'region': region, 'articles': results})
+    except Exception as e:
+        return jsonify({'error': f'Error: {str(e)}'}), 500
+
+
 @app.route('/health')
 def health():
     """Health check."""
