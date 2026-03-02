@@ -1248,7 +1248,7 @@
 
         .theater-row {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             gap: 8px;
             font-size: 0.8rem;
         }
@@ -1266,7 +1266,6 @@
             font-size: 0.68rem;
             font-weight: 700;
             flex-shrink: 0;
-            margin-top: 1px;
         }
 
         .status-NORMAL    { background: rgba(76,175,80,0.2);  color: #81c784; }
@@ -1799,7 +1798,10 @@
             PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingHTML(); });
 
             try {
-                const resp = await fetch('/api/intelligence');
+                const resp = await fetch('/api/intelligence', {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!resp.ok && resp.status === 401) throw new Error('Session expired. Please refresh the page.');
                 const data = await resp.json();
                 if (data.error) throw new Error(data.error);
 
@@ -1944,7 +1946,10 @@
             Object.entries(_regionMarkers).forEach(([key, m]) => m.setRadius(key === region ? 14 : 10));
 
             try {
-                const resp = await fetch('/api/regional-news?region=' + encodeURIComponent(region));
+                const resp = await fetch('/api/regional-news?region=' + encodeURIComponent(region), {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!resp.ok && resp.status === 401) throw new Error('Session expired. Please refresh the page.');
                 const data = await resp.json();
                 if (data.error) throw new Error(data.error);
                 renderNews(data.articles || []);
