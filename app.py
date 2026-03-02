@@ -6,6 +6,7 @@ A simple, fast version that works within web hosting limits.
 import os
 import re
 import json
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -23,6 +24,8 @@ SITE_PASSWORD = "Lockton2026!!"
 SERPER_API_KEY = os.environ.get('SERPER_API_KEY')
 BRAVE_API_KEY = os.environ.get('BRAVE_API_KEY')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
+
+MODEL = 'claude-sonnet-4-20250514'
 
 # --- Input validation constants ---
 MAX_TOPIC_LENGTH = 200
@@ -113,6 +116,44 @@ def search_web(query: str, num_results: int = 10) -> list:
     return results
 
 
+def deduplicate_results(results: list, key: str = 'link') -> list:
+    """Return results with duplicates removed, preserving order."""
+    seen = set()
+    unique = []
+    for r in results:
+        val = r.get(key)
+        if val and val not in seen:
+            seen.add(val)
+            unique.append(r)
+    return unique
+
+
+def parallel_search(queries: list[str], num_results: int = 10) -> list:
+    """Run multiple search_web calls concurrently and return combined, deduplicated results."""
+    with ThreadPoolExecutor(max_workers=len(queries)) as executor:
+        futures = [executor.submit(search_web, q, num_results) for q in queries]
+        all_results = []
+        for f in futures:
+            all_results.extend(f.result())
+    return deduplicate_results(all_results)
+
+
+def extract_json_object(response_text: str) -> str:
+    """Strip markdown fences and extract the first JSON object from a Claude response."""
+    text = response_text.strip()
+    if '```' in text:
+        parts = text.split('```')
+        inner = parts[1] if len(parts) > 1 else text
+        if inner.startswith('json'):
+            inner = inner[4:]
+        text = inner.strip()
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end != -1:
+        text = text[start:end + 1]
+    return text
+
+
 def analyze_with_claude(topic: str, search_results: list) -> dict:
     """Use Claude to analyze search results and identify trends."""
 
@@ -191,7 +232,7 @@ Format your response as a JSON array like this:
 Return ONLY the JSON array, no other text."""
 
     response = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model=MODEL,
         max_tokens=16000,
         messages=[{"role": "user", "content": prompt}]
     )
@@ -283,22 +324,11 @@ Return ONLY a JSON object with exactly these three fields (no markdown, no pream
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model=MODEL,
             max_tokens=400,
             messages=[{"role": "user", "content": prompt}]
         )
-        response_text = response.content[0].text.strip()
-        if "```" in response_text:
-            parts = response_text.split("```")
-            inner = parts[1] if len(parts) > 1 else response_text
-            if inner.startswith("json"):
-                inner = inner[4:]
-            response_text = inner.strip()
-        start = response_text.find('{')
-        end = response_text.rfind('}')
-        if start != -1 and end != -1:
-            response_text = response_text[start:end + 1]
-        return json.loads(response_text)
+        return json.loads(extract_json_object(response.content[0].text))
     except Exception:
         return {"dominant_theme": "", "most_urgent": "", "biggest_wildcard": ""}
 
@@ -358,7 +388,7 @@ def scan_topic():
         if not SERPER_API_KEY and not BRAVE_API_KEY:
             return jsonify({'error': 'No search API key configured (need SERPER_API_KEY or BRAVE_API_KEY)'}), 500
 
-        # Step 1: Search the web (5 targeted queries for broader evidence base)
+        # Step 1: Search the web (5 targeted queries, run in parallel)
         search_queries = [
             f"{topic} trends 2024 2025",
             f"{topic} future predictions emerging",
@@ -367,22 +397,10 @@ def scan_topic():
             f"{topic} industry disruption"
         ]
 
-        all_results = []
-        results_per_query = 10
-        for query in search_queries:
-            results = search_web(query, num_results=results_per_query)
-            all_results.extend(results)
+        unique_results = parallel_search(search_queries, num_results=10)
 
-        if not all_results:
+        if not unique_results:
             return jsonify({'error': 'No search results found. Please try a different topic.'}), 400
-
-        # Remove duplicates based on link
-        seen_links = set()
-        unique_results = []
-        for r in all_results:
-            if r['link'] not in seen_links:
-                seen_links.add(r['link'])
-                unique_results.append(r)
 
         # Step 2: Analyze with Claude (single API call)
         analysis_sources = unique_results[:20]
@@ -430,28 +448,17 @@ def get_intelligence():
         return jsonify({'error': 'No search API key configured'}), 500
 
     try:
-        queries = [
+        unique_results = parallel_search([
             'global security geopolitical crisis news today',
             'international military conflict tensions 2025',
             'world economic financial market risk today',
             'major breaking news international today',
-        ]
-        all_results = []
-        for query in queries:
-            results = search_web(query, num_results=7)
-            all_results.extend(results)
+        ], num_results=7)
 
-        seen_links = set()
-        unique_results = []
-        for r in all_results:
-            if r['link'] not in seen_links:
-                seen_links.add(r['link'])
-                unique_results.append(r)
-
-        news_text = '\n'.join([
+        news_text = '\n'.join(
             f"- {r['title']}: {r['snippet']}"
             for r in unique_results[:24]
-        ])
+        )
 
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=120.0)
 
@@ -467,23 +474,23 @@ Provide a JSON response with exactly these three sections:
     "overall": "ELEVATED",
     "summary": "2-3 sentences assessing the current global strategic posture - key military, diplomatic, and power dynamics.",
     "theaters": [
-      {{"region": "North America", "status": "NORMAL", "note": "brief one-sentence assessment"}},
-      {{"region": "Europe", "status": "ELEVATED", "note": "brief one-sentence assessment"}},
-      {{"region": "Middle East", "status": "ELEVATED", "note": "brief one-sentence assessment"}},
-      {{"region": "Indo-Pacific", "status": "HEIGHTENED", "note": "brief one-sentence assessment"}},
-      {{"region": "Africa", "status": "NORMAL", "note": "brief one-sentence assessment"}},
-      {{"region": "Latin America", "status": "NORMAL", "note": "brief one-sentence assessment"}}
+      {{"region": "North America", "status": "NORMAL", "note": "your assessment here"}},
+      {{"region": "Europe", "status": "ELEVATED", "note": "your assessment here"}},
+      {{"region": "Middle East", "status": "ELEVATED", "note": "your assessment here"}},
+      {{"region": "Indo-Pacific", "status": "HEIGHTENED", "note": "your assessment here"}},
+      {{"region": "Africa", "status": "NORMAL", "note": "your assessment here"}},
+      {{"region": "Latin America", "status": "NORMAL", "note": "your assessment here"}}
     ]
   }},
   "strategic_risk": {{
     "score": 62,
     "trend": "STABLE",
     "top_risks": [
-      {{"title": "risk name", "severity": "HIGH", "description": "one sentence about this risk"}},
-      {{"title": "risk name", "severity": "HIGH", "description": "one sentence about this risk"}},
-      {{"title": "risk name", "severity": "MEDIUM", "description": "one sentence about this risk"}},
-      {{"title": "risk name", "severity": "MEDIUM", "description": "one sentence about this risk"}},
-      {{"title": "risk name", "severity": "LOW", "description": "one sentence about this risk"}}
+      {{"title": "...", "severity": "HIGH", "description": "..."}},
+      {{"title": "...", "severity": "HIGH", "description": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "..."}},
+      {{"title": "...", "severity": "LOW", "description": "..."}}
     ],
     "summary": "1-2 sentences on the overall risk environment."
   }}
@@ -495,30 +502,17 @@ Rules:
 - "trend" must be one of: ESCALATING, STABLE, DE-ESCALATING
 - Each risk "severity" must be one of: HIGH, MEDIUM, LOW
 - "score" must be a number 0-100 reflecting current global risk level
-- Base all assessments on the provided headlines
+- Base all assessments on the provided headlines; replace all "..." placeholders with real content
 
 Return ONLY valid JSON matching the structure above, no markdown or extra text."""
 
         response = client.messages.create(
-            model='claude-sonnet-4-20250514',
+            model=MODEL,
             max_tokens=2000,
             messages=[{'role': 'user', 'content': prompt}]
         )
 
-        response_text = response.content[0].text.strip()
-        if '```' in response_text:
-            parts = response_text.split('```')
-            inner = parts[1] if len(parts) > 1 else response_text
-            if inner.startswith('json'):
-                inner = inner[4:]
-            response_text = inner.strip()
-
-        start = response_text.find('{')
-        end = response_text.rfind('}')
-        if start != -1 and end != -1:
-            response_text = response_text[start:end + 1]
-
-        intelligence = json.loads(response_text)
+        intelligence = json.loads(extract_json_object(response.content[0].text))
         intelligence['timestamp'] = datetime.now(timezone.utc).isoformat()
 
         return jsonify({'success': True, 'intelligence': intelligence})
