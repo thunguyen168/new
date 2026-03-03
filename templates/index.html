@@ -1458,6 +1458,81 @@
             100% { transform: scale(2.4); opacity: 0;    }
         }
 
+        /* Hotspot popup (Leaflet popup dark-theme overrides) */
+        .hotspot-leaflet-popup .leaflet-popup-content-wrapper {
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+            padding: 0;
+        }
+
+        .hotspot-leaflet-popup .leaflet-popup-content {
+            margin: 12px 14px;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .hotspot-leaflet-popup .leaflet-popup-tip {
+            background: #1a1a2e;
+        }
+
+        .hotspot-leaflet-popup .leaflet-popup-close-button {
+            color: #888888;
+            font-size: 16px;
+            top: 6px;
+            right: 8px;
+        }
+
+        .hotspot-leaflet-popup .leaflet-popup-close-button:hover {
+            color: #ffffff;
+        }
+
+        .hotspot-popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .hotspot-popup-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .hotspot-popup-risk {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            flex-shrink: 0;
+        }
+
+        .hotspot-popup-body {
+            font-size: 0.78rem;
+            line-height: 1.45;
+            color: #888888;
+        }
+
+        .hotspot-popup-loading {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Risk dial methodology note */
+        .risk-methodology {
+            font-size: 0.68rem;
+            color: #666666;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .risk-band-normal     { color: #81c784; font-weight: 600; }
+        .risk-band-heightened { color: #ffb74d; font-weight: 600; }
+        .risk-band-elevated   { color: #ffd54f; font-weight: 600; }
+        .risk-band-critical   { color: #e57373; font-weight: 600; }
+
         /* Region focus bar */
         .region-focus-bar {
             display: none;
@@ -2005,8 +2080,60 @@
                 const m = L.marker(h.coords, { icon, interactive: true, keyboard: false })
                     .addTo(_worldMap)
                     .bindTooltip(h.label, { permanent: false, direction: 'top', className: 'leaflet-tooltip' });
+                m.on('click', () => loadHotspotSummary(m, h));
                 _hotspotMarkers.push(m);
             });
+        }
+
+        async function loadHotspotSummary(marker, h) {
+            const riskColor = h.critical ? '#e57373' : '#ff8c42';
+            const riskLabel = h.critical ? 'CRITICAL' : 'ELEVATED';
+            const popupLoading = `<div class="hotspot-popup">
+                <div class="hotspot-popup-header">
+                    <span class="hotspot-popup-label">${h.label}</span>
+                    <span class="hotspot-popup-risk" style="color:${riskColor}">${riskLabel}</span>
+                </div>
+                <div class="hotspot-popup-body hotspot-popup-loading">
+                    <div class="intel-spinner" style="width:12px;height:12px;border-width:2px;margin-right:6px;flex-shrink:0;"></div>
+                    Loading summary&hellip;
+                </div>
+            </div>`;
+
+            marker.unbindPopup();
+            marker.bindPopup(popupLoading, { maxWidth: 290, className: 'hotspot-leaflet-popup' }).openPopup();
+
+            try {
+                const resp = await fetch(
+                    `/api/hotspot-summary?location=${encodeURIComponent(h.label)}&critical=${h.critical}`,
+                    { headers: { 'Accept': 'application/json' } }
+                );
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+
+                const popup = marker.getPopup();
+                if (popup) {
+                    popup.setContent(`<div class="hotspot-popup">
+                        <div class="hotspot-popup-header">
+                            <span class="hotspot-popup-label">${h.label}</span>
+                            <span class="hotspot-popup-risk" style="color:${riskColor}">${riskLabel}</span>
+                        </div>
+                        <div class="hotspot-popup-body">${data.summary}</div>
+                    </div>`);
+                    popup.update();
+                }
+            } catch (err) {
+                const popup = marker.getPopup();
+                if (popup) {
+                    popup.setContent(`<div class="hotspot-popup">
+                        <div class="hotspot-popup-header">
+                            <span class="hotspot-popup-label">${h.label}</span>
+                            <span class="hotspot-popup-risk" style="color:${riskColor}">${riskLabel}</span>
+                        </div>
+                        <div class="hotspot-popup-body" style="color:#e57373;">Unable to load summary.</div>
+                    </div>`);
+                    popup.update();
+                }
+            }
         }
 
         function clearHotspots() {
@@ -2238,6 +2365,7 @@
                         <div class="risk-trend risk-trend-${trend}">${trendIcon} ${trend.replace('-', '\u2011')}</div>
                     </div>
                 </div>
+                <div class="risk-methodology">Score 0&ndash;100 derived from AI analysis of current news across conflict intensity, diplomatic tensions, economic instability, and humanitarian conditions. <span class="risk-band-normal">0&ndash;24 Normal</span> &middot; <span class="risk-band-heightened">25&ndash;49 Heightened</span> &middot; <span class="risk-band-elevated">50&ndash;74 Elevated</span> &middot; <span class="risk-band-critical">75&ndash;100 Critical</span></div>
                 <div class="risk-summary">${risk.summary || ''}</div>
                 <div class="risk-list">${risksHtml}</div>`;
         }

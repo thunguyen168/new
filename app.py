@@ -653,6 +653,61 @@ Return ONLY valid JSON matching the structure above, no markdown or extra text."
         return jsonify({'error': f'Error: {str(e)}'}), 500
 
 
+@app.route('/api/hotspot-summary')
+@require_auth
+def get_hotspot_summary():
+    """Generate a brief AI summary of why a specific hotspot location has an elevated or critical alert."""
+    location = request.args.get('location', '').strip()
+    critical = request.args.get('critical', 'false').lower() == 'true'
+
+    if not location or len(location) > 120:
+        return jsonify({'error': 'Invalid location'}), 400
+
+    if not ANTHROPIC_API_KEY:
+        return jsonify({'error': 'Anthropic API key not configured'}), 500
+    if not SERPER_API_KEY and not BRAVE_API_KEY:
+        return jsonify({'error': 'No search API key configured'}), 500
+
+    risk_level = 'CRITICAL' if critical else 'ELEVATED'
+
+    try:
+        unique_results = parallel_search([
+            f'{location} security conflict risk news today',
+            f'{location} political instability crisis 2025',
+        ], num_results=5)
+
+        news_text = '\n'.join(
+            f"- {r['title']}: {r['snippet']}"
+            for r in unique_results[:10]
+        )
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=60.0)
+
+        prompt = f"""You are a strategic intelligence analyst. Based on these news headlines, write a concise 2-3 sentence summary explaining the key risk factors currently driving a {risk_level} alert for {location}. Focus on the most significant security, political, economic, or humanitarian developments.
+
+NEWS HEADLINES:
+{news_text}
+
+Respond with JSON:
+{{"summary": "2-3 sentence summary of the key risks and developments warranting the {risk_level} alert."}}
+
+Return ONLY valid JSON, no markdown or extra text."""
+
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=300,
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+
+        data = json.loads(extract_json_object(response.content[0].text))
+        return jsonify({'success': True, 'location': location, 'summary': data.get('summary', ''), 'risk_level': risk_level})
+
+    except anthropic.APIError as e:
+        return jsonify({'error': f'AI API error: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Error: {str(e)}'}), 500
+
+
 @app.route('/api/regional-news')
 @require_auth
 def get_regional_news():
