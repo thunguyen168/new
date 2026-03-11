@@ -3749,6 +3749,90 @@
                 });
             }
 
+            // ── Radar overview slide ─────────────────────────────────────────────
+            const radarContainer = document.getElementById('radarCanvas');
+            const svgEl = radarContainer ? radarContainer.querySelector('svg') : null;
+            if (svgEl) {
+                try {
+                    // Clone SVG with explicit pixel dimensions for canvas rendering
+                    const svgClone = svgEl.cloneNode(true);
+                    svgClone.setAttribute('width', '900');
+                    svgClone.setAttribute('height', '900');
+                    const svgData = new XMLSerializer().serializeToString(svgClone);
+                    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                    const svgUrl = URL.createObjectURL(svgBlob);
+
+                    const pngDataUrl = await new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = 900;
+                            canvas.height = 900;
+                            const ctx = canvas.getContext('2d');
+                            ctx.fillStyle = '#111111';
+                            ctx.fillRect(0, 0, 900, 900);
+                            ctx.drawImage(img, 0, 0, 900, 900);
+                            URL.revokeObjectURL(svgUrl);
+                            resolve(canvas.toDataURL('image/png'));
+                        };
+                        img.onerror = (e) => { URL.revokeObjectURL(svgUrl); reject(e); };
+                        img.src = svgUrl;
+                    });
+
+                    const radarSlide = pptx.addSlide();
+                    radarSlide.background = { color: DARK };
+                    radarSlide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 0.55, fill: { color: NAVY } });
+                    radarSlide.addText('Strategic Radar', { x: 0.4, y: 0.1, w: 8, h: 0.35, fontSize: 14, bold: true, color: BLUE, fontFace: 'Calibri' });
+                    radarSlide.addText(topic, { x: 0.4, y: 0.1, w: 12.5, h: 0.35, fontSize: 14, color: WHITE, fontFace: 'Calibri', align: 'right' });
+
+                    // Radar image – square on the left portion of the slide
+                    radarSlide.addImage({ data: pngDataUrl, x: 0.2, y: 0.65, w: 6.7, h: 6.7 });
+
+                    // ── Legend panel (right side) ──────────────────────────────
+                    const lx = 7.25;
+
+                    radarSlide.addText('SIGNAL TYPES', { x: lx, y: 0.75, w: 5.8, h: 0.28, fontSize: 9, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
+                    const typeList = [
+                        { label: 'Strengthening', color: '4CAF50' },
+                        { label: 'Weakening',     color: '2196F3' },
+                        { label: 'Established',   color: '9C27B0' },
+                        { label: 'Weak Signal',   color: '9E9E9E' },
+                        { label: 'Wild Card',     color: 'F44336' }
+                    ];
+                    let legendY = 1.12;
+                    typeList.forEach(t => {
+                        const count = data.phenomena.filter(p => p.type === t.label).length;
+                        if (count > 0) {
+                            radarSlide.addShape(pptx.ShapeType.ellipse, { x: lx, y: legendY + 0.04, w: 0.2, h: 0.2, fill: { color: t.color } });
+                            radarSlide.addText(`${t.label}  (${count})`, { x: lx + 0.3, y: legendY, w: 5.5, h: 0.28, fontSize: 11, color: 'dddddd', fontFace: 'Calibri' });
+                            legendY += 0.36;
+                        }
+                    });
+
+                    legendY += 0.2;
+                    radarSlide.addText('TIME HORIZONS', { x: lx, y: legendY, w: 5.8, h: 0.28, fontSize: 9, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
+                    legendY += 0.36;
+                    [
+                        'Near-term (0–5 years)   — inner ring',
+                        'Mid-term (5–10 years)   — middle ring',
+                        'Long-term (10–20 years) — outer ring'
+                    ].forEach(line => {
+                        radarSlide.addText(line, { x: lx, y: legendY, w: 5.8, h: 0.28, fontSize: 10, color: 'cccccc', fontFace: 'Calibri' });
+                        legendY += 0.34;
+                    });
+
+                    legendY += 0.2;
+                    radarSlide.addText('QUADRANTS', { x: lx, y: legendY, w: 5.8, h: 0.28, fontSize: 9, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
+                    legendY += 0.36;
+                    ['Strategic', 'Regulatory', 'Operational', 'Financial'].forEach((cat, ci) => {
+                        radarSlide.addText(cat, { x: lx + (ci % 2) * 2.9, y: legendY + Math.floor(ci / 2) * 0.34, w: 2.8, h: 0.28, fontSize: 10, color: 'cccccc', fontFace: 'Calibri' });
+                    });
+
+                } catch (radarErr) {
+                    console.warn('Could not capture radar image for PPTX:', radarErr);
+                }
+            }
+
             // ── One slide per phenomenon ────────────────────────────────────────
             data.phenomena.forEach((p, i) => {
                 const slide = pptx.addSlide();
