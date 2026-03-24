@@ -105,6 +105,15 @@
             margin-bottom: 20px;
             font-size: 0.9rem;
         }
+        .admin-link {
+            display: block;
+            margin-top: 24px;
+            font-size: 0.82rem;
+            color: var(--lockton-silver);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .admin-link:hover { color: var(--lockton-blue); }
     </style>
 </head>
 <body>
@@ -130,6 +139,7 @@
             </div>
             <button type="submit" class="login-btn">Sign In</button>
         </form>
+        <a href="/admin" class="admin-link">Admin panel</a>
     </div>
 <script>
 function togglePw(inputId, btn) {
