@@ -12,13 +12,16 @@ from functools import wraps
 
 import httpx
 import anthropic
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(32))
 
-# Site password
-SITE_PASSWORD = "Lockton2026!!"
+# Path to the user database file
+USER_DB_PATH = os.path.join(os.path.dirname(__file__), 'users.json')
+# Admin password for the /admin management panel (set via env var)
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
 
 # API clients
 SERPER_API_KEY = os.environ.get('SERPER_API_KEY')
@@ -60,17 +63,53 @@ def validate_topic_input(topic: str) -> str | None:
     return None
 
 
+def load_users() -> dict:
+    """Load users from users.json. Returns empty dict if file missing or invalid."""
+    if not os.path.exists(USER_DB_PATH):
+        return {}
+    try:
+        with open(USER_DB_PATH) as f:
+            return json.load(f).get('users', {})
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_users(users: dict) -> None:
+    """Persist users to users.json."""
+    with open(USER_DB_PATH, 'w') as f:
+        json.dump({'users': users}, f, indent=2)
+
+
+def verify_user(username: str, password: str) -> bool:
+    """Return True if credentials are valid and the user account is enabled."""
+    users = load_users()
+    user = users.get(username.lower())
+    if not user or not user.get('enabled', True):
+        return False
+    return check_password_hash(user['password_hash'], password)
+
+
 def require_auth(f):
-    """Decorator to require password authentication."""
+    """Decorator to require user authentication."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get('authenticated'):
+        if not session.get('username'):
             # Return JSON error for AJAX requests instead of redirecting to HTML
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
                request.content_type == 'multipart/form-data' or \
                request.accept_mimetypes.best == 'application/json':
                 return jsonify({'error': 'Session expired. Please refresh the page and log in again.'}), 401
             return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def require_admin(f):
+    """Decorator to require admin authentication."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('is_admin'):
+            return redirect(url_for('admin_login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -335,13 +374,14 @@ Return ONLY a JSON object with exactly these three fields (no markdown, no pream
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """Password gate."""
+    """Username + password login."""
     if request.method == 'POST':
+        username = request.form.get('username', '').strip().lower()
         password = request.form.get('password', '')
-        if password == SITE_PASSWORD:
-            session['authenticated'] = True
+        if username and verify_user(username, password):
+            session['username'] = username
             return redirect(url_for('home'))
-        return render_template('login.html', error='Incorrect password.')
+        return render_template('login.html', error='Invalid username or password.')
     return render_template('login.html', error=None)
 
 
@@ -349,6 +389,110 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+
+# ---------------------------------------------------------------------------
+# Admin – user management
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """Admin password gate."""
+    if not ADMIN_PASSWORD:
+        return 'Admin access is disabled. Set the ADMIN_PASSWORD environment variable to enable it.', 403
+    if request.method == 'POST':
+        if request.form.get('password', '') == ADMIN_PASSWORD:
+            session['is_admin'] = True
+            return redirect(url_for('admin'))
+        return render_template('admin_login.html', error='Incorrect admin password.')
+    return render_template('admin_login.html', error=None)
+
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('is_admin', None)
+    return redirect(url_for('admin_login'))
+
+
+@app.route('/admin')
+@require_admin
+def admin():
+    """User management dashboard."""
+    users = load_users()
+    return render_template('admin.html', users=users)
+
+
+@app.route('/admin/users/add', methods=['POST'])
+@require_admin
+def admin_add_user():
+    """Create a new user account."""
+    username = request.form.get('username', '').strip().lower()
+    name = request.form.get('name', '').strip()
+    password = request.form.get('password', '')
+
+    if not username or not password:
+        flash('Username and password are required.', 'error')
+        return redirect(url_for('admin'))
+
+    if not re.match(r'^[a-z0-9_\-\.]+$', username):
+        flash('Username may only contain letters, numbers, hyphens, underscores, and dots.', 'error')
+        return redirect(url_for('admin'))
+
+    users = load_users()
+    if username in users:
+        flash(f'User "{username}" already exists.', 'error')
+        return redirect(url_for('admin'))
+
+    users[username] = {
+        'name': name or username,
+        'password_hash': generate_password_hash(password),
+        'enabled': True,
+        'created': datetime.now(timezone.utc).isoformat(),
+    }
+    save_users(users)
+    flash(f'User "{username}" created successfully.', 'success')
+    return redirect(url_for('admin'))
+
+
+@app.route('/admin/users/<username>/toggle', methods=['POST'])
+@require_admin
+def admin_toggle_user(username):
+    """Enable or disable a user account."""
+    users = load_users()
+    if username in users:
+        users[username]['enabled'] = not users[username].get('enabled', True)
+        save_users(users)
+        state = 'enabled' if users[username]['enabled'] else 'disabled'
+        flash(f'User "{username}" {state}.', 'success')
+    return redirect(url_for('admin'))
+
+
+@app.route('/admin/users/<username>/delete', methods=['POST'])
+@require_admin
+def admin_delete_user(username):
+    """Permanently delete a user account."""
+    users = load_users()
+    if username in users:
+        users.pop(username)
+        save_users(users)
+        flash(f'User "{username}" deleted.', 'success')
+    return redirect(url_for('admin'))
+
+
+@app.route('/admin/users/<username>/reset', methods=['POST'])
+@require_admin
+def admin_reset_password(username):
+    """Reset a user's password."""
+    new_password = request.form.get('password', '')
+    if not new_password:
+        flash('New password cannot be empty.', 'error')
+        return redirect(url_for('admin'))
+    users = load_users()
+    if username in users:
+        users[username]['password_hash'] = generate_password_hash(new_password)
+        save_users(users)
+        flash(f'Password for "{username}" updated.', 'success')
+    return redirect(url_for('admin'))
 
 
 @app.route('/')
