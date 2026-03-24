@@ -76,6 +76,7 @@ def _db_url() -> str:
 def _init_db() -> None:
     """Create the user_store table and seed row if they don't exist."""
     if not DATABASE_URL:
+        _apply_seed_users()
         return
     import psycopg2
     conn = psycopg2.connect(_db_url())
@@ -94,6 +95,37 @@ def _init_db() -> None:
         conn.commit()
     finally:
         conn.close()
+    _apply_seed_users()
+
+
+def _apply_seed_users() -> None:
+    """Merge users from the SEED_USERS env var into the active store.
+
+    Set SEED_USERS to a JSON object mapping email -> user record, e.g.:
+        {"alice@example.com": {"name": "Alice", "password_hash": "...", "enabled": true}}
+
+    Existing records are never overwritten — only missing users are added.
+    This ensures accounts survive redeployments on platforms with ephemeral
+    filesystems even when DATABASE_URL is not configured.
+    """
+    raw = os.environ.get('SEED_USERS', '').strip()
+    if not raw:
+        return
+    try:
+        seed = json.loads(raw)
+    except json.JSONDecodeError:
+        return
+    if not isinstance(seed, dict):
+        return
+    users = load_users()
+    changed = False
+    for email, record in seed.items():
+        email = email.lower()
+        if email not in users:
+            users[email] = record
+            changed = True
+    if changed:
+        save_users(users)
 
 
 def load_users() -> dict:
