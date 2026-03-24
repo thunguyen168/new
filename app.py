@@ -434,8 +434,8 @@ def admin_add_user():
         flash('Username and password are required.', 'error')
         return redirect(url_for('admin'))
 
-    if not re.match(r'^[a-z0-9_\-\.]+$', username):
-        flash('Username may only contain letters, numbers, hyphens, underscores, and dots.', 'error')
+    if not re.match(r'^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$', username):
+        flash('Please enter a valid email address as the username.', 'error')
         return redirect(url_for('admin'))
 
     users = load_users()
