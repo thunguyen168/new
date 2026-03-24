@@ -18,10 +18,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(32))
 
-# Path to the user database file
+# Path to the user database file (used as fallback when DATABASE_URL is not set)
 USER_DB_PATH = os.path.join(os.path.dirname(__file__), 'users.json')
 # Admin password for the /admin management panel (set via env var)
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
+# PostgreSQL connection URL (set this env var on the hosting platform)
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 # API clients
 SERPER_API_KEY = os.environ.get('SERPER_API_KEY')
@@ -63,8 +65,53 @@ def validate_topic_input(topic: str) -> str | None:
     return None
 
 
+def _db_url() -> str:
+    """Return a psycopg2-compatible DB URL (postgresql:// scheme)."""
+    url = DATABASE_URL
+    if url.startswith('postgres://'):
+        url = url.replace('postgres://', 'postgresql://', 1)
+    return url
+
+
+def _init_db() -> None:
+    """Create the user_store table and seed row if they don't exist."""
+    if not DATABASE_URL:
+        return
+    import psycopg2
+    conn = psycopg2.connect(_db_url())
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS user_store (
+                    id INTEGER PRIMARY KEY,
+                    data TEXT NOT NULL DEFAULT '{}'
+                )
+            """)
+            cur.execute("""
+                INSERT INTO user_store (id, data) VALUES (1, '{}')
+                ON CONFLICT (id) DO NOTHING
+            """)
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def load_users() -> dict:
-    """Load users from users.json. Returns empty dict if file missing or invalid."""
+    """Load users from PostgreSQL when DATABASE_URL is set, else from users.json."""
+    if DATABASE_URL:
+        import psycopg2
+        try:
+            conn = psycopg2.connect(_db_url())
+            try:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT data FROM user_store WHERE id = 1")
+                    row = cur.fetchone()
+                    return json.loads(row[0]) if row else {}
+            finally:
+                conn.close()
+        except Exception:
+            pass
+
     if not os.path.exists(USER_DB_PATH):
         return {}
     try:
@@ -75,7 +122,21 @@ def load_users() -> dict:
 
 
 def save_users(users: dict) -> None:
-    """Persist users to users.json."""
+    """Persist users to PostgreSQL when DATABASE_URL is set, else to users.json."""
+    if DATABASE_URL:
+        import psycopg2
+        conn = psycopg2.connect(_db_url())
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE user_store SET data = %s WHERE id = 1",
+                    (json.dumps(users),)
+                )
+            conn.commit()
+        finally:
+            conn.close()
+        return
+
     with open(USER_DB_PATH, 'w') as f:
         json.dump({'users': users}, f, indent=2)
 
@@ -885,6 +946,8 @@ def debug():
         'brave_key_set': bool(BRAVE_API_KEY)
     })
 
+
+_init_db()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
