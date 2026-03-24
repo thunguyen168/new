@@ -452,6 +452,31 @@ def logout():
     return redirect(url_for('login'))
 
 
+@app.route('/change-password', methods=['GET', 'POST'])
+@require_auth
+def change_password():
+    """Allow the logged-in user to change their own password."""
+    if request.method == 'POST':
+        current = request.form.get('current_password', '')
+        new_pw = request.form.get('new_password', '')
+        confirm = request.form.get('confirm_password', '')
+        username = session['username']
+
+        if not verify_user(username, current):
+            return render_template('change_password.html', error='Current password is incorrect.')
+        if len(new_pw) < 8:
+            return render_template('change_password.html', error='New password must be at least 8 characters.')
+        if new_pw != confirm:
+            return render_template('change_password.html', error='New passwords do not match.')
+
+        users = load_users()
+        users[username]['password_hash'] = generate_password_hash(new_pw)
+        save_users(users)
+        return render_template('change_password.html', success=True)
+
+    return render_template('change_password.html')
+
+
 # ---------------------------------------------------------------------------
 # Admin – user management
 # ---------------------------------------------------------------------------
