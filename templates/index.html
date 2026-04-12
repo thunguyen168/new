@@ -1103,6 +1103,38 @@
         .intel-refresh-btn:hover { background: rgba(0, 174, 239, 0.2); }
         .intel-refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        .intel-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 14px 0 4px;
+        }
+
+        .intel-filter-btn {
+            padding: 6px 14px;
+            font-size: 0.79rem;
+            font-weight: 600;
+            color: var(--lockton-silver);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .intel-filter-btn:hover {
+            color: var(--lockton-white);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .intel-filter-btn.active {
+            color: var(--lockton-blue);
+            background: rgba(0, 174, 239, 0.12);
+            border-color: rgba(0, 174, 239, 0.45);
+        }
+
         .intel-timestamp {
             font-size: 0.76rem;
             color: var(--lockton-silver);
@@ -1658,6 +1690,15 @@
                 <button class="global-view-btn" onclick="returnToGlobalView()">&#8617; Return to Global View</button>
             </div>
 
+            <!-- Filter bar -->
+            <div class="intel-filter-bar">
+                <button class="intel-filter-btn active" data-filter="all"           onclick="setIntelFilter('all')">All</button>
+                <button class="intel-filter-btn"        data-filter="geopolitical"  onclick="setIntelFilter('geopolitical')">Geopolitical</button>
+                <button class="intel-filter-btn"        data-filter="macroeconomic" onclick="setIntelFilter('macroeconomic')">Macroeconomic</button>
+                <button class="intel-filter-btn"        data-filter="regulatory"    onclick="setIntelFilter('regulatory')">Regulatory</button>
+                <button class="intel-filter-btn"        data-filter="climate_natcat" onclick="setIntelFilter('climate_natcat')">Climate &amp; Nat Cat</button>
+            </div>
+
             <!-- AI Insights | AI Strategic Posture | Strategic Risk Overview -->
             <div class="intel-panels-row">
 
@@ -1999,6 +2040,7 @@
         // Track active region and hotspot markers
         let _activeRegion = null;
         let _globalIntelCache = null;
+        let _activeIntelFilter = 'all';
         const _hotspotMarkers = [];
 
         // --- HTML helpers ---
@@ -2239,6 +2281,14 @@
 
         // --- Intelligence loading ---
 
+        function setIntelFilter(filterType) {
+            _activeIntelFilter = filterType;
+            document.querySelectorAll('.intel-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filterType);
+            });
+            loadIntelligence();
+        }
+
         async function loadIntelligence() {
             const btn = document.getElementById('intelRefreshBtn');
             if (btn) btn.disabled = true;
@@ -2246,7 +2296,10 @@
             PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingHTML(); });
 
             try {
-                const resp = await fetch('/api/intelligence', {
+                const url = _activeIntelFilter && _activeIntelFilter !== 'all'
+                    ? `/api/intelligence?filter_type=${encodeURIComponent(_activeIntelFilter)}`
+                    : '/api/intelligence';
+                const resp = await fetch(url, {
                     headers: { 'Accept': 'application/json' }
                 });
                 if (!resp.ok && resp.status === 401) throw new Error('Session expired. Please refresh the page.');
@@ -2358,6 +2411,7 @@
                         <span class="risk-item-title">${r.title}</span>
                     </div>
                     ${r.description ? `<div class="risk-item-desc">${r.description}</div>` : ''}
+                    ${r.insurance_implications ? `<div class="risk-item-desc" style="color:#999;margin-top:4px"><span style="font-weight:600;color:#bbb">Insurance Implications:</span> ${r.insurance_implications}</div>` : ''}
                 </div>`
             ).join('');
 

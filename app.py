@@ -751,13 +751,54 @@ def get_intelligence():
     if not SERPER_API_KEY and not BRAVE_API_KEY:
         return jsonify({'error': 'No search API key configured'}), 500
 
-    try:
-        unique_results = parallel_search([
+    VALID_FILTER_TYPES = {'all', 'geopolitical', 'macroeconomic', 'regulatory', 'climate_natcat'}
+    filter_type = request.args.get('filter_type', 'all')
+    if filter_type not in VALID_FILTER_TYPES:
+        filter_type = 'all'
+
+    FILTER_QUERIES = {
+        'all': [
             'global security geopolitical crisis news today',
             'international military conflict tensions 2025',
             'world economic financial market risk today',
             'major breaking news international today',
-        ], num_results=7)
+        ],
+        'geopolitical': [
+            'global military conflict tensions today',
+            'geopolitical crisis diplomacy sanctions 2025',
+            'war conflict flashpoints international security today',
+            'great power rivalry US China Russia today',
+        ],
+        'macroeconomic': [
+            'global economy recession risk today',
+            'financial markets instability inflation 2025',
+            'trade wars tariffs economic disruption today',
+            'central bank policy interest rates global economy today',
+        ],
+        'regulatory': [
+            'global regulatory policy changes 2025',
+            'international compliance legislation financial regulation today',
+            'government policy shifts sanctions regulation today',
+            'ESG regulation data privacy antitrust policy 2025',
+        ],
+        'climate_natcat': [
+            'extreme weather events natural disasters today 2025',
+            'climate risk flood earthquake wildfire hurricane today',
+            'natural catastrophe high risk regions 2025',
+            'climate change physical risk insurance exposure today',
+        ],
+    }
+
+    FILTER_FOCUS = {
+        'all': 'Focus on the most significant global risks across all categories.',
+        'geopolitical': 'Focus exclusively on geopolitical risks — military, diplomatic, conflict, and power dynamics.',
+        'macroeconomic': 'Focus exclusively on macroeconomic risks — markets, trade, inflation, financial stability, and economic policy.',
+        'regulatory': 'Focus exclusively on regulatory risks — policy changes, legislation, compliance shifts, and government interventions.',
+        'climate_natcat': 'Focus exclusively on climate and natural catastrophe risks — extreme weather, natural disasters, high-risk regions for floods, earthquakes, wildfires, and hurricanes, and physical climate risk exposure.',
+    }
+
+    try:
+        unique_results = parallel_search(FILTER_QUERIES[filter_type], num_results=7)
 
         news_text = '\n'.join(
             f"- {r['title']}: {r['snippet']}"
@@ -770,6 +811,8 @@ def get_intelligence():
 
 NEWS HEADLINES:
 {news_text}
+
+{FILTER_FOCUS[filter_type]}
 
 Provide a JSON response with exactly these three sections:
 {{
@@ -790,11 +833,11 @@ Provide a JSON response with exactly these three sections:
     "score": 62,
     "trend": "STABLE",
     "top_risks": [
-      {{"title": "...", "severity": "HIGH", "description": "..."}},
-      {{"title": "...", "severity": "HIGH", "description": "..."}},
-      {{"title": "...", "severity": "MEDIUM", "description": "..."}},
-      {{"title": "...", "severity": "MEDIUM", "description": "..."}},
-      {{"title": "...", "severity": "LOW", "description": "..."}}
+      {{"title": "...", "severity": "HIGH", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "HIGH", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "LOW", "description": "...", "insurance_implications": "..."}}
     ],
     "summary": "1-2 sentences on the overall risk environment."
   }}
@@ -806,6 +849,7 @@ Rules:
 - "trend" must be one of: ESCALATING, STABLE, DE-ESCALATING
 - Each risk "severity" must be one of: HIGH, MEDIUM, LOW
 - "score" must be a number 0-100 reflecting current global risk level
+- Each risk "insurance_implications" must be 1-2 sentences explaining what that specific risk means for an insurance broker and their clients — covering relevant lines of coverage, potential claims exposure, or client advisory actions
 - Base all assessments on the provided headlines; replace all "..." placeholders with real content
 
 Return ONLY valid JSON matching the structure above, no markdown or extra text."""
@@ -818,6 +862,7 @@ Return ONLY valid JSON matching the structure above, no markdown or extra text."
 
         intelligence = json.loads(extract_json_object(response.content[0].text))
         intelligence['timestamp'] = datetime.now(timezone.utc).isoformat()
+        intelligence['filter_type'] = filter_type
 
         return jsonify({'success': True, 'intelligence': intelligence})
 
@@ -874,11 +919,11 @@ Provide a JSON response with exactly these three sections:
     "score": 62,
     "trend": "STABLE",
     "top_risks": [
-      {{"title": "...", "severity": "HIGH", "description": "..."}},
-      {{"title": "...", "severity": "HIGH", "description": "..."}},
-      {{"title": "...", "severity": "MEDIUM", "description": "..."}},
-      {{"title": "...", "severity": "MEDIUM", "description": "..."}},
-      {{"title": "...", "severity": "LOW", "description": "..."}}
+      {{"title": "...", "severity": "HIGH", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "HIGH", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "LOW", "description": "...", "insurance_implications": "..."}}
     ],
     "summary": "1-2 sentences on the overall risk environment specifically in {region_name}."
   }}
@@ -890,6 +935,7 @@ Rules:
 - "trend" must be one of: ESCALATING, STABLE, DE-ESCALATING
 - Each risk "severity" must be one of: HIGH, MEDIUM, LOW
 - "score" must be a number 0-100 reflecting the regional risk level
+- Each risk "insurance_implications" must be 1-2 sentences explaining what that specific risk means for an insurance broker and their clients — covering relevant lines of coverage, potential claims exposure, or client advisory actions
 - All content must be specifically about {region_name}, not global
 - Base all assessments on the provided headlines; replace all "..." placeholders with real content
 - Use real sub-regions, countries, or key actors relevant to {region_name} for the theaters list
