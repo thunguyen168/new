@@ -3595,6 +3595,10 @@
             closeEditModal();
         }
 
+        function toTitleCase(str) {
+            return str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1));
+        }
+
         function generateReportHtml(topic, phenomena, radarSvg, sources) {
             const typeColors = {
                 'Strengthening': '#2e7d32',
@@ -3626,6 +3630,18 @@
                         <div class="sub-section">
                             <h4>Impact</h4>
                             <p>${escapeHtml(p.impact)}</p>
+                        </div>
+                    ` : ''}
+                    ${p.emerging_risks ? `
+                        <div class="sub-section">
+                            <h4>Potential Emerging Risks</h4>
+                            <p>${escapeHtml(p.emerging_risks)}</p>
+                        </div>
+                    ` : ''}
+                    ${p.insurance_impact ? `
+                        <div class="sub-section">
+                            <h4>Insurance Impact</h4>
+                            <p>${escapeHtml(p.insurance_impact)}</p>
                         </div>
                     ` : ''}
                     ${p.additional_information && p.additional_information.length > 0 ? `
@@ -3743,7 +3759,7 @@
         <header>
             <div class="header-left">
                 <p class="report-label">Strategic Foresight Report</p>
-                <h1>${escapeHtml(topic)}</h1>
+                <h1>${escapeHtml(toTitleCase(topic))}</h1>
             </div>
             <div class="header-right">
                 <span>Generated ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span><br>
@@ -3818,7 +3834,7 @@
             titleSlide.background = { color: DARK };
             titleSlide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 0.35, h: 7.5, fill: { color: BLUE } });
             titleSlide.addText('Strategic Foresight Report', { x: 0.7, y: 1.8, w: 12, h: 1, fontSize: 36, bold: true, color: BLUE, fontFace: 'Calibri' });
-            titleSlide.addText(topic, { x: 0.7, y: 2.9, w: 12, h: 0.7, fontSize: 24, color: WHITE, fontFace: 'Calibri' });
+            titleSlide.addText(toTitleCase(topic), { x: 0.7, y: 2.9, w: 12, h: 0.7, fontSize: 24, color: WHITE, fontFace: 'Calibri' });
             titleSlide.addText(`Generated ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`, { x: 0.7, y: 3.7, w: 10, h: 0.4, fontSize: 14, color: SILVER, fontFace: 'Calibri' });
             titleSlide.addText(`${data.phenomena.length} phenomena identified`, { x: 0.7, y: 4.1, w: 6, h: 0.4, fontSize: 14, color: SILVER, fontFace: 'Calibri' });
             titleSlide.addText('Powered by Anthropic Claude via Strategic Foresight Scanner', { x: 0, y: 7.1, w: 13.33, h: 0.35, fontSize: 9, color: SILVER, align: 'center', fontFace: 'Calibri' });
@@ -3952,11 +3968,15 @@
                     slide.addText('Impact', { x: 6.9, y: 2.75, w: 6.0, h: 0.28, fontSize: 9, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
                     slide.addText(p.impact, { x: 6.9, y: 3.03, w: 6.0, h: 1.55, fontSize: 10.5, color: 'cccccc', fontFace: 'Calibri', wrap: true, valign: 'top' });
                 }
-                // Additional info
-                if (p.additional_information && p.additional_information.length > 0) {
-                    slide.addText('Additional Information', { x: 0.4, y: 4.7, w: 12.5, h: 0.28, fontSize: 9, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
-                    const infoText = p.additional_information.slice(0, 3).join('\n');
-                    slide.addText(infoText, { x: 0.4, y: 4.98, w: 12.5, h: 1.5, fontSize: 9.5, color: SILVER, fontFace: 'Calibri', wrap: true, valign: 'top' });
+                // Potential Emerging Risks
+                if (p.emerging_risks) {
+                    slide.addText('Potential Emerging Risks', { x: 0.4, y: 4.7, w: 12.5, h: 0.28, fontSize: 9, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
+                    slide.addText(p.emerging_risks, { x: 0.4, y: 4.98, w: 12.5, h: 0.9, fontSize: 10.5, color: 'cccccc', fontFace: 'Calibri', wrap: true, valign: 'top' });
+                }
+                // Insurance Impact
+                if (p.insurance_impact) {
+                    slide.addText('Insurance Impact', { x: 0.4, y: 6.0, w: 12.5, h: 0.28, fontSize: 9, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
+                    slide.addText(p.insurance_impact, { x: 0.4, y: 6.28, w: 12.5, h: 0.9, fontSize: 10.5, color: 'cccccc', fontFace: 'Calibri', wrap: true, valign: 'top' });
                 }
                 // Slide number
                 slide.addText(`${i + 1} / ${data.phenomena.length}`, { x: 12.2, y: 7.2, w: 1.0, h: 0.25, fontSize: 9, color: SILVER, align: 'right', fontFace: 'Calibri' });
