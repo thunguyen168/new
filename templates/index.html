@@ -1674,6 +1674,15 @@
                 </div>
             </div>
 
+            <!-- Filter bar -->
+            <div class="intel-filter-bar">
+                <button class="intel-filter-btn active" data-filter="all"           onclick="setIntelFilter('all')">All</button>
+                <button class="intel-filter-btn"        data-filter="geopolitical"  onclick="setIntelFilter('geopolitical')">Geopolitical</button>
+                <button class="intel-filter-btn"        data-filter="macroeconomic" onclick="setIntelFilter('macroeconomic')">Macroeconomic</button>
+                <button class="intel-filter-btn"        data-filter="regulatory"    onclick="setIntelFilter('regulatory')">Regulatory</button>
+                <button class="intel-filter-btn"        data-filter="climate_natcat" onclick="setIntelFilter('climate_natcat')">Climate &amp; Nat Cat</button>
+            </div>
+
             <!-- World Map -->
             <div class="intel-map-wrapper">
                 <div id="worldMap"></div>
@@ -1688,15 +1697,6 @@
                     <div class="intel-spinner"></div> Updating insights&hellip;
                 </span>
                 <button class="global-view-btn" onclick="returnToGlobalView()">&#8617; Return to Global View</button>
-            </div>
-
-            <!-- Filter bar -->
-            <div class="intel-filter-bar">
-                <button class="intel-filter-btn active" data-filter="all"           onclick="setIntelFilter('all')">All</button>
-                <button class="intel-filter-btn"        data-filter="geopolitical"  onclick="setIntelFilter('geopolitical')">Geopolitical</button>
-                <button class="intel-filter-btn"        data-filter="macroeconomic" onclick="setIntelFilter('macroeconomic')">Macroeconomic</button>
-                <button class="intel-filter-btn"        data-filter="regulatory"    onclick="setIntelFilter('regulatory')">Regulatory</button>
-                <button class="intel-filter-btn"        data-filter="climate_natcat" onclick="setIntelFilter('climate_natcat')">Climate &amp; Nat Cat</button>
             </div>
 
             <!-- AI Insights | AI Strategic Posture | Strategic Risk Overview -->
@@ -2641,6 +2641,20 @@
                            </div>`
                         : '';
 
+                    const emergingRisksHtml = phenomenon.emerging_risks
+                        ? `<div class="phenomenon-section">
+                            <div class="phenomenon-section-title">Potential Emerging Risks</div>
+                            <p style="color:#d6d6d6;line-height:1.6;">${phenomenon.emerging_risks}</p>
+                           </div>`
+                        : '';
+
+                    const insuranceImpactHtml = phenomenon.insurance_impact
+                        ? `<div class="phenomenon-section">
+                            <div class="phenomenon-section-title">Insurance Impact</div>
+                            <p style="color:#d6d6d6;line-height:1.6;">${phenomenon.insurance_impact}</p>
+                           </div>`
+                        : '';
+
                     const additionalInfoHtml = phenomenon.additional_information && phenomenon.additional_information.length > 0
                         ? `<div class="phenomenon-section">
                             <div class="phenomenon-section-title">Additional Information</div>
@@ -2671,6 +2685,8 @@
                         <p class="phenomenon-summary">${phenomenon.summary || ''}</p>
                         ${backgroundHtml}
                         ${impactHtml}
+                        ${emergingRisksHtml}
+                        ${insuranceImpactHtml}
                         ${additionalInfoHtml}
                     `;
 
@@ -2766,6 +2782,20 @@
                 drivers.innerHTML += `
                     <strong style="display:block;margin-top:12px;">Impact:</strong>
                     <p style="margin-top:6px;">${item.impact}</p>
+                `;
+            }
+
+            if (item.emerging_risks) {
+                drivers.innerHTML += `
+                    <strong style="display:block;margin-top:12px;">Potential Emerging Risks:</strong>
+                    <p style="margin-top:6px;">${item.emerging_risks}</p>
+                `;
+            }
+
+            if (item.insurance_impact) {
+                drivers.innerHTML += `
+                    <strong style="display:block;margin-top:12px;">Insurance Impact:</strong>
+                    <p style="margin-top:6px;">${item.insurance_impact}</p>
                 `;
             }
 
