@@ -788,8 +788,9 @@ def get_intelligence():
         'climate_natcat': [
             'extreme weather events natural disasters today 2025',
             'climate risk flood earthquake wildfire hurricane today',
-            'natural catastrophe high risk regions 2025',
             'climate change physical risk insurance exposure today',
+            'climate sustainability regulation policy net zero 2025',
+            'climate regulatory risk TCFD ESG disclosure today',
         ],
     }
 
@@ -798,7 +799,7 @@ def get_intelligence():
         'geopolitical': 'Focus exclusively on geopolitical risks — military, diplomatic, conflict, and power dynamics.',
         'macroeconomic': 'Focus exclusively on macroeconomic risks — markets, trade, inflation, financial stability, and economic policy.',
         'regulatory': 'Focus exclusively on regulatory risks — policy changes, legislation, compliance shifts, and government interventions.',
-        'climate_natcat': 'Focus exclusively on climate and natural catastrophe risks — extreme weather, natural disasters, high-risk regions for floods, earthquakes, wildfires, and hurricanes, and physical climate risk exposure.',
+        'climate_natcat': 'Focus exclusively on climate and natural catastrophe risks — extreme weather, natural disasters, high-risk regions for floods, earthquakes, wildfires, and hurricanes, and physical climate risk exposure. Include significant climate-related regulatory developments such as net zero legislation, ESG disclosure requirements, and sustainability compliance changes.',
     }
 
     try:
@@ -919,8 +920,8 @@ def get_regional_intelligence():
         'climate_natcat': [
             f'{region_name} extreme weather natural disasters today',
             f'{region_name} climate risk flood earthquake wildfire today',
-            f'{region_name} natural catastrophe risk 2025',
             f'{region_name} climate physical risk exposure today',
+            f'{region_name} climate sustainability regulation net zero policy 2025',
         ],
     }
 
@@ -931,7 +932,7 @@ def get_regional_intelligence():
         'geopolitical': f'Focus exclusively on geopolitical risks — military, diplomatic, conflict, and power dynamics — and specifically focused on {region_name}.',
         'macroeconomic': f'Focus exclusively on macroeconomic risks — markets, trade, inflation, financial stability, and economic policy — and specifically focused on {region_name}.',
         'regulatory': f'Focus exclusively on regulatory risks — policy changes, legislation, compliance shifts, and government interventions — and specifically focused on {region_name}.',
-        'climate_natcat': f'Focus exclusively on climate and natural catastrophe risks — extreme weather, natural disasters, floods, earthquakes, wildfires, and physical climate risk exposure — and specifically focused on {region_name}.',
+        'climate_natcat': f'Focus exclusively on climate and natural catastrophe risks — extreme weather, natural disasters, floods, earthquakes, wildfires, and physical climate risk exposure — and specifically focused on {region_name}. Include significant climate-related regulatory developments such as net zero legislation, ESG disclosure requirements, and sustainability compliance changes.',
     }
 
     try:
