@@ -3887,19 +3887,19 @@
             const titleSlide = pptx.addSlide();
             titleSlide.background = { color: BG_DARK };
             titleSlide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 0.15, h: 7.5, fill: { color: BLUE }, line: { color: BLUE } });
-            titleSlide.addText('STRATEGIC FORESIGHT REPORT', { x: 0.45, y: 1.6, w: 12.5, h: 0.35, fontSize: 11, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 2 });
-            titleSlide.addText(toTitleCase(topic), { x: 0.45, y: 2.1, w: 12.5, h: 1.4, fontSize: 36, bold: true, color: WHITE, fontFace: 'Calibri', wrap: true, valign: 'top' });
+            titleSlide.addText('STRATEGIC FORESIGHT REPORT', { x: 0.45, y: 1.6, w: 12.5, h: 0.35, fontSize: 14, bold: true, color: BLUE, fontFace: 'Garamond', charSpacing: 2 });
+            titleSlide.addText(toTitleCase(topic), { x: 0.45, y: 2.1, w: 12.5, h: 1.4, fontSize: 16, bold: true, color: WHITE, fontFace: 'Garamond', wrap: true, valign: 'top' });
             titleSlide.addShape(pptx.ShapeType.rect, { x: 0.45, y: 3.7, w: 5.5, h: 0.03, fill: { color: BLUE }, line: { color: BLUE } });
-            titleSlide.addText(`${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}   ·   ${data.phenomena.length} phenomena identified`, { x: 0.45, y: 3.85, w: 12.5, h: 0.3, fontSize: 9, color: MUTED, fontFace: 'Calibri' });
-            titleSlide.addText('Powered by Anthropic Claude via Strategic Foresight Scanner', { x: 0.45, y: 7.1, w: 12.5, h: 0.28, fontSize: 8, color: '444455', fontFace: 'Calibri' });
+            titleSlide.addText(`${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}   ·   ${data.phenomena.length} phenomena identified`, { x: 0.45, y: 3.85, w: 12.5, h: 0.3, fontSize: 11, color: MUTED, fontFace: 'Segoe UI' });
+            titleSlide.addText('Powered by Anthropic Claude via Strategic Foresight Scanner', { x: 0.45, y: 7.1, w: 12.5, h: 0.28, fontSize: 11, color: '444455', fontFace: 'Segoe UI' });
 
             // ── Executive brief slide ────────────────────────────────────────────
             if (data.executive_summary && data.executive_summary.dominant_theme) {
                 const execSlide = pptx.addSlide();
                 execSlide.background = { color: WHITE };
                 execSlide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 1.0, fill: { color: HDR }, line: { color: HDR } });
-                execSlide.addText('EXECUTIVE BRIEF', { x: 0.4, y: 0.32, w: 8, h: 0.35, fontSize: 10, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
-                execSlide.addText(toTitleCase(topic), { x: 0.4, y: 0.32, w: 12.5, h: 0.35, fontSize: 9, color: WHITE, fontFace: 'Calibri', align: 'right' });
+                execSlide.addText('EXECUTIVE BRIEF', { x: 0.4, y: 0.32, w: 8, h: 0.35, fontSize: 14, bold: true, color: BLUE, fontFace: 'Garamond', charSpacing: 1 });
+                execSlide.addText(toTitleCase(topic), { x: 0.4, y: 0.32, w: 12.5, h: 0.35, fontSize: 14, color: WHITE, fontFace: 'Garamond', align: 'right' });
                 const execItems = [
                     { label: 'Dominant Theme',    text: data.executive_summary.dominant_theme,    borderColor: BLUE },
                     { label: 'Most Urgent Signal', text: data.executive_summary.most_urgent,       borderColor: 'e53935' },
@@ -3909,8 +3909,8 @@
                     const yPos = 1.2 + i * 1.85;
                     execSlide.addShape(pptx.ShapeType.rect, { x: 0.4, y: yPos, w: 12.5, h: 1.65, fill: { color: LGREY }, line: { color: 'e8e8e8', pt: 0.5 } });
                     execSlide.addShape(pptx.ShapeType.rect, { x: 0.4, y: yPos, w: 0.06, h: 1.65, fill: { color: item.borderColor }, line: { color: item.borderColor } });
-                    execSlide.addText(item.label.toUpperCase(), { x: 0.6, y: yPos + 0.12, w: 12, h: 0.25, fontSize: 8, bold: true, color: MUTED, fontFace: 'Calibri', charSpacing: 1 });
-                    execSlide.addText(item.text || '', { x: 0.6, y: yPos + 0.42, w: 12.1, h: 1.1, fontSize: 10, color: BODY, fontFace: 'Calibri', wrap: true, valign: 'top' });
+                    execSlide.addText(item.label.toUpperCase(), { x: 0.6, y: yPos + 0.12, w: 12, h: 0.25, fontSize: 11, bold: true, color: MUTED, fontFace: 'Segoe UI', charSpacing: 1 });
+                    execSlide.addText(item.text || '', { x: 0.6, y: yPos + 0.42, w: 12.1, h: 1.1, fontSize: 11, color: BODY, fontFace: 'Segoe UI', wrap: true, valign: 'top' });
                 });
             }
 
@@ -3946,8 +3946,8 @@
                     const radarSlide = pptx.addSlide();
                     radarSlide.background = { color: WHITE };
                     radarSlide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 1.0, fill: { color: HDR }, line: { color: HDR } });
-                    radarSlide.addText('STRATEGIC RADAR', { x: 0.4, y: 0.32, w: 8, h: 0.35, fontSize: 10, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
-                    radarSlide.addText(topic, { x: 0.4, y: 0.32, w: 12.5, h: 0.35, fontSize: 9, color: WHITE, fontFace: 'Calibri', align: 'right' });
+                    radarSlide.addText('STRATEGIC RADAR', { x: 0.4, y: 0.32, w: 8, h: 0.35, fontSize: 14, bold: true, color: BLUE, fontFace: 'Garamond', charSpacing: 1 });
+                    radarSlide.addText(topic, { x: 0.4, y: 0.32, w: 12.5, h: 0.35, fontSize: 14, color: WHITE, fontFace: 'Garamond', align: 'right' });
                     radarSlide.addImage({ data: pngDataUrl, x: 0.2, y: 1.1, w: 6.5, h: 6.2 });
 
                     // ── Legend panel (right side) ──────────────────────────────
@@ -3960,29 +3960,29 @@
                         { label: 'Weak Signal',   color: '455a64' },
                         { label: 'Wild Card',     color: 'b71c1c' }
                     ];
-                    radarSlide.addText('SIGNAL TYPES', { x: lx, y: legendY, w: 5.8, h: 0.26, fontSize: 9, bold: true, color: BODY, fontFace: 'Calibri', charSpacing: 1 });
+                    radarSlide.addText('SIGNAL TYPES', { x: lx, y: legendY, w: 5.8, h: 0.26, fontSize: 11, bold: true, color: BODY, fontFace: 'Segoe UI', charSpacing: 1 });
                     legendY += 0.33;
                     typeListNew.forEach(t => {
                         const count = data.phenomena.filter(p => p.type === t.label).length;
                         if (count > 0) {
                             radarSlide.addShape(pptx.ShapeType.ellipse, { x: lx, y: legendY + 0.04, w: 0.18, h: 0.18, fill: { color: t.color }, line: { color: t.color } });
-                            radarSlide.addText(t.label, { x: lx + 0.28, y: legendY, w: 3.8, h: 0.26, fontSize: 9, color: BODY, fontFace: 'Calibri' });
-                            radarSlide.addText(`(${count})`, { x: lx + 4.1, y: legendY, w: 0.9, h: 0.26, fontSize: 9, color: MUTED, fontFace: 'Calibri' });
+                            radarSlide.addText(t.label, { x: lx + 0.28, y: legendY, w: 3.8, h: 0.26, fontSize: 11, color: BODY, fontFace: 'Segoe UI' });
+                            radarSlide.addText(`(${count})`, { x: lx + 4.1, y: legendY, w: 0.9, h: 0.26, fontSize: 11, color: MUTED, fontFace: 'Segoe UI' });
                             legendY += 0.3;
                         }
                     });
                     legendY += 0.2;
-                    radarSlide.addText('TIME HORIZONS', { x: lx, y: legendY, w: 5.8, h: 0.26, fontSize: 9, bold: true, color: BODY, fontFace: 'Calibri', charSpacing: 1 });
+                    radarSlide.addText('TIME HORIZONS', { x: lx, y: legendY, w: 5.8, h: 0.26, fontSize: 11, bold: true, color: BODY, fontFace: 'Segoe UI', charSpacing: 1 });
                     legendY += 0.33;
                     ['Near-term (0–5 years)   — inner ring', 'Mid-term (5–10 years)   — middle ring', 'Long-term (10–20 years) — outer ring'].forEach(line => {
-                        radarSlide.addText(line, { x: lx, y: legendY, w: 5.8, h: 0.26, fontSize: 9, color: MUTED, fontFace: 'Calibri' });
+                        radarSlide.addText(line, { x: lx, y: legendY, w: 5.8, h: 0.26, fontSize: 11, color: MUTED, fontFace: 'Segoe UI' });
                         legendY += 0.3;
                     });
                     legendY += 0.2;
-                    radarSlide.addText('QUADRANTS', { x: lx, y: legendY, w: 5.8, h: 0.26, fontSize: 9, bold: true, color: BODY, fontFace: 'Calibri', charSpacing: 1 });
+                    radarSlide.addText('QUADRANTS', { x: lx, y: legendY, w: 5.8, h: 0.26, fontSize: 11, bold: true, color: BODY, fontFace: 'Segoe UI', charSpacing: 1 });
                     legendY += 0.33;
                     ['Strategic', 'Regulatory', 'Operational', 'Financial'].forEach((cat, ci) => {
-                        radarSlide.addText(cat, { x: lx + (ci % 2) * 2.9, y: legendY + Math.floor(ci / 2) * 0.3, w: 2.8, h: 0.26, fontSize: 9, color: MUTED, fontFace: 'Calibri' });
+                        radarSlide.addText(cat, { x: lx + (ci % 2) * 2.9, y: legendY + Math.floor(ci / 2) * 0.3, w: 2.8, h: 0.26, fontSize: 11, color: MUTED, fontFace: 'Segoe UI' });
                     });
 
                 } catch (radarErr) {
@@ -3999,9 +3999,9 @@
                 const dotColor = typeColors[p.type] || BLUE;
                 slide.addShape(pptx.ShapeType.ellipse, { x: 0.3, y: 0.28, w: 0.28, h: 0.28, fill: { color: dotColor }, line: { color: dotColor } });
                 const refNum = String(i + 1).padStart(2, '0');
-                slide.addText(`${refNum}`, { x: 0.65, y: 0.25, w: 0.5, h: 0.35, fontSize: 9, color: MUTED, fontFace: 'Calibri' });
-                slide.addText(p.title || 'Untitled', { x: 1.2, y: 0.2, w: 10.5, h: 0.45, fontSize: 11, bold: true, color: WHITE, fontFace: 'Calibri', wrap: false });
-                slide.addText((p.type || '').toUpperCase(), { x: 11.8, y: 0.28, w: 1.3, h: 0.28, fontSize: 8, color: dotColor, fontFace: 'Calibri', align: 'right', bold: true });
+                slide.addText(`${refNum}`, { x: 0.65, y: 0.25, w: 0.5, h: 0.35, fontSize: 14, color: MUTED, fontFace: 'Garamond' });
+                slide.addText(p.title || 'Untitled', { x: 1.2, y: 0.2, w: 10.5, h: 0.45, fontSize: 16, bold: true, color: WHITE, fontFace: 'Garamond', wrap: false });
+                slide.addText((p.type || '').toUpperCase(), { x: 11.8, y: 0.28, w: 1.3, h: 0.28, fontSize: 14, color: dotColor, fontFace: 'Garamond', align: 'right', bold: true });
                 // Tags strip
                 const cat = (p.theme_tags || []).find(t => ['Strategic','Regulatory','Operational','Financial'].includes(t)) || '';
                 slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0.9, w: 13.33, h: 0.32, fill: { color: LGREY }, line: { color: LGREY } });
@@ -4009,49 +4009,49 @@
                 if (cat) tagParts.push({ text: cat, options: { color: BLUE, bold: true } });
                 if (p.timing) tagParts.push({ text: (tagParts.length ? '   ·   ' : '') + p.timing, options: { color: MUTED } });
                 if (p.source_confidence) tagParts.push({ text: '   ·   Source: ' + p.source_confidence, options: { color: MUTED } });
-                if (tagParts.length > 0) slide.addText(tagParts, { x: 0.4, y: 0.96, w: 12.5, h: 0.22, fontSize: 8, fontFace: 'Calibri' });
+                if (tagParts.length > 0) slide.addText(tagParts, { x: 0.4, y: 0.96, w: 12.5, h: 0.22, fontSize: 11, fontFace: 'Segoe UI' });
                 // Summary
-                slide.addText('SUMMARY', { x: 0.4, y: 1.35, w: 12.5, h: 0.22, fontSize: 8, bold: true, color: BODY, fontFace: 'Calibri', charSpacing: 1 });
+                slide.addText('SUMMARY', { x: 0.4, y: 1.35, w: 12.5, h: 0.22, fontSize: 11, bold: true, color: BODY, fontFace: 'Segoe UI', charSpacing: 1 });
                 slide.addShape(pptx.ShapeType.rect, { x: 0.38, y: 1.6, w: 0.055, h: 0.85, fill: { color: BLUE }, line: { color: BLUE } });
-                slide.addText(p.summary || '', { x: 0.55, y: 1.6, w: 12.4, h: 0.85, fontSize: 9.5, italic: true, color: BODY, fontFace: 'Calibri', wrap: true, valign: 'top' });
+                slide.addText(p.summary || '', { x: 0.55, y: 1.6, w: 12.4, h: 0.85, fontSize: 11, italic: true, color: BODY, fontFace: 'Segoe UI', wrap: true, valign: 'top' });
                 // Background + Impact (two columns)
                 if (p.background) {
-                    slide.addText('BACKGROUND', { x: 0.4, y: 2.62, w: 6.1, h: 0.22, fontSize: 8, bold: true, color: BODY, fontFace: 'Calibri', charSpacing: 1 });
-                    slide.addText(p.background, { x: 0.4, y: 2.87, w: 6.1, h: 1.4, fontSize: 9, color: BODY, fontFace: 'Calibri', wrap: true, valign: 'top' });
+                    slide.addText('BACKGROUND', { x: 0.4, y: 2.62, w: 6.1, h: 0.22, fontSize: 11, bold: true, color: BODY, fontFace: 'Segoe UI', charSpacing: 1 });
+                    slide.addText(p.background, { x: 0.4, y: 2.87, w: 6.1, h: 1.4, fontSize: 11, color: BODY, fontFace: 'Segoe UI', wrap: true, valign: 'top' });
                 }
                 if (p.impact) {
-                    slide.addText('IMPACT', { x: 6.85, y: 2.62, w: 6.1, h: 0.22, fontSize: 8, bold: true, color: BODY, fontFace: 'Calibri', charSpacing: 1 });
-                    slide.addText(p.impact, { x: 6.85, y: 2.87, w: 6.1, h: 1.4, fontSize: 9, color: BODY, fontFace: 'Calibri', wrap: true, valign: 'top' });
+                    slide.addText('IMPACT', { x: 6.85, y: 2.62, w: 6.1, h: 0.22, fontSize: 11, bold: true, color: BODY, fontFace: 'Segoe UI', charSpacing: 1 });
+                    slide.addText(p.impact, { x: 6.85, y: 2.87, w: 6.1, h: 1.4, fontSize: 11, color: BODY, fontFace: 'Segoe UI', wrap: true, valign: 'top' });
                 }
                 // Emerging Risks (grey strip)
                 if (p.emerging_risks) {
                     slide.addShape(pptx.ShapeType.rect, { x: 0, y: 4.38, w: 13.33, h: 0.92, fill: { color: LGREY }, line: { color: LGREY } });
-                    slide.addText('POTENTIAL EMERGING RISKS', { x: 0.4, y: 4.41, w: 12.5, h: 0.22, fontSize: 8, bold: true, color: BODY, fontFace: 'Calibri', charSpacing: 1 });
-                    slide.addText(p.emerging_risks, { x: 0.4, y: 4.65, w: 12.5, h: 0.6, fontSize: 9, color: BODY, fontFace: 'Calibri', wrap: true, valign: 'top' });
+                    slide.addText('POTENTIAL EMERGING RISKS', { x: 0.4, y: 4.41, w: 12.5, h: 0.22, fontSize: 11, bold: true, color: BODY, fontFace: 'Segoe UI', charSpacing: 1 });
+                    slide.addText(p.emerging_risks, { x: 0.4, y: 4.65, w: 12.5, h: 0.6, fontSize: 11, color: BODY, fontFace: 'Segoe UI', wrap: true, valign: 'top' });
                 }
                 // Insurance Impact (blue left border accent)
                 if (p.insurance_impact) {
                     slide.addShape(pptx.ShapeType.rect, { x: 0.38, y: 5.42, w: 0.055, h: 0.92, fill: { color: BLUE }, line: { color: BLUE } });
-                    slide.addText('INSURANCE IMPACT', { x: 0.55, y: 5.42, w: 12.4, h: 0.22, fontSize: 8, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 1 });
-                    slide.addText(p.insurance_impact, { x: 0.55, y: 5.67, w: 12.4, h: 0.67, fontSize: 9, color: BODY, fontFace: 'Calibri', wrap: true, valign: 'top' });
+                    slide.addText('INSURANCE IMPACT', { x: 0.55, y: 5.42, w: 12.4, h: 0.22, fontSize: 11, bold: true, color: BLUE, fontFace: 'Segoe UI', charSpacing: 1 });
+                    slide.addText(p.insurance_impact, { x: 0.55, y: 5.67, w: 12.4, h: 0.67, fontSize: 11, color: BODY, fontFace: 'Segoe UI', wrap: true, valign: 'top' });
                 }
                 // Slide number
-                slide.addText(`${i + 1} / ${data.phenomena.length}`, { x: 12.0, y: 7.17, w: 1.2, h: 0.25, fontSize: 8, color: 'aaaaaa', align: 'right', fontFace: 'Calibri' });
+                slide.addText(`${i + 1} / ${data.phenomena.length}`, { x: 12.0, y: 7.17, w: 1.2, h: 0.25, fontSize: 11, color: 'aaaaaa', align: 'right', fontFace: 'Segoe UI' });
             });
 
             // ── Disclaimer slide ─────────────────────────────────────────────────
             const disclaimerSlide = pptx.addSlide();
             disclaimerSlide.background = { color: BG_DARK };
             disclaimerSlide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 0.15, h: 7.5, fill: { color: BLUE }, line: { color: BLUE } });
-            disclaimerSlide.addText('DISCLAIMER', { x: 0.45, y: 1.5, w: 12, h: 0.5, fontSize: 24, bold: true, color: BLUE, fontFace: 'Calibri', charSpacing: 2 });
-            disclaimerSlide.addText('This report was generated using a Generative AI tool for internal exploratory analysis only. Outputs must be independently reviewed and validated before any external use.', { x: 0.45, y: 2.2, w: 12.5, h: 1.0, fontSize: 14, color: DISC_TEXT, fontFace: 'Calibri', wrap: true });
-            disclaimerSlide.addText(`Generated using Anthropic Claude (Sonnet) via Strategic Foresight Scanner with public web sources on ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.`, { x: 0.45, y: 3.35, w: 12.5, h: 0.6, fontSize: 12, color: SRC_TEXT, fontFace: 'Calibri', wrap: true });
+            disclaimerSlide.addText('DISCLAIMER', { x: 0.45, y: 1.5, w: 12, h: 0.5, fontSize: 16, bold: true, color: BLUE, fontFace: 'Garamond', charSpacing: 2 });
+            disclaimerSlide.addText('This report was generated using a Generative AI tool for internal exploratory analysis only. Outputs must be independently reviewed and validated before any external use.', { x: 0.45, y: 2.2, w: 12.5, h: 1.0, fontSize: 11, color: DISC_TEXT, fontFace: 'Segoe UI', wrap: true });
+            disclaimerSlide.addText(`Generated using Anthropic Claude (Sonnet) via Strategic Foresight Scanner with public web sources on ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.`, { x: 0.45, y: 3.35, w: 12.5, h: 0.6, fontSize: 11, color: SRC_TEXT, fontFace: 'Segoe UI', wrap: true });
 
             const topSources = (window.latestScanData.sources || []).slice(0, 10);
             if (topSources.length > 0) {
-                disclaimerSlide.addText('Key Sources:', { x: 0.45, y: 4.1, w: 12.5, h: 0.3, fontSize: 11, bold: true, color: BLUE, fontFace: 'Calibri' });
+                disclaimerSlide.addText('Key Sources:', { x: 0.45, y: 4.1, w: 12.5, h: 0.3, fontSize: 11, bold: true, color: BLUE, fontFace: 'Segoe UI' });
                 const sourcesText = topSources.map((s, i) => `${i + 1}. ${s.title} — ${s.link}`).join('\n');
-                disclaimerSlide.addText(sourcesText, { x: 0.45, y: 4.5, w: 12.5, h: 2.5, fontSize: 9, color: SRC_TEXT, fontFace: 'Calibri', wrap: true });
+                disclaimerSlide.addText(sourcesText, { x: 0.45, y: 4.5, w: 12.5, h: 2.5, fontSize: 11, color: SRC_TEXT, fontFace: 'Segoe UI', wrap: true });
             }
 
             const blob = await pptx.write({ outputType: 'blob' });
