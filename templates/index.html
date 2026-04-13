@@ -3888,7 +3888,7 @@
             titleSlide.background = { color: BG_DARK };
             titleSlide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 0.15, h: 7.5, fill: { color: BLUE }, line: { color: BLUE } });
             titleSlide.addText('STRATEGIC FORESIGHT REPORT', { x: 0.45, y: 1.6, w: 12.5, h: 0.35, fontSize: 14, bold: true, color: BLUE, fontFace: 'Garamond', charSpacing: 2 });
-            titleSlide.addText(toTitleCase(topic), { x: 0.45, y: 2.1, w: 12.5, h: 1.4, fontSize: 16, bold: true, color: WHITE, fontFace: 'Garamond', wrap: true, valign: 'top' });
+            titleSlide.addText(toTitleCase(topic), { x: 0.45, y: 3.0, w: 12.5, h: 1.4, fontSize: 40, bold: true, color: WHITE, fontFace: 'Garamond', wrap: true, valign: 'top' });
             titleSlide.addShape(pptx.ShapeType.rect, { x: 0.45, y: 3.7, w: 5.5, h: 0.03, fill: { color: BLUE }, line: { color: BLUE } });
             titleSlide.addText(`${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}   ·   ${data.phenomena.length} phenomena identified`, { x: 0.45, y: 3.85, w: 12.5, h: 0.3, fontSize: 11, color: MUTED, fontFace: 'Segoe UI' });
             titleSlide.addText('Powered by Anthropic Claude via Strategic Foresight Scanner', { x: 0.45, y: 7.1, w: 12.5, h: 0.28, fontSize: 11, color: '444455', fontFace: 'Segoe UI' });
