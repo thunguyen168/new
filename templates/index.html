@@ -3711,12 +3711,9 @@
             const sourcesHtml = sources.length > 0 ? `
                 <div class="sources-section">
                     <h2 class="section-heading">Sources</h2>
-                    ${sources.map(s => `
-                        <div class="source">
-                            <a href="${escapeHtml(s.link)}" target="_blank">${escapeHtml(s.title)}</a>
-                            <p>${escapeHtml(s.snippet || '')}</p>
-                        </div>
-                    `).join('')}
+                    <ol style="padding-left:18px;margin:0;font-size:0.85rem;color:#444;line-height:2">
+                        ${sources.map(s => `<li><strong>${escapeHtml(s.title)}</strong> &mdash; <span style="color:#666">${escapeHtml(s.link)}</span></li>`).join('')}
+                    </ol>
                 </div>
             ` : '';
 
@@ -4045,6 +4042,13 @@
             disclaimerSlide.addText('This report was generated using a Generative AI tool for internal exploratory analysis only. Outputs must be independently reviewed and validated before any external use.', { x: 0.7, y: 2.4, w: 11.5, h: 1.2, fontSize: 14, color: 'cccccc', fontFace: 'Calibri', wrap: true });
             disclaimerSlide.addText(`Generated using Anthropic Claude (Sonnet) via Strategic Foresight Scanner with public web sources on ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.`, { x: 0.7, y: 3.8, w: 11.5, h: 0.8, fontSize: 12, color: SILVER, fontFace: 'Calibri', wrap: true });
 
+            const topSources = (window.latestScanData.sources || []).slice(0, 10);
+            if (topSources.length > 0) {
+                disclaimerSlide.addText('Key Sources:', { x: 0.7, y: 4.8, w: 11.5, h: 0.3, fontSize: 11, bold: true, color: BLUE, fontFace: 'Calibri' });
+                const sourcesText = topSources.map((s, i) => `${i + 1}. ${s.title} — ${s.link}`).join('\n');
+                disclaimerSlide.addText(sourcesText, { x: 0.7, y: 5.2, w: 11.5, h: 2.0, fontSize: 9, color: SILVER, fontFace: 'Calibri', wrap: true });
+            }
+
             const blob = await pptx.write({ outputType: 'blob' });
             triggerDownload(blob, `foresight-${topic.toLowerCase().replace(/\s+/g, '-')}.pptx`);
             } catch (err) {
@@ -4180,11 +4184,23 @@
   </div>
   <div style="margin-bottom:32px">${risksHtml}</div>
 
+  <h2 style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#00aeef;border-bottom:2px solid #00aeef;padding-bottom:6px;margin-bottom:16px">Sources</h2>
+  ${(() => {
+      const srcs = intel.sources;
+      if (srcs && srcs.length > 0) {
+          return '<ol style="padding-left:18px;margin:0 0 32px;font-size:12px;color:#444;line-height:1.8">' +
+              srcs.map(s => `<li><strong>${s.title || ''}</strong>${s.link ? ' &mdash; <span style="color:#666">' + s.link + '</span>' : ''}</li>`).join('') +
+              '</ol>';
+      }
+      return '<p style="font-size:12px;color:#888;margin:0 0 32px">Sources available in the Strategic Intelligence Dashboard.</p>';
+  })()}
+
 </div>
 
-<div style="background:#f5f5f5;border-top:1px solid #ddd;padding:14px 40px;font-size:11px;color:#888;display:flex;justify-content:space-between">
-  <span>Filter applied: ${filterLabel}</span>
-  <span>AI-generated intelligence report &middot; ${dateStr} ${timeStr}</span>
+<div style="background:#f5f5f5;border-top:1px solid #ddd;padding:16px 40px;font-size:11px;color:#888">
+  <div style="margin-bottom:6px">Filter applied: ${filterLabel}</div>
+  <div style="margin-bottom:4px">This report was generated using a Generative AI tool for internal exploratory analysis only. Outputs must be independently reviewed and validated before any external use.</div>
+  <div>Generated using Anthropic Claude (Sonnet) via Strategic Intelligence Dashboard, with public web sources, on ${dateStr} ${timeStr}.</div>
 </div>
 </body>
 </html>`;
