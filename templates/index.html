@@ -2264,7 +2264,7 @@
             document.getElementById('regionFocusLoading').style.display = 'flex';
 
             try {
-                const resp = await fetch('/api/regional-intelligence?region=' + encodeURIComponent(regionKey), {
+                const resp = await fetch('/api/regional-intelligence?region=' + encodeURIComponent(regionKey) + '&filter_type=' + encodeURIComponent(_activeIntelFilter), {
                     headers: { 'Accept': 'application/json' }
                 });
                 if (!resp.ok && resp.status === 401) throw new Error('Session expired. Please refresh the page.');

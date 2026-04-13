@@ -890,10 +890,52 @@ def get_regional_intelligence():
     if not SERPER_API_KEY and not BRAVE_API_KEY:
         return jsonify({'error': 'No search API key configured'}), 500
 
+    VALID_FILTER_TYPES = {'all', 'geopolitical', 'macroeconomic', 'regulatory', 'climate_natcat'}
+    filter_type = request.args.get('filter_type', 'all')
+    if filter_type not in VALID_FILTER_TYPES:
+        filter_type = 'all'
+
     region_name = REGION_DISPLAY_NAMES.get(region, region)
 
+    REGION_FILTER_QUERIES = {
+        'geopolitical': [
+            f'{region_name} military conflict tensions today',
+            f'{region_name} geopolitical crisis diplomacy sanctions 2025',
+            f'{region_name} war conflict security flashpoints today',
+            f'{region_name} political power dynamics today',
+        ],
+        'macroeconomic': [
+            f'{region_name} economy recession risk today',
+            f'{region_name} financial markets inflation 2025',
+            f'{region_name} trade economic disruption today',
+            f'{region_name} central bank policy economic risk today',
+        ],
+        'regulatory': [
+            f'{region_name} regulatory policy changes 2025',
+            f'{region_name} compliance legislation financial regulation today',
+            f'{region_name} government policy shifts today',
+            f'{region_name} ESG data privacy regulation 2025',
+        ],
+        'climate_natcat': [
+            f'{region_name} extreme weather natural disasters today',
+            f'{region_name} climate risk flood earthquake wildfire today',
+            f'{region_name} natural catastrophe risk 2025',
+            f'{region_name} climate physical risk exposure today',
+        ],
+    }
+
+    queries = REGION_INTEL_QUERIES[region] if filter_type == 'all' else REGION_FILTER_QUERIES[filter_type]
+
+    REGION_FILTER_FOCUS = {
+        'all': f'Focus on the most significant developments in {region_name} across all categories.',
+        'geopolitical': f'Focus exclusively on geopolitical risks — military, diplomatic, conflict, and power dynamics — and specifically focused on {region_name}.',
+        'macroeconomic': f'Focus exclusively on macroeconomic risks — markets, trade, inflation, financial stability, and economic policy — and specifically focused on {region_name}.',
+        'regulatory': f'Focus exclusively on regulatory risks — policy changes, legislation, compliance shifts, and government interventions — and specifically focused on {region_name}.',
+        'climate_natcat': f'Focus exclusively on climate and natural catastrophe risks — extreme weather, natural disasters, floods, earthquakes, wildfires, and physical climate risk exposure — and specifically focused on {region_name}.',
+    }
+
     try:
-        unique_results = parallel_search(REGION_INTEL_QUERIES[region], num_results=7)
+        unique_results = parallel_search(queries, num_results=7)
 
         news_text = '\n'.join(
             f"- {r['title']}: {r['snippet']}"
@@ -906,6 +948,8 @@ def get_regional_intelligence():
 
 NEWS HEADLINES:
 {news_text}
+
+{REGION_FILTER_FOCUS[filter_type]}
 
 Provide a JSON response with exactly these three sections:
 {{
@@ -956,6 +1000,7 @@ Return ONLY valid JSON matching the structure above, no markdown or extra text."
         intelligence['timestamp'] = datetime.now(timezone.utc).isoformat()
         intelligence['region'] = region
         intelligence['region_name'] = region_name
+        intelligence['filter_type'] = filter_type
 
         return jsonify({'success': True, 'intelligence': intelligence})
 
