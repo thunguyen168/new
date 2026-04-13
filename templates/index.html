@@ -4184,7 +4184,7 @@
   <h2 style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#00aeef;border-bottom:2px solid #00aeef;padding-bottom:6px;margin-bottom:16px">Strategic Risk Overview</h2>
   <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
     <span style="font-size:28px;font-weight:700;color:#1a1a2e">${risk.score || 0}<span style="font-size:14px;color:#888">/100</span></span>
-    <span style="font-size:13px;font-weight:600;color:#555">${trendIcon[risk.trend] || '→'} ${(risk.trend || 'STABLE').replace('-', '\u2011')}</span>
+    <span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:#555"><span>${trendIcon[risk.trend] || '→'}</span><span>${(risk.trend || 'STABLE').replace('-', '\u2011')}</span></span>
     <span style="font-size:13px;color:#444">${risk.summary || ''}</span>
   </div>
   <div style="margin-bottom:32px">${risksHtml}</div>
