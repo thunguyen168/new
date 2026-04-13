@@ -1670,6 +1670,7 @@
                 <span class="intel-dashboard-title">Global Intelligence Dashboard</span>
                 <div class="intel-controls">
                     <button class="intel-refresh-btn" id="intelRefreshBtn" onclick="refreshIntelligence()">&#8635; Refresh</button>
+                    <button class="intel-refresh-btn" id="intelExportPdfBtn" onclick="exportIntelligencePdf()" disabled>&#128196; Export PDF</button>
                     <span class="intel-timestamp" id="intelTimestamp"></span>
                 </div>
             </div>
@@ -2043,6 +2044,7 @@
         let _globalIntelCache = null;
         let _activeIntelFilter = 'all';
         let _intelContext = { type: 'global', name: '' };
+        let _currentIntelData = null;
         const _hotspotMarkers = [];
 
         // --- HTML helpers ---
@@ -2265,6 +2267,7 @@
             const loadingFocusHtml = `<div class="intel-loading"><div class="intel-spinner"></div>Loading ${regionLabel} intelligence&hellip;</div>`;
             PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingFocusHtml; });
             document.getElementById('regionFocusLoading').style.display = 'flex';
+            document.getElementById('intelExportPdfBtn').disabled = true;
 
             try {
                 const resp = await fetch('/api/regional-intelligence?region=' + encodeURIComponent(regionKey) + '&filter_type=' + encodeURIComponent(_activeIntelFilter), {
@@ -2279,6 +2282,8 @@
                 renderPosture(intel.strategic_posture);
                 renderRisk(intel.strategic_risk);
                 updateIntelContext('region', regionLabel);
+                _currentIntelData = intel;
+                document.getElementById('intelExportPdfBtn').disabled = false;
             } catch (err) {
                 PANEL_IDS.forEach(id => {
                     document.getElementById(id).innerHTML = errorHTML('Unable to load regional intelligence: ' + err.message);
@@ -2304,6 +2309,7 @@
         async function loadCountryIntelligence(locationName) {
             const loadingFocusHtml = `<div class="intel-loading"><div class="intel-spinner"></div>Loading ${locationName} intelligence&hellip;</div>`;
             PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingFocusHtml; });
+            document.getElementById('intelExportPdfBtn').disabled = true;
 
             try {
                 const resp = await fetch(
@@ -2319,6 +2325,8 @@
                 renderPosture(intel.strategic_posture);
                 renderRisk(intel.strategic_risk);
                 updateIntelContext('country', locationName);
+                _currentIntelData = intel;
+                document.getElementById('intelExportPdfBtn').disabled = false;
             } catch (err) {
                 PANEL_IDS.forEach(id => {
                     document.getElementById(id).innerHTML = errorHTML('Unable to load country intelligence: ' + err.message);
@@ -2340,6 +2348,7 @@
         async function loadIntelligence() {
             const btn = document.getElementById('intelRefreshBtn');
             if (btn) btn.disabled = true;
+            document.getElementById('intelExportPdfBtn').disabled = true;
 
             PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingHTML(); });
 
@@ -2363,6 +2372,8 @@
                     renderPosture(intel.strategic_posture);
                     renderRisk(intel.strategic_risk);
                     updateIntelContext('global', '');
+                    _currentIntelData = intel;
+                    document.getElementById('intelExportPdfBtn').disabled = false;
                 }
 
                 if (intel.timestamp) {
@@ -4069,6 +4080,120 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        // ── Intelligence PDF export ───────────────────────────────────────────────
+        function exportIntelligencePdf() {
+            if (!_currentIntelData) return;
+
+            const intel = _currentIntelData;
+            const filterLabels = {
+                all: 'All Categories', geopolitical: 'Geopolitical',
+                macroeconomic: 'Macroeconomic', regulatory: 'Regulatory',
+                climate_natcat: 'Climate & Nat Cat'
+            };
+            const filterLabel = filterLabels[_activeIntelFilter] || 'All Categories';
+
+            const contextPrefix = _intelContext.type === 'region' ? 'Region: ' :
+                                  _intelContext.type === 'country' ? 'Country: ' : '';
+            const contextName = _intelContext.name || 'Global View';
+            const subtitle = _intelContext.type === 'global'
+                ? `Global View — ${filterLabel}`
+                : `${contextPrefix}${contextName} — ${filterLabel}`;
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const severityColor = s => s === 'HIGH' ? '#e57373' : s === 'MEDIUM' ? '#ff8c42' : '#66bb6a';
+            const statusColor = s => ({ CRITICAL: '#e57373', HEIGHTENED: '#ff8c42', ELEVATED: '#ffd54f', NORMAL: '#66bb6a' }[s] || '#aaa');
+            const trendIcon = { ESCALATING: '↑', STABLE: '→', 'DE-ESCALATING': '↓' };
+
+            const posture = intel.strategic_posture || {};
+            const risk = intel.strategic_risk || {};
+
+            const theatersHtml = (posture.theaters || []).map(t => `
+                <tr>
+                    <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600">${t.region || ''}</td>
+                    <td style="padding:8px 12px;border-bottom:1px solid #eee">
+                        <span style="background:${statusColor(t.status)};color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:700">${t.status || ''}</span>
+                    </td>
+                    <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#444;font-size:13px">${t.note || ''}</td>
+                </tr>`).join('');
+
+            const risksHtml = (risk.top_risks || []).map(r => `
+                <div style="border:1px solid #e0e0e0;border-radius:6px;padding:14px 16px;margin-bottom:12px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                        <span style="background:${severityColor(r.severity)};color:#fff;padding:2px 9px;border-radius:3px;font-size:11px;font-weight:700;flex-shrink:0">${r.severity || ''}</span>
+                        <span style="font-weight:700;font-size:14px;color:#1a1a2e">${r.title || ''}</span>
+                    </div>
+                    ${r.description ? `<p style="margin:0 0 6px;color:#333;font-size:13px;line-height:1.5">${r.description}</p>` : ''}
+                    ${r.insurance_implications ? `<p style="margin:0;font-size:12px;color:#666;line-height:1.5"><strong style="color:#444">Insurance Implications:</strong> ${r.insurance_implications}</p>` : ''}
+                </div>`).join('');
+
+            const reportHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Strategic Intelligence Report — ${subtitle}</title>
+<style>
+  body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; }
+  @media print {
+    .no-print { display: none; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div style="background:#1a1a2e;color:#fff;padding:32px 40px 24px">
+  <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#00aeef;margin-bottom:8px">Strategic Intelligence Report</div>
+  <div style="font-size:24px;font-weight:700;margin-bottom:6px">${subtitle}</div>
+  <div style="font-size:13px;color:#aaa">${dateStr} &middot; ${timeStr}</div>
+</div>
+
+<div style="padding:32px 40px;max-width:900px;margin:0 auto">
+
+  <h2 style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#00aeef;border-bottom:2px solid #00aeef;padding-bottom:6px;margin-bottom:16px">AI World Brief</h2>
+  <p style="font-size:14px;line-height:1.7;color:#222;margin:0 0 32px">${intel.world_brief || ''}</p>
+
+  <h2 style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#00aeef;border-bottom:2px solid #00aeef;padding-bottom:6px;margin-bottom:16px">Strategic Posture</h2>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+    <span style="background:${statusColor(posture.overall)};color:#fff;padding:4px 14px;border-radius:4px;font-size:13px;font-weight:700">${posture.overall || 'NORMAL'}</span>
+    <span style="font-size:13px;color:#444">${posture.summary || ''}</span>
+  </div>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:32px;font-size:13px">
+    <thead>
+      <tr style="background:#f5f5f5">
+        <th style="padding:8px 12px;text-align:left;font-weight:700;color:#1a1a2e;width:22%">Theater</th>
+        <th style="padding:8px 12px;text-align:left;font-weight:700;color:#1a1a2e;width:15%">Status</th>
+        <th style="padding:8px 12px;text-align:left;font-weight:700;color:#1a1a2e">Assessment</th>
+      </tr>
+    </thead>
+    <tbody>${theatersHtml}</tbody>
+  </table>
+
+  <h2 style="font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#00aeef;border-bottom:2px solid #00aeef;padding-bottom:6px;margin-bottom:16px">Strategic Risk Overview</h2>
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+    <span style="font-size:28px;font-weight:700;color:#1a1a2e">${risk.score || 0}<span style="font-size:14px;color:#888">/100</span></span>
+    <span style="font-size:13px;font-weight:600;color:#555">${trendIcon[risk.trend] || '→'} ${(risk.trend || 'STABLE').replace('-', '\u2011')}</span>
+    <span style="font-size:13px;color:#444">${risk.summary || ''}</span>
+  </div>
+  <div style="margin-bottom:32px">${risksHtml}</div>
+
+</div>
+
+<div style="background:#f5f5f5;border-top:1px solid #ddd;padding:14px 40px;font-size:11px;color:#888;display:flex;justify-content:space-between">
+  <span>Filter applied: ${filterLabel}</span>
+  <span>AI-generated intelligence report &middot; ${dateStr} ${timeStr}</span>
+</div>
+</body>
+</html>`;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(reportHtml);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); }, 500);
         }
 
         // ── Session storage history ─────────────────────────────────────────────
