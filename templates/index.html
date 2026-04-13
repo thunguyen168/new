@@ -1682,6 +1682,7 @@
                 <button class="intel-filter-btn"        data-filter="regulatory"    onclick="setIntelFilter('regulatory')">Regulatory</button>
                 <button class="intel-filter-btn"        data-filter="climate_natcat" onclick="setIntelFilter('climate_natcat')">Climate &amp; Nat Cat</button>
             </div>
+            <div id="intelContextIndicator" style="font-size:11px;color:#666;margin:4px 0 6px;letter-spacing:0.03em;">Global View</div>
 
             <!-- World Map -->
             <div class="intel-map-wrapper">
@@ -2041,6 +2042,7 @@
         let _activeRegion = null;
         let _globalIntelCache = null;
         let _activeIntelFilter = 'all';
+        let _intelContext = { type: 'global', name: '' };
         const _hotspotMarkers = [];
 
         // --- HTML helpers ---
@@ -2152,6 +2154,7 @@
 
             marker.unbindPopup();
             marker.bindPopup(popupLoading, { maxWidth: 290, className: 'hotspot-leaflet-popup' }).openPopup();
+            loadCountryIntelligence(h.label);
 
             try {
                 const resp = await fetch(
@@ -2275,12 +2278,51 @@
                 renderInsights(intel);
                 renderPosture(intel.strategic_posture);
                 renderRisk(intel.strategic_risk);
+                updateIntelContext('region', regionLabel);
             } catch (err) {
                 PANEL_IDS.forEach(id => {
                     document.getElementById(id).innerHTML = errorHTML('Unable to load regional intelligence: ' + err.message);
                 });
             } finally {
                 document.getElementById('regionFocusLoading').style.display = 'none';
+            }
+        }
+
+        function updateIntelContext(type, name) {
+            _intelContext = { type, name };
+            const el = document.getElementById('intelContextIndicator');
+            if (!el) return;
+            const filterLabel = {
+                all: '', geopolitical: ' — Geopolitical', macroeconomic: ' — Macroeconomic',
+                regulatory: ' — Regulatory', climate_natcat: ' — Climate & Nat Cat'
+            }[_activeIntelFilter] || '';
+            if (type === 'global')  el.textContent = 'Global View' + filterLabel;
+            if (type === 'region')  el.textContent = 'Region: ' + name + filterLabel;
+            if (type === 'country') el.textContent = 'Country: ' + name + filterLabel;
+        }
+
+        async function loadCountryIntelligence(locationName) {
+            const loadingFocusHtml = `<div class="intel-loading"><div class="intel-spinner"></div>Loading ${locationName} intelligence&hellip;</div>`;
+            PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingFocusHtml; });
+
+            try {
+                const resp = await fetch(
+                    '/api/country-intelligence?location=' + encodeURIComponent(locationName) +
+                    '&filter_type=' + encodeURIComponent(_activeIntelFilter),
+                    { headers: { 'Accept': 'application/json' } }
+                );
+                if (!resp.ok && resp.status === 401) throw new Error('Session expired. Please refresh the page.');
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+                const intel = data.intelligence;
+                renderInsights(intel);
+                renderPosture(intel.strategic_posture);
+                renderRisk(intel.strategic_risk);
+                updateIntelContext('country', locationName);
+            } catch (err) {
+                PANEL_IDS.forEach(id => {
+                    document.getElementById(id).innerHTML = errorHTML('Unable to load country intelligence: ' + err.message);
+                });
             }
         }
 
@@ -2291,6 +2333,7 @@
             document.querySelectorAll('.intel-filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.filter === filterType);
             });
+            updateIntelContext(_intelContext.type, _intelContext.name);
             loadIntelligence();
         }
 
@@ -2319,6 +2362,7 @@
                     renderInsights(intel);
                     renderPosture(intel.strategic_posture);
                     renderRisk(intel.strategic_risk);
+                    updateIntelContext('global', '');
                 }
 
                 if (intel.timestamp) {

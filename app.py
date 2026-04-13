@@ -1011,6 +1011,143 @@ Return ONLY valid JSON matching the structure above, no markdown or extra text."
         return jsonify({'error': f'Error: {str(e)}'}), 500
 
 
+@app.route('/api/country-intelligence')
+@require_auth
+def get_country_intelligence():
+    """Generate AI intelligence brief focused on a specific country or city."""
+    location = request.args.get('location', '').strip()[:120]
+
+    if not location:
+        return jsonify({'error': 'Location parameter is required'}), 400
+
+    if not ANTHROPIC_API_KEY:
+        return jsonify({'error': 'Anthropic API key not configured'}), 500
+    if not SERPER_API_KEY and not BRAVE_API_KEY:
+        return jsonify({'error': 'No search API key configured'}), 500
+
+    VALID_FILTER_TYPES = {'all', 'geopolitical', 'macroeconomic', 'regulatory', 'climate_natcat'}
+    filter_type = request.args.get('filter_type', 'all')
+    if filter_type not in VALID_FILTER_TYPES:
+        filter_type = 'all'
+
+    COUNTRY_FILTER_QUERIES = {
+        'all': [
+            f'{location} security political risk today',
+            f'{location} geopolitical economic risk 2025',
+            f'{location} financial stability risk today',
+            f'{location} crisis instability news today',
+        ],
+        'geopolitical': [
+            f'{location} military conflict geopolitical risk today',
+            f'{location} political instability security crisis 2025',
+            f'{location} diplomatic tensions sanctions today',
+            f'{location} political power dynamics 2025',
+        ],
+        'macroeconomic': [
+            f'{location} economic financial risk instability today',
+            f'{location} market trade economic crisis 2025',
+            f'{location} inflation recession financial stability today',
+            f'{location} central bank economic policy risk today',
+        ],
+        'regulatory': [
+            f'{location} regulatory policy compliance risk today',
+            f'{location} government legislation regulatory change 2025',
+            f'{location} compliance enforcement policy shift today',
+            f'{location} regulatory environment business risk 2025',
+        ],
+        'climate_natcat': [
+            f'{location} extreme weather natural disaster risk today',
+            f'{location} climate physical risk flood earthquake wildfire 2025',
+            f'{location} natural catastrophe exposure risk today',
+            f'{location} climate sustainability regulation net zero 2025',
+        ],
+    }
+
+    queries = COUNTRY_FILTER_QUERIES[filter_type]
+
+    COUNTRY_FILTER_FOCUS = {
+        'all': f'Focus on the most significant developments in {location} across all categories.',
+        'geopolitical': f'Focus exclusively on geopolitical risks — military, diplomatic, conflict, and power dynamics — and specifically focused on {location}.',
+        'macroeconomic': f'Focus exclusively on macroeconomic risks — markets, trade, inflation, financial stability, and economic policy — and specifically focused on {location}.',
+        'regulatory': f'Focus exclusively on regulatory risks — policy changes, legislation, compliance shifts, and government interventions — and specifically focused on {location}.',
+        'climate_natcat': f'Focus exclusively on climate and natural catastrophe risks — extreme weather, natural disasters, floods, earthquakes, wildfires, and physical climate risk exposure — and specifically focused on {location}. Include significant climate-related regulatory developments such as net zero legislation, ESG disclosure requirements, and sustainability compliance changes.',
+    }
+
+    try:
+        unique_results = parallel_search(queries, num_results=7)
+
+        news_text = '\n'.join(
+            f"- {r['title']}: {r['snippet']}"
+            for r in unique_results[:20]
+        )
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=120.0)
+
+        prompt = f"""You are a strategic intelligence analyst specialising in {location}. Based on these current news headlines, provide a structured intelligence assessment focused exclusively on {location}.
+
+NEWS HEADLINES:
+{news_text}
+
+{COUNTRY_FILTER_FOCUS[filter_type]}
+
+Provide a JSON response with exactly these three sections:
+{{
+  "world_brief": "2-3 sentence authoritative intelligence briefing on the most significant developments in {location} right now.",
+  "strategic_posture": {{
+    "overall": "ELEVATED",
+    "summary": "2-3 sentences assessing the current strategic posture in {location} — key military, diplomatic, and power dynamics specific to this location.",
+    "theaters": [
+      {{"region": "{location}", "status": "ELEVATED", "note": "your detailed assessment here"}},
+      {{"region": "Key Neighbour or Actor", "status": "NORMAL", "note": "your assessment here"}},
+      {{"region": "Key Neighbour or Actor", "status": "NORMAL", "note": "your assessment here"}}
+    ]
+  }},
+  "strategic_risk": {{
+    "score": 62,
+    "trend": "STABLE",
+    "top_risks": [
+      {{"title": "...", "severity": "HIGH", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "HIGH", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "MEDIUM", "description": "...", "insurance_implications": "..."}},
+      {{"title": "...", "severity": "LOW", "description": "...", "insurance_implications": "..."}}
+    ],
+    "summary": "1-2 sentences on the overall risk environment specifically in {location}."
+  }}
+}}
+
+Rules:
+- "overall" must be one of: NORMAL, ELEVATED, HEIGHTENED, CRITICAL
+- Each theater "status" must be one of: NORMAL, ELEVATED, HEIGHTENED, CRITICAL
+- "trend" must be one of: ESCALATING, STABLE, DE-ESCALATING
+- Each risk "severity" must be one of: HIGH, MEDIUM, LOW
+- "score" must be a number 0-100 reflecting the risk level for {location}
+- Each risk "insurance_implications" must be 1-2 sentences explaining what that specific risk means for an insurance broker and their clients — covering relevant lines of coverage, potential claims exposure, or client advisory actions
+- All content must be specifically about {location}, not global
+- Base all assessments on the provided headlines; replace all "..." placeholders with real content
+- Use the country itself plus key neighbouring countries or actors relevant to {location} for the theaters list
+
+Return ONLY valid JSON matching the structure above, no markdown or extra text."""
+
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=2000,
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+
+        intelligence = json.loads(extract_json_object(response.content[0].text))
+        intelligence['timestamp'] = datetime.now(timezone.utc).isoformat()
+        intelligence['location'] = location
+        intelligence['filter_type'] = filter_type
+
+        return jsonify({'success': True, 'intelligence': intelligence})
+
+    except anthropic.APIError as e:
+        return jsonify({'error': f'AI API error: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Error: {str(e)}'}), 500
+
+
 @app.route('/api/hotspot-summary')
 @require_auth
 def get_hotspot_summary():
