@@ -384,7 +384,7 @@ Return ONLY the JSON array, no other text."""
 
     response = client.messages.create(
         model=MODEL,
-        max_tokens=8096,
+        max_tokens=4096,
         messages=[{"role": "user", "content": prompt}]
     )
 
@@ -876,7 +876,7 @@ Return ONLY valid JSON matching the structure above, no markdown or extra text."
 
         response = client.messages.create(
             model=MODEL,
-            max_tokens=2000,
+            max_tokens=2048,
             messages=[{'role': 'user', 'content': prompt}]
         )
 
@@ -1008,7 +1008,7 @@ Return ONLY valid JSON matching the structure above, no markdown or extra text."
 
         response = client.messages.create(
             model=MODEL,
-            max_tokens=2000,
+            max_tokens=2048,
             messages=[{'role': 'user', 'content': prompt}]
         )
 
@@ -1146,7 +1146,7 @@ Return ONLY valid JSON matching the structure above, no markdown or extra text."
 
         response = client.messages.create(
             model=MODEL,
-            max_tokens=2000,
+            max_tokens=2048,
             messages=[{'role': 'user', 'content': prompt}]
         )
 
