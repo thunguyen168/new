@@ -680,7 +680,13 @@ def scan_topic():
             f"{topic} industry disruption"
         ]
 
-        unique_results = parallel_search(search_queries, num_results=5)
+        unique_results = []
+        seen_links = set()
+        for q in search_queries:
+            for r in search_web(q, num_results=3):
+                if r['link'] not in seen_links:
+                    seen_links.add(r['link'])
+                    unique_results.append(r)
 
         if not unique_results:
             return jsonify({'error': 'No search results found. Please try a different topic.'}), 400
