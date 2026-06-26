@@ -31,6 +31,7 @@ BRAVE_API_KEY = os.environ.get('BRAVE_API_KEY')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 
 MODEL = os.environ.get('ANTHROPIC_MODEL', 'claude-sonnet-4-6')
+MODEL_FAST = os.environ.get('ANTHROPIC_MODEL_FAST', 'claude-haiku-4-5-20251001')
 
 # --- Input validation constants ---
 MAX_TOPIC_LENGTH = 200
@@ -305,6 +306,7 @@ def analyze_with_claude(topic: str, search_results: list) -> dict:
     """Use Claude to analyze search results and identify trends."""
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=httpx.Timeout(60.0, connect=10.0, read=90.0, write=10.0))
+    _model = MODEL_FAST
 
     # Format search results for the prompt
     sources_text = ""
@@ -383,7 +385,7 @@ Format your response as a JSON array like this:
 Return ONLY the JSON array, no other text."""
 
     response = client.messages.create(
-        model=MODEL,
+        model=MODEL_FAST,
         max_tokens=16000,
         messages=[{"role": "user", "content": prompt}]
     )
