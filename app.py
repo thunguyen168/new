@@ -30,7 +30,7 @@ SERPER_API_KEY = os.environ.get('SERPER_API_KEY')
 BRAVE_API_KEY = os.environ.get('BRAVE_API_KEY')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 
-MODEL = 'claude-sonnet-4-6'
+MODEL = 'claude-sonnet-4-6'  # updated
 
 # --- Input validation constants ---
 MAX_TOPIC_LENGTH = 200
