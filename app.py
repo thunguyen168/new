@@ -678,13 +678,13 @@ def scan_topic():
             f"{topic} industry disruption"
         ]
 
-        unique_results = parallel_search(search_queries, num_results=10)
+        unique_results = parallel_search(search_queries, num_results=5)
 
         if not unique_results:
             return jsonify({'error': 'No search results found. Please try a different topic.'}), 400
 
         # Step 2: Analyze with Claude (single API call)
-        analysis_sources = unique_results[:20]
+        analysis_sources = unique_results[:15]
         analysis = analyze_with_claude(topic, analysis_sources)
 
         # Step 3: Generate executive summary (second, lightweight API call)
