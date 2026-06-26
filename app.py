@@ -304,7 +304,7 @@ def extract_json_object(response_text: str) -> str:
 def analyze_with_claude(topic: str, search_results: list) -> dict:
     """Use Claude to analyze search results and identify trends."""
 
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=240.0)
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=httpx.Timeout(60.0, connect=10.0, read=90.0, write=10.0))
 
     # Format search results for the prompt
     sources_text = ""
