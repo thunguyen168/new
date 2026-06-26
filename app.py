@@ -283,6 +283,21 @@ def extract_json_object(response_text: str) -> str:
     end = text.rfind('}')
     if start != -1 and end != -1:
         text = text[start:end + 1]
+    # Try to parse and fix truncated JSON
+    try:
+        json.loads(text)
+        return text
+    except json.JSONDecodeError:
+        # Try to fix truncated JSON by finding last complete key-value pair
+        last_comma = text.rfind(',')
+        last_brace = text.rfind('}')
+        if last_comma > last_brace:
+            text = text[:last_comma] + '}'
+        try:
+            json.loads(text)
+            return text
+        except json.JSONDecodeError:
+            pass
     return text
 
 
