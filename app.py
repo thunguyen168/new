@@ -451,6 +451,75 @@ Return ONLY the JSON array, no other text."""
     }
 
 
+
+
+def analyze_with_claude_batch2(topic: str, search_results: list, existing_phenomena: list) -> dict:
+    """Second Claude call to get 10 more phenomena different from the first batch."""
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=httpx.Timeout(60.0, connect=10.0, read=90.0, write=10.0))
+
+    sources_text = ""
+    for i, result in enumerate(search_results, 1):
+        sources_text += f"\n{i}. {result['title']}\n   {result['snippet']}\n   Source: {result['link']}\n"
+
+    existing_titles = [p.get('title', '') for p in existing_phenomena]
+    existing_list = "\n".join(f"- {t}" for t in existing_titles)
+
+    prompt = f"""You are a strategic foresight analyst. Based on the search results below about "{topic}", identify exactly 10 MORE key phenomena that are DIFFERENT from these already identified ones:
+
+ALREADY IDENTIFIED (do not repeat these):
+{existing_list}
+
+PHENOMENON CRITERIA - Each phenomenon must meet ALL of these:
+1. It must have a significant impact on several industries in the future.
+2. Its potential impact is informed by the available evidence.
+3. It must be covered in several trustworthy publications.
+4. It must have a direction: either getting stronger, broader, deeper, or weaker.
+5. It must be substantially different from the already identified phenomena above.
+
+COLOUR-CODED SIGNAL TYPES - Include a mix of:
+- "Strengthening" (GREEN): Becoming more common or acute.
+- "Weakening" (BLUE): Becoming more unusual.
+- "Established" (PURPLE): Stabilised in development.
+- "Weak Signal" (GREY): Small emerging issue.
+- "Wild Card" (RED): Possible but not probable event (5-30% probability).
+
+TIMING: Use one of: "Near-term (0-5 years)", "Mid-term (5-10 years)", "Long-term (10-20 years)". Set to null for Weak Signals.
+
+THEME TAGS: Exactly one of: "Strategic", "Regulatory", "Operational", "Financial".
+
+SEARCH RESULTS:
+{sources_text}
+
+For each phenomenon provide: title, theme_tags, type, timing, summary, background, impact, additional_information, source_confidence, emerging_risks, insurance_impact.
+
+Return ONLY a JSON array of exactly 10 phenomena. No other text."""
+
+    response = client.messages.create(
+        model=MODEL_FAST,
+        max_tokens=8192,
+        messages=[{{"role": "user", "content": prompt}}]
+    )
+
+    response_text = response.content[0].text.strip()
+
+    try:
+        if "```" in response_text:
+            parts = response_text.split("```")
+            inner = parts[1] if len(parts) > 1 else response_text
+            if inner.startswith("json"):
+                inner = inner[4:]
+            response_text = inner.strip()
+        start = response_text.find('[')
+        if start != -1:
+            end = response_text.rfind(']')
+            if end != -1:
+                response_text = response_text[start:end + 1]
+        phenomena = json.loads(response_text)
+    except json.JSONDecodeError:
+        phenomena = []
+
+    return {{"topic": topic, "phenomena": phenomena, "sources": search_results}}
+
 def generate_executive_summary(topic: str, phenomena: list) -> dict:
     """Generate a 3-sentence executive brief from the identified phenomena."""
     if not phenomena:
@@ -691,11 +760,15 @@ def scan_topic():
         if not unique_results:
             return jsonify({'error': 'No search results found. Please try a different topic.'}), 400
 
-        # Step 2: Analyze with Claude (single API call)
+        # Step 2: Analyze with Claude - first 10 phenomena
         analysis_sources = unique_results[:15]
         analysis = analyze_with_claude(topic, analysis_sources)
 
-        # Step 3: Generate executive summary (second, lightweight API call)
+        # Step 2b: Second call for 10 more phenomena
+        analysis2 = analyze_with_claude_batch2(topic, analysis_sources, analysis['phenomena'])
+        analysis['phenomena'] = analysis['phenomena'] + analysis2['phenomena']
+
+        # Step 3: Generate executive summary
         executive_summary = generate_executive_summary(topic, analysis['phenomena'])
 
         return jsonify({
