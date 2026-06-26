@@ -752,10 +752,12 @@ def scan_topic():
         unique_results = []
         seen_links = set()
         for q in search_queries:
-            for r in search_web(q, num_results=3):
-                if r['link'] not in seen_links:
-                    seen_links.add(r['link'])
-                    unique_results.append(r)
+            results = search_web(q, num_results=3)
+            if isinstance(results, list):
+                for r in results:
+                    if isinstance(r, dict) and r.get('link') and r['link'] not in seen_links:
+                        seen_links.add(r['link'])
+                        unique_results.append(r)
 
         if not unique_results:
             return jsonify({'error': 'No search results found. Please try a different topic.'}), 400
