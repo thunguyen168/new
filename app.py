@@ -762,13 +762,9 @@ def scan_topic():
         if not unique_results:
             return jsonify({'error': 'No search results found. Please try a different topic.'}), 400
 
-        # Step 2: Analyze with Claude - first 10 phenomena
+        # Step 2: Analyze with Claude
         analysis_sources = unique_results[:15]
         analysis = analyze_with_claude(topic, analysis_sources)
-
-        # Step 2b: Second call for 10 more phenomena
-        analysis2 = analyze_with_claude_batch2(topic, analysis_sources, analysis['phenomena'])
-        analysis['phenomena'] = analysis['phenomena'] + analysis2['phenomena']
 
         # Step 3: Generate executive summary
         executive_summary = generate_executive_summary(topic, analysis['phenomena'])
