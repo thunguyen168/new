@@ -384,7 +384,7 @@ Return ONLY the JSON array, no other text."""
 
     response = client.messages.create(
         model=MODEL,
-        max_tokens=8192,
+        max_tokens=16000,
         messages=[{"role": "user", "content": prompt}]
     )
 
