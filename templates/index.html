@@ -39,6 +39,7 @@
             background: #ffffff;
             border-bottom: 1px solid #e0eaf4;
             padding: 0 24px;
+            box-shadow: 0 2px 12px rgba(0, 100, 200, 0.06);
         }
 
         .navbar-brand {
@@ -49,10 +50,10 @@
         }
 
         .navbar-logo {
-            width: 30px;
-            height: 30px;
+            width: 36px;
+            height: 36px;
             background: #0a1628;
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -60,16 +61,16 @@
         }
 
         .navbar-wordmark-name {
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 700;
-            letter-spacing: 2px;
+            letter-spacing: 2.5px;
             color: #0a1628;
             line-height: 1.1;
         }
 
         .navbar-wordmark-sub {
-            font-size: 9px;
-            letter-spacing: 1.5px;
+            font-size: 10px;
+            letter-spacing: 2px;
             color: #00aeef;
             line-height: 1;
         }
@@ -89,6 +90,7 @@
             align-items: center;
             gap: 12px;
             flex-shrink: 0;
+            margin-left: auto;
         }
 
         .live-badge {
@@ -122,7 +124,7 @@
         .container {
             max-width: 1100px;
             margin: 0 auto;
-            padding: 32px 20px;
+            padding: 40px 20px;
         }
 
         .search-box {
@@ -436,11 +438,11 @@
 
         .phenomenon-card {
             background: #ffffff;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 25px;
             margin-bottom: 20px;
             border: 1px solid #e0eaf4;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 2px 8px rgba(0, 100, 200, 0.05);
             transition: all 0.3s ease;
         }
 
@@ -1120,7 +1122,7 @@
             white-space: nowrap;
         }
 
-        .view-tab:hover { color: #0a1628; }
+        .view-tab:hover { color: #4a5568; }
 
         .view-tab.active {
             color: #0a1628;
@@ -1180,7 +1182,7 @@
         }
 
         .intel-filter-btn {
-            padding: 6px 14px;
+            padding: 6px 16px;
             font-size: 0.79rem;
             font-weight: 600;
             color: #6b7a90;
@@ -1212,7 +1214,7 @@
         /* Map */
         .intel-map-wrapper {
             position: relative;
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
             border: 1px solid rgba(0, 174, 239, 0.2);
             margin-bottom: 14px;
@@ -1257,11 +1259,11 @@
         .intel-panel {
             background: #ffffff;
             border: 1px solid #e0eaf4;
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 8px rgba(0, 100, 200, 0.05);
         }
 
         .intel-panel-header {
@@ -1448,10 +1450,10 @@
         .newsfeed-section {
             background: #ffffff;
             border: 1px solid #e0eaf4;
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
             margin-bottom: 14px;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 8px rgba(0, 100, 200, 0.05);
         }
 
         .newsfeed-header {
@@ -1720,12 +1722,12 @@
         <div class="navbar-brand">
             <div class="navbar-logo">
                 <!-- Globe icon -->
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="9" cy="9" r="7.5" stroke="#00aeef" stroke-width="1.2"/>
-                    <ellipse cx="9" cy="9" rx="3.2" ry="7.5" stroke="#00aeef" stroke-width="1.2"/>
-                    <line x1="1.5" y1="9" x2="16.5" y2="9" stroke="#00aeef" stroke-width="1.2"/>
-                    <line x1="2.5" y1="5.5" x2="15.5" y2="5.5" stroke="#00aeef" stroke-width="1"/>
-                    <line x1="2.5" y1="12.5" x2="15.5" y2="12.5" stroke="#00aeef" stroke-width="1"/>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="8.2" stroke="#00aeef" stroke-width="1.3"/>
+                    <ellipse cx="10" cy="10" rx="3.5" ry="8.2" stroke="#00aeef" stroke-width="1.3"/>
+                    <line x1="1.8" y1="10" x2="18.2" y2="10" stroke="#00aeef" stroke-width="1.3"/>
+                    <line x1="3" y1="6.2" x2="17" y2="6.2" stroke="#00aeef" stroke-width="1.1"/>
+                    <line x1="3" y1="13.8" x2="17" y2="13.8" stroke="#00aeef" stroke-width="1.1"/>
                 </svg>
             </div>
             <div class="navbar-wordmark">
@@ -1758,15 +1760,6 @@
              ====================================================== -->
         <div id="view-intelligence">
         <div class="intel-dashboard" id="intelDashboard">
-
-            <div class="intel-dashboard-header">
-                <span class="intel-dashboard-title">Global Intelligence Dashboard</span>
-                <div class="intel-controls">
-                    <button class="intel-refresh-btn" id="intelRefreshBtn" onclick="refreshIntelligence()">&#8635; Refresh</button>
-                    <button class="intel-refresh-btn" id="intelExportPdfBtn" onclick="exportIntelligencePdf()" disabled>&#128196; Export PDF</button>
-                    <span class="intel-timestamp" id="intelTimestamp"></span>
-                </div>
-            </div>
 
             <!-- Filter bar -->
             <div class="intel-filter-bar">
