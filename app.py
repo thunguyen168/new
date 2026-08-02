@@ -877,6 +877,8 @@ For each phenomenon provide exactly these fields:
 5. summary — 2-3 sentences: what this phenomenon means in plain language and why it matters
 6. emerging_risk_implications — 2-3 sentences on new or accelerated risks this phenomenon creates
 7. insurance_impact — 2-3 sentences on implications for insurance brokers and their clients
+8. additional_information — array of 2-3 source references, each formatted as "Article Title (https://url): brief description of what it covers"
+9. source_confidence — "High" (multiple tier-1 sources: Reuters, BBC, peer-reviewed journals, WEF, OECD), "Medium" (credible mix of sources), or "Low" (weaker sources or speculation-heavy)
 
 Return ONLY a JSON array of exactly 20 objects. Output each object on its own line as soon as it is complete. No other text.
 [
@@ -887,7 +889,9 @@ Return ONLY a JSON array of exactly 20 objects. Output each object on its own li
     "timing": "Near-term (0-5 years)",
     "summary": "...",
     "emerging_risk_implications": "...",
-    "insurance_impact": "..."
+    "insurance_impact": "...",
+    "additional_information": ["Article Title (https://example.com): description"],
+    "source_confidence": "High"
   }}
 ]"""
 

@@ -3027,14 +3027,20 @@
                             const insHtml = ph.insurance_impact
                                 ? `<div class="phenomenon-section"><div class="phenomenon-section-title">Potential Insurance Developments</div><p style="color:#3d4f6a;line-height:1.6;">${ph.insurance_impact}</p></div>`
                                 : '';
+                            const confClass = {'High':'confidence-high','Medium':'confidence-medium','Low':'confidence-low'}[ph.source_confidence] || 'confidence-medium';
+                            const confHtml = ph.source_confidence ? `<span class="confidence-badge ${confClass}">Source: ${ph.source_confidence}</span>` : '';
+                            const addlHtml = ph.additional_information && ph.additional_information.length
+                                ? `<div class="phenomenon-section"><div class="phenomenon-section-title">Additional Information</div><ul class="phenomenon-list">${ph.additional_information.map(i => `<li>${linkifyAdditionalInfo(i)}</li>`).join('')}</ul></div>`
+                                : '';
                             card.innerHTML = `
                                 <h3 class="phenomenon-title"><span class="ref-id">${idx + 1}</span>${ph.title || 'Untitled'}</h3>
                                 <div class="phenomenon-tags">
                                     ${ph.type ? `<span class="tag type">${ph.type}</span>` : ''}
                                     ${categoryHtml}
                                     ${ph.timing ? `<span class="tag horizon">${ph.timing}</span>` : ''}
+                                    ${confHtml}
                                 </div>
-                                ${meaningHtml}${eriHtml}${insHtml}`;
+                                ${meaningHtml}${eriHtml}${insHtml}${addlHtml}`;
                             list.appendChild(card);
 
                         } else if (evt.type === 'executive_summary') {
@@ -3161,6 +3167,18 @@
                         : '';
 
                     const refId = index + 1;
+                    const confidenceClass = {'High':'confidence-high','Medium':'confidence-medium','Low':'confidence-low'}[phenomenon.source_confidence] || 'confidence-medium';
+                    const confidenceHtml = phenomenon.source_confidence
+                        ? `<span class="confidence-badge ${confidenceClass}">Source: ${phenomenon.source_confidence}</span>`
+                        : '';
+                    const additionalInfoHtml = phenomenon.additional_information && phenomenon.additional_information.length > 0
+                        ? `<div class="phenomenon-section">
+                            <div class="phenomenon-section-title">Additional Information</div>
+                            <ul class="phenomenon-list">
+                                ${phenomenon.additional_information.map(i => `<li>${linkifyAdditionalInfo(i)}</li>`).join('')}
+                            </ul>
+                           </div>`
+                        : '';
 
                     card.innerHTML = `
                         <h3 class="phenomenon-title"><span class="ref-id">${refId}</span>${phenomenon.title || 'Untitled'}</h3>
@@ -3168,10 +3186,12 @@
                             ${phenomenon.type ? `<span class="tag type">${phenomenon.type}</span>` : ''}
                             ${categoryHtml}
                             ${phenomenon.timing ? `<span class="tag horizon">${phenomenon.timing}</span>` : ''}
+                            ${confidenceHtml}
                         </div>
                         ${meaningHtml}
                         ${emergingRiskImplicationsHtml}
                         ${insuranceImpactHtml}
+                        ${additionalInfoHtml}
                     `;
 
                     list.appendChild(card);
@@ -3254,10 +3274,11 @@
             overview.innerHTML = `<strong>Summary:</strong> ${item.summary || 'No summary available yet.'}`;
 
             drivers.innerHTML = '';
-            if (item.meaning) {
+            const _desc = item.meaning || item.summary;
+            if (_desc) {
                 drivers.innerHTML += `
                     <strong>Phenomenon Description:</strong>
-                    <p style="margin-top:6px;">${item.meaning}</p>
+                    <p style="margin-top:6px;">${_desc}</p>
                 `;
             }
             if (item.emerging_risk_implications) {
@@ -3273,7 +3294,16 @@
                 `;
             }
 
-            implications.innerHTML = '';
+            if (item.additional_information && item.additional_information.length > 0) {
+                implications.innerHTML = `
+                    <strong>Additional Information:</strong>
+                    <ul class="scorecard-list">
+                        ${item.additional_information.map(info => `<li>${linkifyAdditionalInfo(info)}</li>`).join('')}
+                    </ul>
+                `;
+            } else {
+                implications.innerHTML = '';
+            }
 
             const scanSources = (window.latestScanData && window.latestScanData.sources) ? window.latestScanData.sources : [];
             const topSources = getTopSources(scanSources);
@@ -3486,9 +3516,9 @@
                 // Label at top of circle (12 o'clock)
                 const zt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 zt.setAttribute('x', center);
-                zt.setAttribute('y', center - zr - 5);
+                zt.setAttribute('y', center - zr - 10);
                 zt.setAttribute('fill', '#8898aa');
-                zt.setAttribute('font-size', '10');
+                zt.setAttribute('font-size', '16');
                 zt.setAttribute('font-weight', '500');
                 zt.setAttribute('text-anchor', 'middle');
                 zt.textContent = zone.label;
