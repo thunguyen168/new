@@ -914,6 +914,22 @@
             transform: translateY(-1px);
         }
 
+        .new-scan-btn {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #3d4f6a;
+            background: #ffffff;
+            border: 1px solid #d0dce8;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .new-scan-btn:hover {
+            border-color: #00aeef;
+            color: #00aeef;
+        }
+
         /* Executive Summary */
         .executive-summary {
             background: #f8fafc;
@@ -2232,6 +2248,7 @@
                 <h2 class="results-title" id="resultsTitle">Results</h2>
                 <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <span class="results-count" id="resultsCount">0 phenomena found</span>
+                    <button class="new-scan-btn" onclick="clearScan()">&#8635; New Scan</button>
                     <button class="download-report-btn" id="editContentBtn" onclick="openEditModal()">Edit Content</button>
                     <div class="export-menu" id="exportMenu">
                         <button class="download-report-btn" onclick="toggleExportMenu()">Export &#9660;</button>
@@ -2876,6 +2893,15 @@
         function setTopic(topic) {
             document.getElementById('topicInput').value = topic;
             updateCharCount();
+        }
+
+        function clearScan() {
+            document.getElementById('topicInput').value = '';
+            updateCharCount();
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('errorMessage').classList.remove('active');
+            window.latestScanData = null;
+            window.latestScanTopic = null;
         }
 
         // Character counter
@@ -4544,16 +4570,11 @@
             return `${Math.round(mins / 60)}h ago`;
         }
 
-        // On page load, restore scan history display and last scan if available
+        // On page load, show scan history chips only — never auto-restore results
         (function initHistory() {
             const history = getHistory();
             if (history.length > 0) {
                 renderScanHistory();
-                // Restore the most recent scan automatically
-                const latest = history[0];
-                document.getElementById('topicInput').value = latest.topic;
-                updateCharCount();
-                displayResults(latest.topic, latest.data);
             }
         })();
     </script>
