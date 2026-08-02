@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Foresight Scanner</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
     <style>
         * {
             margin: 0;
@@ -1211,31 +1210,8 @@
             color: #6b7a90;
         }
 
-        /* Map */
-        .intel-map-wrapper {
-            position: relative;
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid rgba(0, 174, 239, 0.2);
-            margin-bottom: 14px;
-            height: 360px;
-        }
-
-        #worldMap {
-            height: 100%;
-            width: 100%;
-            background: #e8eef4;
-        }
-
         .map-overlay-label {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            z-index: 500;
-            background: rgba(255, 255, 255, 0.92);
-            border: 1px solid #d0dae8;
-            border-radius: 6px;
-            padding: 5px 10px;
+            display: none;
             font-size: 0.72rem;
             color: #6b7a90;
             pointer-events: none;
@@ -1563,36 +1539,6 @@
             100% { transform: scale(2.4); opacity: 0;    }
         }
 
-        /* Hotspot popup (Leaflet popup light-theme overrides) */
-        .hotspot-leaflet-popup .leaflet-popup-content-wrapper {
-            background: #ffffff;
-            border: 1px solid #e0eaf4;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-            padding: 0;
-        }
-
-        .hotspot-leaflet-popup .leaflet-popup-content {
-            margin: 12px 14px;
-            color: #3d4f6a;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .hotspot-leaflet-popup .leaflet-popup-tip {
-            background: #ffffff;
-        }
-
-        .hotspot-leaflet-popup .leaflet-popup-close-button {
-            color: #8898aa;
-            font-size: 16px;
-            top: 6px;
-            right: 8px;
-        }
-
-        .hotspot-leaflet-popup .leaflet-popup-close-button:hover {
-            color: #0a1628;
-        }
-
         .hotspot-popup-header {
             display: flex;
             justify-content: space-between;
@@ -1638,62 +1584,6 @@
         .risk-band-elevated   { color: #ffd54f; font-weight: 600; }
         .risk-band-critical   { color: #e57373; font-weight: 600; }
 
-        /* Region focus bar */
-        .region-focus-bar {
-            display: none;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 14px;
-            background: rgba(0, 174, 239, 0.07);
-            border: 1px solid rgba(0, 174, 239, 0.3);
-            border-radius: 10px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-        }
-
-        .region-focus-bar.active {
-            display: flex;
-        }
-
-        .region-focus-label {
-            font-size: 0.78rem;
-            color: #6b7a90;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        .region-focus-name {
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: var(--lockton-blue);
-        }
-
-        .region-focus-loading {
-            font-size: 0.8rem;
-            color: #6b7a90;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .global-view-btn {
-            margin-left: auto;
-            padding: 5px 14px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #0a1628;
-            background: rgba(0, 174, 239, 0.1);
-            border: 1px solid rgba(0, 174, 239, 0.4);
-            border-radius: 7px;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .global-view-btn:hover {
-            background: rgba(0, 174, 239, 0.2);
-        }
-
         /* Section divider */
         .intel-section-divider {
             display: flex;
@@ -1712,6 +1602,218 @@
             flex: 1;
             height: 1px;
             background: #e0eaf4;
+        }
+
+        /* ============================================================
+           Industry Insights
+           ============================================================ */
+        .industry-section {
+            padding: 24px;
+            max-width: 1100px;
+        }
+
+        .industry-header {
+            margin-bottom: 20px;
+        }
+        .industry-eyebrow {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #00aeef;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .industry-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0a1628;
+            margin-bottom: 6px;
+        }
+        .industry-subtitle {
+            font-size: 12px;
+            color: #6b7a90;
+        }
+
+        .industry-controls-card {
+            background: #fff;
+            border: 1px solid #e0eaf4;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .industry-dropdown-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .industry-dropdown-label {
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            color: #8898aa;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .industry-dropdown {
+            background: #f8fafc;
+            border: 1px solid #d0dce8;
+            border-radius: 7px;
+            padding: 8px 10px;
+            font-size: 12px;
+            color: #0a1628;
+            outline: none;
+            width: 100%;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .industry-dropdown:focus { border-color: #00aeef; }
+
+        .industry-generate-btn {
+            background: #0a1628;
+            color: #fff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            align-self: flex-end;
+        }
+        .industry-generate-btn:hover { background: #00aeef; }
+        .industry-generate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .industry-empty-state {
+            background: #fff;
+            border: 2px dashed #d0dce8;
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+        }
+        .industry-empty-icon {
+            width: 44px;
+            height: 44px;
+            background: #e8f4ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+        }
+        .industry-empty-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0a1628;
+            margin-bottom: 8px;
+        }
+        .industry-empty-sub {
+            font-size: 12px;
+            color: #8898aa;
+            line-height: 1.6;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .industry-result-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .industry-result-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0a1628;
+        }
+        .industry-result-meta {
+            font-size: 11px;
+            color: #8898aa;
+            margin-top: 3px;
+        }
+        .industry-export-btn {
+            background: #fff;
+            border: 1px solid #d0dce8;
+            color: #0a1628;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .industry-export-btn:hover { border-color: #00aeef; color: #00aeef; }
+
+        .industry-results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 700px) { .industry-results-grid { grid-template-columns: 1fr; } }
+
+        .industry-insight-card {
+            background: #fff;
+            border: 1px solid #e0eaf4;
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .industry-card-eyebrow {
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            color: #00aeef;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .industry-card-body {
+            font-size: 12px;
+            color: #3d4f6a;
+            line-height: 1.65;
+        }
+        .industry-card-body ul {
+            margin: 6px 0 0 16px;
+            padding: 0;
+        }
+        .industry-card-body li { margin-bottom: 4px; }
+
+        .industry-sources-card {
+            background: #f8fafc;
+            border: 1px solid #e0eaf4;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .industry-sources-title {
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            color: #8898aa;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .industry-source-item {
+            font-size: 11px;
+            color: #6b7a90;
+            margin-bottom: 4px;
+            display: flex;
+            gap: 6px;
+        }
+        .industry-source-num {
+            color: #00aeef;
+            font-weight: 700;
+            flex-shrink: 0;
         }
 
         /* ============================================================
@@ -1945,22 +2047,6 @@
 
             <div id="intelContextIndicator" style="font-size:11px;color:#8898aa;margin:4px 0 6px;letter-spacing:0.03em;">Global View</div>
 
-            <!-- World Map -->
-            <div class="intel-map-wrapper">
-                <div id="worldMap"></div>
-                <div class="map-overlay-label">Click a region marker to zoom in and view regional insights</div>
-            </div>
-
-            <!-- Region focus bar (shown when a region is selected) -->
-            <div class="region-focus-bar" id="regionFocusBar">
-                <span class="region-focus-label">Focused on</span>
-                <span class="region-focus-name" id="regionFocusName"></span>
-                <span class="region-focus-loading" id="regionFocusLoading" style="display:none;">
-                    <div class="intel-spinner"></div> Updating insights&hellip;
-                </span>
-                <button class="global-view-btn" onclick="returnToGlobalView()">&#8617; Return to Global View</button>
-            </div>
-
             <!-- AI Insights | AI Strategic Posture | Strategic Risk Overview -->
             <div class="intel-panels-row">
 
@@ -2176,15 +2262,110 @@
              Industry Insights view (hidden by default)
              ====================================================== -->
         <div id="view-industry" style="display:none;">
-            <div class="intel-section-divider"><span>Industry Insights</span></div>
-            <div class="intel-panel" style="padding: 32px; text-align: center; min-height: 260px; justify-content: center; align-items: center;">
-                <div class="intel-panel-header" style="justify-content:center; border-bottom:none; background:none;">
-                    <span class="intel-panel-title" style="font-size:1rem;">Industry Insights</span>
+        <div class="industry-section">
+
+            <!-- Header -->
+            <div class="industry-header">
+                <div class="industry-eyebrow">Market Intelligence</div>
+                <div class="industry-title">Industry Insights</div>
+                <div class="industry-subtitle">Select an industry, geography and insight type — then generate a tailored brief with cited sources</div>
+            </div>
+
+            <!-- Controls card -->
+            <div class="industry-controls-card">
+                <div class="industry-dropdown-group">
+                    <label class="industry-dropdown-label">Industry</label>
+                    <select class="industry-dropdown" id="industrySelect">
+                        <option value="">Select industry…</option>
+                        <option value="Aviation & Aerospace">Aviation &amp; Aerospace</option>
+                        <option value="Construction & Engineering">Construction &amp; Engineering</option>
+                        <option value="Energy & Utilities">Energy &amp; Utilities</option>
+                        <option value="Financial Services">Financial Services</option>
+                        <option value="Healthcare & Life Sciences">Healthcare &amp; Life Sciences</option>
+                        <option value="Manufacturing & Industrial">Manufacturing &amp; Industrial</option>
+                        <option value="Marine & Shipping">Marine &amp; Shipping</option>
+                        <option value="Real Estate">Real Estate</option>
+                        <option value="Technology & Cyber">Technology &amp; Cyber</option>
+                        <option value="Retail & Consumer">Retail &amp; Consumer</option>
+                    </select>
                 </div>
-                <div class="intel-panel-content" style="display:flex; align-items:center; justify-content:center; color:#6b7a90; font-size:0.95rem;">
-                    Industry-specific intelligence will appear here.
+                <div class="industry-dropdown-group">
+                    <label class="industry-dropdown-label">Geography</label>
+                    <select class="industry-dropdown" id="industryGeoSelect">
+                        <option value="">Select geography…</option>
+                        <option value="Global">Global</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Europe">Europe</option>
+                        <option value="North America">North America</option>
+                        <option value="Middle East">Middle East</option>
+                        <option value="Indo-Pacific">Indo-Pacific</option>
+                        <option value="Africa">Africa</option>
+                        <option value="Latin America">Latin America</option>
+                    </select>
+                </div>
+                <div class="industry-dropdown-group">
+                    <label class="industry-dropdown-label">Insight Type</label>
+                    <select class="industry-dropdown" id="industryTypeSelect">
+                        <option value="">Select type…</option>
+                        <option value="Full overview">Full overview</option>
+                        <option value="Risk landscape">Risk landscape</option>
+                        <option value="Regulatory environment">Regulatory environment</option>
+                        <option value="Market trends">Market trends</option>
+                        <option value="Insurance implications">Insurance implications</option>
+                    </select>
+                </div>
+                <button class="industry-generate-btn" id="industryGenerateBtn" onclick="generateIndustryInsights()">Generate Insights →</button>
+            </div>
+
+            <!-- Empty state -->
+            <div class="industry-empty-state" id="industryEmptyState">
+                <div class="industry-empty-icon">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="7" width="16" height="12" rx="2" stroke="#00aeef" stroke-width="1.5"/>
+                        <path d="M7 7V5a4 4 0 0 1 8 0v2" stroke="#00aeef" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M8 12h6M8 15h4" stroke="#00aeef" stroke-width="1.3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="industry-empty-title">Select your parameters above</div>
+                <div class="industry-empty-sub">Choose an industry, geography and insight type, then click Generate to receive a tailored brief sourced from WEF, Swiss Re, Lloyd's, OECD and other trusted institutions.</div>
+            </div>
+
+            <!-- Results section (hidden by default) -->
+            <div id="industryResults" style="display:none;">
+                <div class="industry-result-header">
+                    <div>
+                        <div class="industry-result-title" id="industryResultTitle"></div>
+                        <div class="industry-result-meta" id="industryResultMeta"></div>
+                    </div>
+                    <button class="industry-export-btn" onclick="exportIndustryPDF()">Export PDF ↗</button>
+                </div>
+
+                <div class="industry-results-grid">
+                    <div class="industry-insight-card">
+                        <div class="industry-card-eyebrow">Market Overview</div>
+                        <div class="industry-card-body" id="industryCardMarket"></div>
+                    </div>
+                    <div class="industry-insight-card">
+                        <div class="industry-card-eyebrow">Risk Landscape</div>
+                        <div class="industry-card-body" id="industryCardRisks"></div>
+                    </div>
+                    <div class="industry-insight-card">
+                        <div class="industry-card-eyebrow">Regulatory Environment</div>
+                        <div class="industry-card-body" id="industryCardRegulatory"></div>
+                    </div>
+                    <div class="industry-insight-card">
+                        <div class="industry-card-eyebrow">Insurance Implications</div>
+                        <div class="industry-card-body" id="industryCardInsurance"></div>
+                    </div>
+                </div>
+
+                <div class="industry-sources-card">
+                    <div class="industry-sources-title">Sources &amp; References</div>
+                    <div id="industrySourcesList"></div>
                 </div>
             </div>
+
+        </div>
         </div><!-- /#view-industry -->
 
         <footer>
@@ -2200,7 +2381,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.7.1/dist/pptxgen.bundle.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script>
         // ============================================================
         // Global Intelligence Dashboard
@@ -2208,9 +2388,6 @@
 
         const DEFAULT_VIEW = 'intelligence';
         const PANEL_IDS = ['insightsContent', 'postureContent', 'riskContent'];
-
-        let _worldMap = null;
-        const _regionMarkers = {};
 
         // Theater region name -> dropdown region key
         const THEATER_REGION_MAP = {
@@ -2232,95 +2409,12 @@
             'latin-america': { coords: [-15, -60], label: 'Latin America' },
         };
 
-        // Zoom settings per region when clicked: [lat, lng, zoomLevel]
-        const REGION_ZOOM_CONFIG = {
-            'us':            { center: [39, -98],   zoom: 4 },
-            'europe':        { center: [52, 15],    zoom: 4 },
-            'middle-east':   { center: [27, 43],    zoom: 5 },
-            'asia-pacific':  { center: [22, 108],   zoom: 4 },
-            'africa':        { center: [2,  20],    zoom: 4 },
-            'latin-america': { center: [-12, -58],  zoom: 4 },
-        };
-
-        // Global map defaults
-        const GLOBAL_MAP_CENTER = [20, 0];
-        const GLOBAL_MAP_ZOOM   = 2;
-
-        // Country-level hotspots shown when a region is zoomed in.
-        // Each entry: { coords, label, critical? }
-        // critical = true renders a red pulse (elevated threat)
-        const REGION_HOTSPOTS = {
-            'us': [
-                { coords: [38.9, -77.0],  label: 'Washington D.C.',  critical: false },
-                { coords: [45.4, -75.7],  label: 'Ottawa',           critical: false },
-                { coords: [19.4, -99.1],  label: 'Mexico City',      critical: false },
-                { coords: [25.1, -77.4],  label: 'Nassau (Caribbean Hub)', critical: false },
-                { coords: [18.5, -69.9],  label: 'Santo Domingo',    critical: false },
-            ],
-            'europe': [
-                { coords: [55.8,  37.6],  label: 'Moscow',           critical: true  },
-                { coords: [50.4,  30.5],  label: 'Kyiv',             critical: true  },
-                { coords: [52.5,  13.4],  label: 'Berlin',           critical: false },
-                { coords: [50.8,   4.4],  label: 'Brussels (NATO/EU)', critical: false },
-                { coords: [51.5,  -0.1],  label: 'London',           critical: false },
-                { coords: [48.8,   2.3],  label: 'Paris',            critical: false },
-                { coords: [41.9,  12.5],  label: 'Rome',             critical: false },
-                { coords: [59.3,  18.1],  label: 'Stockholm',        critical: false },
-                { coords: [52.2,  21.0],  label: 'Warsaw',           critical: false },
-            ],
-            'middle-east': [
-                { coords: [35.7,  51.4],  label: 'Tehran',           critical: true  },
-                { coords: [31.8,  35.2],  label: 'Jerusalem / Tel Aviv', critical: true },
-                { coords: [31.5,  34.5],  label: 'Gaza Strip',       critical: true  },
-                { coords: [24.7,  46.7],  label: 'Riyadh',           critical: false },
-                { coords: [33.3,  44.4],  label: 'Baghdad',          critical: false },
-                { coords: [33.9,  35.5],  label: 'Beirut',           critical: true  },
-                { coords: [33.5,  36.3],  label: 'Damascus',         critical: true  },
-                { coords: [15.4,  44.2],  label: "Sana'a (Yemen)",   critical: true  },
-                { coords: [25.3,  55.3],  label: 'Dubai (Gulf Hub)', critical: false },
-            ],
-            'africa': [
-                { coords: [30.0,  31.2],  label: 'Cairo',            critical: false },
-                { coords: [15.6,  32.5],  label: 'Khartoum',        critical: true  },
-                { coords: [ 9.0,  38.7],  label: 'Addis Ababa',     critical: false },
-                { coords: [-1.3,  36.8],  label: 'Nairobi',         critical: false },
-                { coords: [-4.3,  15.3],  label: 'Kinshasa (DRC)',   critical: true  },
-                { coords: [ 6.5,   3.4],  label: 'Lagos',            critical: false },
-                { coords: [12.4,  -1.5],  label: 'Ouagadougou (Sahel)', critical: true },
-                { coords: [13.5,   2.1],  label: 'Niamey (Sahel)',   critical: true  },
-                { coords: [-25.9, 32.6],  label: 'Maputo',           critical: false },
-            ],
-            'latin-america': [
-                { coords: [-15.8, -47.9], label: 'Brasília',         critical: false },
-                { coords: [  4.7, -74.1], label: 'Bogotá',           critical: false },
-                { coords: [ 10.5, -66.9], label: 'Caracas',          critical: true  },
-                { coords: [-34.6, -58.4], label: 'Buenos Aires',     critical: false },
-                { coords: [ 19.4, -99.1], label: 'Mexico City',      critical: false },
-                { coords: [ 23.1, -82.4], label: 'Havana',           critical: false },
-                { coords: [-33.5, -70.6], label: 'Santiago',         critical: false },
-                { coords: [-12.1, -77.0], label: 'Lima',             critical: false },
-            ],
-            'asia-pacific': [
-                { coords: [39.9, 116.4],  label: 'Beijing',          critical: false },
-                { coords: [35.7, 139.7],  label: 'Tokyo',            critical: false },
-                { coords: [28.6,  77.2],  label: 'New Delhi',        critical: false },
-                { coords: [37.6, 127.0],  label: 'Seoul',            critical: false },
-                { coords: [25.0, 121.5],  label: 'Taipei',           critical: true  },
-                { coords: [39.0, 125.8],  label: 'Pyongyang',        critical: true  },
-                { coords: [14.6, 121.0],  label: 'Manila',           critical: false },
-                { coords: [21.0, 105.8],  label: 'Hanoi',            critical: false },
-                { coords: [ 1.3, 103.8],  label: 'Singapore',        critical: false },
-                { coords: [33.9,  35.5],  label: 'Canberra',         critical: false },
-            ],
-        };
-
-        // Track active region and hotspot markers
+        // Track active region
         let _activeRegion = null;
         let _globalIntelCache = null;
         let _activeIntelFilter = 'all';
         let _intelContext = { type: 'global', name: '' };
         let _currentIntelData = null;
-        const _hotspotMarkers = [];
 
         // --- HTML helpers ---
 
@@ -2334,168 +2428,15 @@
             return `<div class="intel-error"${style}>${message}</div>`;
         }
 
-        // --- Map ---
-
-        function initWorldMap() {
-            if (_worldMap) return;
-
-            _worldMap = L.map('worldMap', {
-                center: [20, 0],
-                zoom: 2,
-                zoomControl: false,
-                attributionControl: true,
-                scrollWheelZoom: false,
-            });
-
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 18,
-            }).addTo(_worldMap);
-
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
-                subdomains: 'abcd',
-                maxZoom: 18,
-            }).addTo(_worldMap);
-
-            L.control.zoom({ position: 'bottomright' }).addTo(_worldMap);
-
-            Object.entries(REGION_MARKER_COORDS).forEach(([regionKey, { coords, label }]) => {
-                const marker = L.circleMarker(coords, {
-                    radius: 10,
-                    fillColor: '#00aeef',
-                    color: '#00aeef',
-                    weight: 2,
-                    opacity: 0.85,
-                    fillOpacity: 0.22,
-                }).addTo(_worldMap);
-
-                marker.bindTooltip(label, { permanent: false, direction: 'top' });
-
-                marker.on('click', () => {
-                    focusOnRegion(regionKey);
-                });
-
-                _regionMarkers[regionKey] = marker;
-            });
-        }
-
         function _statusColor(status) {
             return { NORMAL: '#81c784', ELEVATED: '#ffd54f', HEIGHTENED: '#ffb74d', CRITICAL: '#e57373' }[status] || '#00aeef';
         }
 
-        function updateMapMarkers(theaters) {
-            if (!_worldMap || !theaters) return;
-            theaters.forEach(t => {
-                const marker = _regionMarkers[THEATER_REGION_MAP[t.region]];
-                if (!marker) return;
-                const color = _statusColor(t.status);
-                marker.setStyle({ fillColor: color, color: color });
-                marker.setTooltipContent(`${t.region}: ${t.status || 'NORMAL'}`);
-            });
-        }
-
-        // --- Hotspot markers ---
-
-        function showRegionHotspots(regionKey) {
-            clearHotspots();
-            const hotspots = REGION_HOTSPOTS[regionKey] || [];
-            hotspots.forEach(h => {
-                const icon = L.divIcon({
-                    className: '',
-                    html: `<div class="hotspot-pin${h.critical ? ' critical' : ''}"><div class="hotspot-pin-ring"></div><div class="hotspot-pin-dot"></div></div>`,
-                    iconSize:   [12, 12],
-                    iconAnchor: [ 6,  6],
-                });
-                const m = L.marker(h.coords, { icon, interactive: true, keyboard: false })
-                    .addTo(_worldMap)
-                    .bindTooltip(h.label, { permanent: false, direction: 'top', className: 'leaflet-tooltip' });
-                m.on('click', () => loadHotspotSummary(m, h));
-                _hotspotMarkers.push(m);
-            });
-        }
-
-        async function loadHotspotSummary(marker, h) {
-            const riskColor = h.critical ? '#e57373' : '#ff8c42';
-            const riskLabel = h.critical ? 'CRITICAL' : 'ELEVATED';
-            const popupLoading = `<div class="hotspot-popup">
-                <div class="hotspot-popup-header">
-                    <span class="hotspot-popup-label">${h.label}</span>
-                    <span class="hotspot-popup-risk" style="color:${riskColor}">${riskLabel}</span>
-                </div>
-                <div class="hotspot-popup-body hotspot-popup-loading">
-                    <div class="intel-spinner" style="width:12px;height:12px;border-width:2px;margin-right:6px;flex-shrink:0;"></div>
-                    Loading summary&hellip;
-                </div>
-            </div>`;
-
-            marker.unbindPopup();
-            marker.bindPopup(popupLoading, { maxWidth: 290, className: 'hotspot-leaflet-popup' }).openPopup();
-            loadCountryIntelligence(h.label);
-
-            try {
-                const resp = await fetch(
-                    `/api/hotspot-summary?location=${encodeURIComponent(h.label)}&critical=${h.critical}`,
-                    { headers: { 'Accept': 'application/json' } }
-                );
-                const data = await resp.json();
-                if (data.error) throw new Error(data.error);
-
-                const popup = marker.getPopup();
-                if (popup) {
-                    popup.setContent(`<div class="hotspot-popup">
-                        <div class="hotspot-popup-header">
-                            <span class="hotspot-popup-label">${h.label}</span>
-                            <span class="hotspot-popup-risk" style="color:${riskColor}">${riskLabel}</span>
-                        </div>
-                        <div class="hotspot-popup-body">${data.summary}</div>
-                    </div>`);
-                    popup.update();
-                }
-            } catch (err) {
-                const popup = marker.getPopup();
-                if (popup) {
-                    popup.setContent(`<div class="hotspot-popup">
-                        <div class="hotspot-popup-header">
-                            <span class="hotspot-popup-label">${h.label}</span>
-                            <span class="hotspot-popup-risk" style="color:${riskColor}">${riskLabel}</span>
-                        </div>
-                        <div class="hotspot-popup-body" style="color:#e57373;">Unable to load summary.</div>
-                    </div>`);
-                    popup.update();
-                }
-            }
-        }
-
-        function clearHotspots() {
-            _hotspotMarkers.forEach(m => m.remove());
-            _hotspotMarkers.length = 0;
-        }
-
-        // --- Region focus / zoom ---
+        // --- Region focus ---
 
         function focusOnRegion(regionKey) {
-            const zoomCfg = REGION_ZOOM_CONFIG[regionKey];
-            if (_worldMap && zoomCfg) {
-                _worldMap.flyTo(zoomCfg.center, zoomCfg.zoom, { animate: true, duration: 1.2 });
-            }
-
-            // Highlight selected marker, dim others
-            Object.entries(_regionMarkers).forEach(([key, m]) => {
-                m.setStyle({ opacity: key === regionKey ? 1 : 0.35, fillOpacity: key === regionKey ? 0.55 : 0.12 });
-                m.setRadius(key === regionKey ? 14 : 10);
-            });
-
-            // Show country hotspot pins for this region
-            showRegionHotspots(regionKey);
-
             _activeRegion = regionKey;
             const label = REGION_MARKER_COORDS[regionKey]?.label || regionKey;
-
-            // Show focus bar
-            const bar = document.getElementById('regionFocusBar');
-            bar.classList.add('active');
-            document.getElementById('regionFocusName').textContent = label;
 
             // Update news dropdown and load news
             document.getElementById('regionSelector').value = regionKey;
@@ -2507,21 +2448,6 @@
 
         function returnToGlobalView() {
             _activeRegion = null;
-
-            // Reset map
-            if (_worldMap) {
-                _worldMap.flyTo(GLOBAL_MAP_CENTER, GLOBAL_MAP_ZOOM, { animate: true, duration: 1.2 });
-            }
-
-            // Reset marker styles and remove hotspot pins
-            Object.values(_regionMarkers).forEach(m => {
-                m.setStyle({ opacity: 0.85, fillOpacity: 0.22 });
-                m.setRadius(10);
-            });
-            clearHotspots();
-
-            // Hide focus bar
-            document.getElementById('regionFocusBar').classList.remove('active');
 
             // Restore global intelligence (use cache if available)
             if (_globalIntelCache) {
@@ -2541,7 +2467,6 @@
             // Show loading state in panels
             const loadingFocusHtml = `<div class="intel-loading"><div class="intel-spinner"></div>Loading ${regionLabel} intelligence&hellip;</div>`;
             PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingFocusHtml; });
-            document.getElementById('regionFocusLoading').style.display = 'flex';
             document.getElementById('intelExportPdfBtn').disabled = true;
 
             try {
@@ -2563,8 +2488,6 @@
                 PANEL_IDS.forEach(id => {
                     document.getElementById(id).innerHTML = errorHTML('Unable to load regional intelligence: ' + err.message);
                 });
-            } finally {
-                document.getElementById('regionFocusLoading').style.display = 'none';
             }
         }
 
@@ -2691,7 +2614,6 @@
 
             if (view === 'intelligence') {
                 intelView.style.display = '';
-                if (_worldMap) setTimeout(() => _worldMap.invalidateSize(), 60);
             } else if (view === 'industry') {
                 industryView.style.display = '';
             } else {
@@ -2800,8 +2722,6 @@
             const region = document.getElementById('regionSelector').value;
             document.getElementById('newsfeedContent').innerHTML = loadingHTML('80px');
 
-            Object.entries(_regionMarkers).forEach(([key, m]) => m.setRadius(key === region ? 14 : 10));
-
             try {
                 const resp = await fetch('/api/regional-news?region=' + encodeURIComponent(region), {
                     headers: { 'Accept': 'application/json' }
@@ -2839,7 +2759,6 @@
             try { savedView = sessionStorage.getItem('foresightActiveView') || DEFAULT_VIEW; } catch (e) {}
             switchView(savedView);
 
-            initWorldMap();
             loadIntelligence();
             loadRegionalNews();
         });
@@ -4561,6 +4480,140 @@
                 displayResults(latest.topic, latest.data);
             }
         })();
+    </script>
+
+    <!-- ================================================================
+         Industry Insights
+         ================================================================ -->
+    <script>
+    // Placeholder content per industry
+    const INDUSTRY_CONTENT = {
+        'Financial Services': {
+            market: `<p>Global financial services AUM surpassed $120 trillion in 2024, with private credit emerging as the fastest-growing asset class (+18% YoY). Rising interest rates have stabilised net interest margins for banks while pressuring leveraged borrowers.</p><ul><li>US regional bank consolidation accelerating post-SVB</li><li>Central bank digital currencies (CBDCs) in pilot across 18 jurisdictions</li><li>ESG-linked debt issuance up 34% YoY in EMEA</li></ul>`,
+            risks: `<p>Systemic risks remain elevated across interconnected credit markets. Key concerns for 2025–26:</p><ul><li><strong>Credit default wave:</strong> US corporate default rate forecast at 4.5% (Moody's)</li><li><strong>Cyber & operational risk:</strong> 63% of financial institutions reported a significant cyber incident in 2024</li><li><strong>Regulatory capital pressure:</strong> Basel IV phased implementation increasing RWA by 15–20%</li><li><strong>Concentration risk:</strong> AI-driven homogeneity in risk models</li></ul>`,
+            regulatory: `<p>The regulatory landscape is tightening significantly across major jurisdictions:</p><ul><li><strong>EU DORA:</strong> Digital Operational Resilience Act in force Jan 2025 — mandatory ICT risk frameworks</li><li><strong>US SEC:</strong> Enhanced cyber disclosure rules for public companies</li><li><strong>UK FCA:</strong> Consumer Duty embedding ongoing, with focus on fair value</li><li><strong>Basel IV:</strong> Output floor implementation from 2025 onwards</li></ul>`,
+            insurance: `<p>Insurance implications for financial services clients are multi-dimensional:</p><ul><li><strong>D&O:</strong> Elevated claims frequency from ESG misrepresentation and cyber-linked securities litigation</li><li><strong>Financial Lines:</strong> Tighter capacity for financial institutions in Lloyd's and London market</li><li><strong>Cyber:</strong> Systemic aggregation concerns limiting coverage breadth; sub-limits on ransomware</li><li><strong>Trade Credit:</strong> Increased demand driven by supply chain uncertainty</li></ul>`,
+            sources: ['Swiss Re Institute — Sigma Report 2024: Global Insurance Markets', 'Moody\'s Analytics — 2025 Credit Outlook', 'Basel Committee on Banking Supervision — Basel IV Implementation Update', 'UK FCA — Consumer Duty Annual Findings Report 2024', 'European Banking Authority — Risk Dashboard Q3 2024']
+        },
+        'Energy & Utilities': {
+            market: `<p>The global energy transition is accelerating, with renewable capacity additions reaching a record 295 GW in 2024 (IEA). Fossil fuel demand remains resilient in emerging markets while European utilities face structurally lower wholesale prices.</p><ul><li>Global offshore wind pipeline exceeds 500 GW</li><li>Battery storage deployments up 89% YoY</li><li>LNG spot prices stabilised after 2022–23 volatility</li></ul>`,
+            risks: `<p>Material risks facing energy and utilities operators in 2025:</p><ul><li><strong>Transition risk:</strong> Stranded asset exposure in coal and conventional gas estimated at $1.4T (IRENA)</li><li><strong>Physical climate risk:</strong> Increased frequency of extreme weather disrupting grid infrastructure</li><li><strong>Geopolitical supply risk:</strong> Critical mineral dependencies (lithium, cobalt, nickel)</li><li><strong>Cyber-physical attacks:</strong> OT/IT convergence creating new attack surfaces on grid infrastructure</li></ul>`,
+            regulatory: `<ul><li><strong>EU Taxonomy:</strong> Expanded sustainability criteria affecting project financing</li><li><strong>UK CfD scheme:</strong> AR6 allocation round results shaping offshore wind economics</li><li><strong>US IRA:</strong> Inflation Reduction Act incentives driving $500B+ clean energy investment</li><li><strong>Carbon border adjustment (CBAM):</strong> Full implementation 2026, impacting energy-intensive exporters</li></ul>`,
+            insurance: `<ul><li><strong>Property CAT:</strong> Significant reinsurance capacity reduction for coastal and wildfire-exposed assets</li><li><strong>Construction All-Risk:</strong> Offshore wind construction risks challenging market; limited market appetite</li><li><strong>Liability:</strong> Greenwashing claims emerging against energy companies</li><li><strong>Business Interruption:</strong> Grid interdependency creating complex contingent BI exposures</li></ul>`,
+            sources: ['IEA — Renewables 2024 Report', 'IRENA — World Energy Transitions Outlook 2024', 'Lloyd\'s — Energy Market Insight Report H1 2025', 'OECD — Carbon Border Adjustment Mechanism Analysis', 'Swiss Re — Natural Catastrophe Sigma 2024']
+        },
+        'Technology & Cyber': {
+            market: `<p>Global technology sector revenue exceeded $5.5 trillion in 2024. AI infrastructure investment dominated capex, with hyperscalers collectively spending $250B+ on data centres. Enterprise software growth moderated to 12% as macro headwinds affected IT budgets.</p><ul><li>Generative AI adoption reached 40% of large enterprises</li><li>Semiconductor supply chain reshoring accelerating (CHIPS Act, EU Chips Act)</li><li>Cloud migration: 65% of enterprise workloads now cloud-native</li></ul>`,
+            risks: `<ul><li><strong>AI model risk:</strong> Hallucination, bias and liability questions unresolved across use cases</li><li><strong>Supply chain compromise:</strong> Software supply chain attacks up 245% since 2021 (Sonatype)</li><li><strong>Ransomware:</strong> Average ransom demand reached $2.73M in 2024 (Sophos)</li><li><strong>Talent concentration:</strong> Critical AI expertise concentrated in handful of firms and geographies</li><li><strong>Regulatory fragmentation:</strong> Diverging AI governance (EU AI Act vs. US executive orders)</li></ul>`,
+            regulatory: `<ul><li><strong>EU AI Act:</strong> In force August 2024; high-risk system obligations from 2026</li><li><strong>NIS2 Directive:</strong> Expanded critical infrastructure cyber obligations across EU member states</li><li><strong>UK Online Safety Act:</strong> Platform liability obligations from 2025</li><li><strong>US Executive Order on AI:</strong> Federal agency adoption guidelines and safety standards</li><li><strong>SEC Cyber Disclosure Rule:</strong> Material incident 4-day disclosure requirement</li></ul>`,
+            insurance: `<ul><li><strong>Cyber:</strong> Market hardening continues — rate increases 8–15% in 2025; systemic aggregation concerns</li><li><strong>Tech E&O:</strong> AI-related liability exclusions standard in most policies; specialist products emerging</li><li><strong>D&O:</strong> Securities litigation risk from AI-related disclosures and data breaches</li><li><strong>Crime:</strong> Social engineering / funds transfer fraud losses reaching record levels</li></ul>`,
+            sources: ['Gartner — IT Spending Forecast 2025', 'Sophos — State of Ransomware 2024', 'EU Agency for Cybersecurity (ENISA) — Threat Landscape 2024', 'Sonatype — Software Supply Chain Report 2024', 'Marsh — Cyber Risk Report 2025']
+        }
+    };
+
+    const INDUSTRY_DEFAULTS = {
+        market: `<p>This sector is experiencing significant structural change driven by technological disruption, regulatory evolution and macroeconomic headwinds. Market participants are adapting strategies to navigate elevated volatility.</p><ul><li>Global revenue growth moderating to 6–8% following post-pandemic normalisation</li><li>Cost pressures from inflation and labour markets persisting into 2025</li><li>M&A activity rebounding as valuations compress and strategic rationale strengthens</li></ul>`,
+        risks: `<ul><li><strong>Macroeconomic:</strong> Higher-for-longer interest rates compressing margins and valuations</li><li><strong>Geopolitical:</strong> Supply chain fragmentation and trade policy uncertainty</li><li><strong>Climate:</strong> Physical and transition risks creating asset stranding and compliance costs</li><li><strong>Cyber:</strong> Escalating threat actor sophistication and regulatory enforcement</li><li><strong>Talent:</strong> Skills shortages in critical technology and sustainability functions</li></ul>`,
+        regulatory: `<ul><li>ESG reporting mandates expanding across major jurisdictions (CSRD, SEC climate rules)</li><li>AI governance frameworks introducing new compliance obligations for tech-enabled operations</li><li>Data privacy regimes tightening globally, following GDPR model</li><li>Sector-specific prudential and conduct regulation intensifying post-pandemic</li></ul>`,
+        insurance: `<ul><li><strong>Property:</strong> Catastrophe reinsurance capacity constrained; risk-adequate pricing required</li><li><strong>Liability:</strong> Long-tail exposures from environmental and product liability evolving</li><li><strong>Cyber:</strong> Demand rising; market capacity stabilising following 2022–23 hardening</li><li><strong>Directors & Officers:</strong> Elevated claims from ESG, cyber and regulatory enforcement actions</li></ul>`,
+        sources: ['WEF — Global Risks Report 2025', 'Swiss Re Institute — Sigma 2024', 'Lloyd\'s — Risk Outlook 2025', 'OECD — Economic Outlook 2025', 'McKinsey Global Institute — State of the Industry Report 2025']
+    };
+
+    function generateIndustryInsights() {
+        const industry = document.getElementById('industrySelect').value;
+        const geo      = document.getElementById('industryGeoSelect').value;
+        const type     = document.getElementById('industryTypeSelect').value;
+
+        if (!industry || !geo || !type) {
+            alert('Please select an industry, geography and insight type before generating.');
+            return;
+        }
+
+        const btn = document.getElementById('industryGenerateBtn');
+        btn.disabled = true;
+        btn.textContent = 'Generating…';
+
+        // Show loading in results area
+        document.getElementById('industryEmptyState').style.display = 'none';
+        const resultsEl = document.getElementById('industryResults');
+        resultsEl.style.display = '';
+        ['industryCardMarket','industryCardRisks','industryCardRegulatory','industryCardInsurance'].forEach(id => {
+            document.getElementById(id).innerHTML = '<div class="intel-loading" style="height:60px"><div class="intel-spinner"></div></div>';
+        });
+        document.getElementById('industrySourcesList').innerHTML = '';
+        document.getElementById('industryResultTitle').textContent = '';
+        document.getElementById('industryResultMeta').textContent = '';
+
+        // Simulate brief load delay, then populate with placeholder content
+        setTimeout(() => {
+            const content = INDUSTRY_CONTENT[industry] || INDUSTRY_DEFAULTS;
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            document.getElementById('industryResultTitle').textContent = `${industry} — ${geo}`;
+            document.getElementById('industryResultMeta').textContent = `${type} · Generated ${dateStr} · Indicative analysis`;
+
+            document.getElementById('industryCardMarket').innerHTML     = content.market;
+            document.getElementById('industryCardRisks').innerHTML      = content.risks;
+            document.getElementById('industryCardRegulatory').innerHTML = content.regulatory;
+            document.getElementById('industryCardInsurance').innerHTML  = content.insurance;
+
+            const sources = content.sources || INDUSTRY_DEFAULTS.sources;
+            document.getElementById('industrySourcesList').innerHTML = sources.map((s, i) =>
+                `<div class="industry-source-item"><span class="industry-source-num">[${i+1}]</span><span>${s}</span></div>`
+            ).join('');
+
+            btn.disabled = false;
+            btn.textContent = 'Generate Insights →';
+        }, 800);
+    }
+
+    function exportIndustryPDF() {
+        const title    = document.getElementById('industryResultTitle').textContent;
+        const meta     = document.getElementById('industryResultMeta').textContent;
+        const market   = document.getElementById('industryCardMarket').innerHTML;
+        const risks    = document.getElementById('industryCardRisks').innerHTML;
+        const reg      = document.getElementById('industryCardRegulatory').innerHTML;
+        const ins      = document.getElementById('industryCardInsurance').innerHTML;
+        const sources  = document.getElementById('industrySourcesList').innerHTML;
+
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+        <title>${title}</title>
+        <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a2a3a; margin: 0; padding: 0; }
+            .cover { background: #0a1628; color: #fff; padding: 48px 40px 36px; }
+            .cover-eyebrow { font-size: 10px; letter-spacing: 2px; color: #00aeef; text-transform: uppercase; margin-bottom: 12px; }
+            .cover-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+            .cover-meta { font-size: 12px; color: #8898aa; }
+            .body { padding: 32px 40px; }
+            .section { margin-bottom: 28px; page-break-inside: avoid; }
+            .section-label { font-size: 9px; letter-spacing: 1.5px; color: #00aeef; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #e0eaf4; padding-bottom: 6px; }
+            .section-body { font-size: 12px; line-height: 1.65; color: #3d4f6a; }
+            .section-body ul { margin: 6px 0 0 16px; }
+            .section-body li { margin-bottom: 4px; }
+            .sources { background: #f8fafc; border: 1px solid #e0eaf4; border-radius: 8px; padding: 14px; font-size: 11px; color: #6b7a90; }
+            .disclaimer { margin-top: 32px; font-size: 10px; color: #aaa; border-top: 1px solid #e0eaf4; padding-top: 12px; }
+            @media print { .no-print { display: none; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        </style></head><body>
+        <div class="cover">
+            <div class="cover-eyebrow">Lockton · Market Intelligence</div>
+            <div class="cover-title">${title}</div>
+            <div class="cover-meta">${meta}</div>
+        </div>
+        <div class="body">
+            <div class="section"><div class="section-label">Market Overview</div><div class="section-body">${market}</div></div>
+            <div class="section"><div class="section-label">Risk Landscape</div><div class="section-body">${risks}</div></div>
+            <div class="section"><div class="section-label">Regulatory Environment</div><div class="section-body">${reg}</div></div>
+            <div class="section"><div class="section-label">Insurance Implications</div><div class="section-body">${ins}</div></div>
+            <div class="sources"><strong style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8898aa;">Sources &amp; References</strong><br><br>${sources}</div>
+            <div class="disclaimer">This brief is generated for internal exploratory analysis only. Outputs must be independently reviewed and validated before any external use. Powered by Lockton AI Foresight Scanner.</div>
+        </div>
+        <script>window.onload = function() { window.print(); }<\/script>
+        </body></html>`;
+
+        const w = window.open('', '_blank');
+        if (w) { w.document.write(html); w.document.close(); }
+    }
     </script>
 
     <!-- ================================================================
