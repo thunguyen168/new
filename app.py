@@ -391,7 +391,7 @@ Format your response as a JSON array like this:
 Return ONLY the JSON array, no other text."""
 
     response = client.messages.create(
-        model=MODEL_FAST,
+        model=MODEL,
         max_tokens=16000,
         messages=[{"role": "user", "content": prompt}]
     )
@@ -960,7 +960,7 @@ Rules:
 Return ONLY valid JSON matching the structure above, no markdown or extra text."""
 
         response = client.messages.create(
-            model=MODEL,
+            model=MODEL_FAST,
             max_tokens=2048,
             messages=[{'role': 'user', 'content': prompt}]
         )
@@ -1092,8 +1092,8 @@ Rules:
 Return ONLY valid JSON matching the structure above, no markdown or extra text."""
 
         response = client.messages.create(
-            model=MODEL,
-            max_tokens=3000,
+            model=MODEL_FAST,
+            max_tokens=2048,
             messages=[{'role': 'user', 'content': prompt}]
         )
 
@@ -1230,7 +1230,7 @@ Rules:
 Return ONLY valid JSON matching the structure above, no markdown or extra text."""
 
         response = client.messages.create(
-            model=MODEL,
+            model=MODEL_FAST,
             max_tokens=2048,
             messages=[{'role': 'user', 'content': prompt}]
         )
