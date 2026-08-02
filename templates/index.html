@@ -993,7 +993,7 @@
 
         .confidence-low {
             background: rgba(136, 136, 136, 0.18);
-            color: #aaaaaa;
+            color: #6b7a90;
             border: 1px solid rgba(136, 136, 136, 0.35);
         }
 
@@ -1789,6 +1789,64 @@
         }
         .industry-card-body li { margin-bottom: 4px; }
 
+        .industry-market-card {
+            background: #fff;
+            border: 1px solid #e0eaf4;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+        }
+
+        .industry-steeple-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 800px) { .industry-steeple-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 500px) { .industry-steeple-grid { grid-template-columns: 1fr; } }
+
+        .industry-steeple-card {
+            background: #fff;
+            border: 1px solid #e0eaf4;
+            border-radius: 10px;
+            padding: 12px 14px 12px 16px;
+            border-left-width: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .steeple-watermark {
+            position: absolute;
+            top: -4px;
+            right: 8px;
+            font-size: 52px;
+            font-weight: 900;
+            color: rgba(0,0,0,0.04);
+            line-height: 1;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .steeple-card-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #0a1628;
+            margin-bottom: 7px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .steeple-card-body {
+            font-size: 11px;
+            color: #3d4f6a;
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+        .steeple-card-body ul { margin: 4px 0 0 14px; padding: 0; }
+        .steeple-card-body li { margin-bottom: 3px; }
+
         .industry-sources-card {
             background: #f8fafc;
             border: 1px solid #e0eaf4;
@@ -2340,22 +2398,48 @@
                     <button class="industry-export-btn" onclick="exportIndustryPDF()">Export PDF ↗</button>
                 </div>
 
-                <div class="industry-results-grid">
-                    <div class="industry-insight-card">
-                        <div class="industry-card-eyebrow">Market Overview</div>
-                        <div class="industry-card-body" id="industryCardMarket"></div>
+                <!-- Market Overview (full width) -->
+                <div class="industry-market-card">
+                    <div class="industry-card-eyebrow">Market Overview</div>
+                    <div class="industry-card-body" id="industryCardMarket"></div>
+                </div>
+
+                <!-- STEEPLE grid -->
+                <div class="industry-steeple-grid">
+                    <div class="industry-steeple-card" style="border-left-color:#8b5cf6;">
+                        <div class="steeple-watermark">S</div>
+                        <div class="steeple-card-title">Social</div>
+                        <div class="steeple-card-body" id="industryCardSocial"></div>
                     </div>
-                    <div class="industry-insight-card">
-                        <div class="industry-card-eyebrow">Risk Landscape</div>
-                        <div class="industry-card-body" id="industryCardRisks"></div>
+                    <div class="industry-steeple-card" style="border-left-color:#00aeef;">
+                        <div class="steeple-watermark">T</div>
+                        <div class="steeple-card-title">Technological</div>
+                        <div class="steeple-card-body" id="industryCardTech"></div>
                     </div>
-                    <div class="industry-insight-card">
-                        <div class="industry-card-eyebrow">Regulatory Environment</div>
-                        <div class="industry-card-body" id="industryCardRegulatory"></div>
+                    <div class="industry-steeple-card" style="border-left-color:#10b981;">
+                        <div class="steeple-watermark">E</div>
+                        <div class="steeple-card-title">Economic</div>
+                        <div class="steeple-card-body" id="industryCardEconomic"></div>
                     </div>
-                    <div class="industry-insight-card">
-                        <div class="industry-card-eyebrow">Insurance Implications</div>
-                        <div class="industry-card-body" id="industryCardInsurance"></div>
+                    <div class="industry-steeple-card" style="border-left-color:#059669;">
+                        <div class="steeple-watermark">E</div>
+                        <div class="steeple-card-title">Environmental</div>
+                        <div class="steeple-card-body" id="industryCardEnvironmental"></div>
+                    </div>
+                    <div class="industry-steeple-card" style="border-left-color:#ef4444;">
+                        <div class="steeple-watermark">P</div>
+                        <div class="steeple-card-title">Political</div>
+                        <div class="steeple-card-body" id="industryCardPolitical"></div>
+                    </div>
+                    <div class="industry-steeple-card" style="border-left-color:#f97316;">
+                        <div class="steeple-watermark">L</div>
+                        <div class="steeple-card-title">Legal</div>
+                        <div class="steeple-card-body" id="industryCardLegal"></div>
+                    </div>
+                    <div class="industry-steeple-card" style="border-left-color:#6366f1; grid-column: 1 / -1;">
+                        <div class="steeple-watermark">E</div>
+                        <div class="steeple-card-title">Ethical</div>
+                        <div class="steeple-card-body" id="industryCardEthical"></div>
                     </div>
                 </div>
 
@@ -2885,28 +2969,28 @@
                     const backgroundHtml = phenomenon.background
                         ? `<div class="phenomenon-section">
                             <div class="phenomenon-section-title">Background</div>
-                            <p style="color:#d6d6d6;line-height:1.6;">${phenomenon.background}</p>
+                            <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.background}</p>
                            </div>`
                         : '';
 
                     const impactHtml = phenomenon.impact
                         ? `<div class="phenomenon-section">
                             <div class="phenomenon-section-title">Impact</div>
-                            <p style="color:#d6d6d6;line-height:1.6;">${phenomenon.impact}</p>
+                            <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.impact}</p>
                            </div>`
                         : '';
 
                     const emergingRisksHtml = phenomenon.emerging_risks
                         ? `<div class="phenomenon-section">
                             <div class="phenomenon-section-title">Potential Emerging Risks</div>
-                            <p style="color:#d6d6d6;line-height:1.6;">${phenomenon.emerging_risks}</p>
+                            <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.emerging_risks}</p>
                            </div>`
                         : '';
 
                     const insuranceImpactHtml = phenomenon.insurance_impact
                         ? `<div class="phenomenon-section">
                             <div class="phenomenon-section-title">Insurance Impact</div>
-                            <p style="color:#d6d6d6;line-height:1.6;">${phenomenon.insurance_impact}</p>
+                            <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.insurance_impact}</p>
                            </div>`
                         : '';
 
@@ -3097,7 +3181,7 @@
             }));
 
             if (!items || items.length === 0) {
-                container.innerHTML = '<p style="color:#888888;text-align:center;">No signals to plot yet.</p>';
+                container.innerHTML = '<p style="color:#3d4f6a;text-align:center;">No signals to plot yet.</p>';
                 summary.textContent = 'No phenomena or sources to summarize yet.';
                 return;
             }
@@ -4486,38 +4570,56 @@
          Industry Insights
          ================================================================ -->
     <script>
-    // Placeholder content per industry
+    // ── STEEPLE placeholder content per industry ─────────────────────
     const INDUSTRY_CONTENT = {
         'Financial Services': {
-            market: `<p>Global financial services AUM surpassed $120 trillion in 2024, with private credit emerging as the fastest-growing asset class (+18% YoY). Rising interest rates have stabilised net interest margins for banks while pressuring leveraged borrowers.</p><ul><li>US regional bank consolidation accelerating post-SVB</li><li>Central bank digital currencies (CBDCs) in pilot across 18 jurisdictions</li><li>ESG-linked debt issuance up 34% YoY in EMEA</li></ul>`,
-            risks: `<p>Systemic risks remain elevated across interconnected credit markets. Key concerns for 2025–26:</p><ul><li><strong>Credit default wave:</strong> US corporate default rate forecast at 4.5% (Moody's)</li><li><strong>Cyber & operational risk:</strong> 63% of financial institutions reported a significant cyber incident in 2024</li><li><strong>Regulatory capital pressure:</strong> Basel IV phased implementation increasing RWA by 15–20%</li><li><strong>Concentration risk:</strong> AI-driven homogeneity in risk models</li></ul>`,
-            regulatory: `<p>The regulatory landscape is tightening significantly across major jurisdictions:</p><ul><li><strong>EU DORA:</strong> Digital Operational Resilience Act in force Jan 2025 — mandatory ICT risk frameworks</li><li><strong>US SEC:</strong> Enhanced cyber disclosure rules for public companies</li><li><strong>UK FCA:</strong> Consumer Duty embedding ongoing, with focus on fair value</li><li><strong>Basel IV:</strong> Output floor implementation from 2025 onwards</li></ul>`,
-            insurance: `<p>Insurance implications for financial services clients are multi-dimensional:</p><ul><li><strong>D&O:</strong> Elevated claims frequency from ESG misrepresentation and cyber-linked securities litigation</li><li><strong>Financial Lines:</strong> Tighter capacity for financial institutions in Lloyd's and London market</li><li><strong>Cyber:</strong> Systemic aggregation concerns limiting coverage breadth; sub-limits on ransomware</li><li><strong>Trade Credit:</strong> Increased demand driven by supply chain uncertainty</li></ul>`,
-            sources: ['Swiss Re Institute — Sigma Report 2024: Global Insurance Markets', 'Moody\'s Analytics — 2025 Credit Outlook', 'Basel Committee on Banking Supervision — Basel IV Implementation Update', 'UK FCA — Consumer Duty Annual Findings Report 2024', 'European Banking Authority — Risk Dashboard Q3 2024']
+            market: `<p>Global financial services AUM surpassed $120 trillion in 2024, with private credit emerging as the fastest-growing asset class (+18% YoY). Rising interest rates have stabilised net interest margins for traditional banks while compressing the valuations of leveraged borrowers and fintech platforms. The sector faces a structural shift as AI-driven automation redefines operating models and talent requirements across front, middle and back office functions.</p>`,
+            social: `<ul><li>Ageing demographics driving demand for wealth management and retirement products in developed markets</li><li>Financial inclusion pressure intensifying — 1.4B adults globally remain unbanked (World Bank)</li><li>Consumer trust in traditional banks declining; younger cohorts prefer digital-first providers</li><li>ESG preferences among retail investors reshaping fund flows into sustainable products</li></ul>`,
+            tech: `<ul><li>Generative AI deployed in credit underwriting, fraud detection, and client communication at scale</li><li>Blockchain-based settlement reducing T+2 clearing to near real-time in pilot markets</li><li>Open banking mandates (PSD2, UK OBIE) enabling data-driven product innovation</li><li>Central bank digital currencies (CBDCs) in active pilot across 18 jurisdictions</li></ul>`,
+            economic: `<ul><li>Global AUM: $120T+ (2024); private credit fastest-growing at +18% YoY</li><li>Higher-for-longer rates supporting NIM recovery but compressing leveraged credit quality</li><li>US corporate default rate forecast at 4.5% in 2025 (Moody's)</li><li>M&A activity rebounding in asset management as scale consolidation accelerates</li></ul>`,
+            environmental: `<ul><li>Climate stress-testing now mandatory for major banks under EBA, PRA and Fed frameworks</li><li>Transition finance demand outpacing green bond supply — $4.8T annual gap (IEA)</li><li>Physical climate risk (flood, wildfire) affecting mortgage book quality in exposed geographies</li><li>ESG-linked debt issuance up 34% YoY in EMEA despite greenwashing scrutiny</li></ul>`,
+            political: `<ul><li>Geopolitical fragmentation driving bifurcated regulatory regimes (US vs. EU vs. China)</li><li>Sanctions compliance burden intensifying for globally active institutions</li><li>US rollback of climate disclosure rules under new administration creating regulatory uncertainty</li><li>De-dollarisation narrative accelerating in emerging market central banks</li></ul>`,
+            legal: `<ul><li>EU DORA: Digital Operational Resilience Act in force Jan 2025 — mandatory ICT risk frameworks</li><li>Basel IV output floor implementation from 2025 increasing RWA by 15–20%</li><li>UK FCA Consumer Duty: ongoing embedding with supervisory focus on fair value outcomes</li><li>SEC enhanced cyber disclosure rules: material incident 4-day reporting requirement</li></ul>`,
+            ethical: `<ul><li>AI bias in credit decisioning under regulatory scrutiny — explainability requirements increasing</li><li>Executive pay and bonus structures facing shareholder activism at major institutions</li><li>Greenwashing litigation risk elevated as ESG claims face legal challenge</li><li>Data monetisation practices drawing criticism from privacy advocates and regulators</li></ul>`,
+            sources: ['Swiss Re Institute — Sigma Report 2024: Global Insurance Markets', 'Moody\'s Analytics — 2025 Credit Outlook', 'Basel Committee on Banking Supervision — Basel IV Implementation Update', 'UK FCA — Consumer Duty Annual Findings Report 2024', 'European Banking Authority — Risk Dashboard Q3 2024', 'World Bank — Global Findex Database 2024']
         },
         'Energy & Utilities': {
-            market: `<p>The global energy transition is accelerating, with renewable capacity additions reaching a record 295 GW in 2024 (IEA). Fossil fuel demand remains resilient in emerging markets while European utilities face structurally lower wholesale prices.</p><ul><li>Global offshore wind pipeline exceeds 500 GW</li><li>Battery storage deployments up 89% YoY</li><li>LNG spot prices stabilised after 2022–23 volatility</li></ul>`,
-            risks: `<p>Material risks facing energy and utilities operators in 2025:</p><ul><li><strong>Transition risk:</strong> Stranded asset exposure in coal and conventional gas estimated at $1.4T (IRENA)</li><li><strong>Physical climate risk:</strong> Increased frequency of extreme weather disrupting grid infrastructure</li><li><strong>Geopolitical supply risk:</strong> Critical mineral dependencies (lithium, cobalt, nickel)</li><li><strong>Cyber-physical attacks:</strong> OT/IT convergence creating new attack surfaces on grid infrastructure</li></ul>`,
-            regulatory: `<ul><li><strong>EU Taxonomy:</strong> Expanded sustainability criteria affecting project financing</li><li><strong>UK CfD scheme:</strong> AR6 allocation round results shaping offshore wind economics</li><li><strong>US IRA:</strong> Inflation Reduction Act incentives driving $500B+ clean energy investment</li><li><strong>Carbon border adjustment (CBAM):</strong> Full implementation 2026, impacting energy-intensive exporters</li></ul>`,
-            insurance: `<ul><li><strong>Property CAT:</strong> Significant reinsurance capacity reduction for coastal and wildfire-exposed assets</li><li><strong>Construction All-Risk:</strong> Offshore wind construction risks challenging market; limited market appetite</li><li><strong>Liability:</strong> Greenwashing claims emerging against energy companies</li><li><strong>Business Interruption:</strong> Grid interdependency creating complex contingent BI exposures</li></ul>`,
-            sources: ['IEA — Renewables 2024 Report', 'IRENA — World Energy Transitions Outlook 2024', 'Lloyd\'s — Energy Market Insight Report H1 2025', 'OECD — Carbon Border Adjustment Mechanism Analysis', 'Swiss Re — Natural Catastrophe Sigma 2024']
+            market: `<p>The global energy transition is accelerating, with renewable capacity additions reaching a record 295 GW in 2024 (IEA). Fossil fuel demand remains resilient in emerging markets while European utilities face structurally lower wholesale power prices amid oversupply of solar generation. Capital allocation is bifurcating between incumbents doubling down on low-carbon infrastructure and those managing stranded asset risk in conventional generation portfolios.</p>`,
+            social: `<ul><li>Energy poverty affecting 750M+ globally, sustaining demand for affordable fossil fuel alternatives</li><li>Community opposition to grid infrastructure (pylons, onshore wind) delaying projects in Europe and North America</li><li>Just transition concerns creating social licence challenges for mining of critical minerals</li><li>Consumer demand for green tariffs and rooftop solar accelerating prosumer growth</li></ul>`,
+            tech: `<ul><li>Battery storage deployments up 89% YoY globally; grid-scale BESS becoming cost-competitive</li><li>Green hydrogen electrolyser costs falling 60% since 2020; commercial-scale projects emerging</li><li>AI-driven grid management optimising dispatch and reducing curtailment losses</li><li>Small modular reactors (SMRs) advancing — first commercial units expected by 2030</li></ul>`,
+            economic: `<ul><li>Global renewable energy investment: $1.7T in 2024 (BloombergNEF)</li><li>LNG spot prices stabilised post-2022–23 volatility; European storage levels healthy</li><li>Stranded asset exposure in coal and conventional gas estimated at $1.4T (IRENA)</li><li>US IRA driving $500B+ clean energy investment over 10 years; European competitiveness concerns</li></ul>`,
+            environmental: `<ul><li>Extreme weather events disrupting grid infrastructure with increasing frequency and severity</li><li>Offshore wind facing wake effects and bird migration challenges in dense development zones</li><li>Critical mineral supply chains (lithium, cobalt, nickel) under environmental scrutiny</li><li>Carbon border adjustment (CBAM) full implementation 2026 reshaping export economics</li></ul>`,
+            political: `<ul><li>US IRA incentives vs. European Green Deal subsidy competition creating investment distortions</li><li>OPEC+ supply management sustaining oil prices above marginal cost of most producers</li><li>Critical mineral geopolitics: China controls 60%+ of global refining capacity for key transition metals</li><li>Energy security driving government intervention in market design and grid ownership</li></ul>`,
+            legal: `<ul><li>EU Taxonomy: expanded sustainability criteria affecting project finance eligibility</li><li>UK CfD scheme: AR6 results shaping offshore wind project economics and developer returns</li><li>CBAM: full implementation 2026, affecting energy-intensive goods exporters</li><li>Nature-related disclosure requirements (TNFD) adding to environmental reporting burden</li></ul>`,
+            ethical: `<ul><li>Greenwashing litigation risk elevated — legal challenges to carbon offset and net zero claims</li><li>Community benefit fund requirements increasingly expected for large-scale renewable projects</li><li>Just transition obligations creating ethical complexity in fossil fuel workforce management</li><li>Biodiversity offsetting quality concerns in project permitting processes</li></ul>`,
+            sources: ['IEA — Renewables 2024 Report', 'IRENA — World Energy Transitions Outlook 2024', 'Lloyd\'s — Energy Market Insight Report H1 2025', 'BloombergNEF — Energy Transition Investment Trends 2024', 'Swiss Re — Natural Catastrophe Sigma 2024', 'OECD — Carbon Border Adjustment Mechanism Analysis']
         },
         'Technology & Cyber': {
-            market: `<p>Global technology sector revenue exceeded $5.5 trillion in 2024. AI infrastructure investment dominated capex, with hyperscalers collectively spending $250B+ on data centres. Enterprise software growth moderated to 12% as macro headwinds affected IT budgets.</p><ul><li>Generative AI adoption reached 40% of large enterprises</li><li>Semiconductor supply chain reshoring accelerating (CHIPS Act, EU Chips Act)</li><li>Cloud migration: 65% of enterprise workloads now cloud-native</li></ul>`,
-            risks: `<ul><li><strong>AI model risk:</strong> Hallucination, bias and liability questions unresolved across use cases</li><li><strong>Supply chain compromise:</strong> Software supply chain attacks up 245% since 2021 (Sonatype)</li><li><strong>Ransomware:</strong> Average ransom demand reached $2.73M in 2024 (Sophos)</li><li><strong>Talent concentration:</strong> Critical AI expertise concentrated in handful of firms and geographies</li><li><strong>Regulatory fragmentation:</strong> Diverging AI governance (EU AI Act vs. US executive orders)</li></ul>`,
-            regulatory: `<ul><li><strong>EU AI Act:</strong> In force August 2024; high-risk system obligations from 2026</li><li><strong>NIS2 Directive:</strong> Expanded critical infrastructure cyber obligations across EU member states</li><li><strong>UK Online Safety Act:</strong> Platform liability obligations from 2025</li><li><strong>US Executive Order on AI:</strong> Federal agency adoption guidelines and safety standards</li><li><strong>SEC Cyber Disclosure Rule:</strong> Material incident 4-day disclosure requirement</li></ul>`,
-            insurance: `<ul><li><strong>Cyber:</strong> Market hardening continues — rate increases 8–15% in 2025; systemic aggregation concerns</li><li><strong>Tech E&O:</strong> AI-related liability exclusions standard in most policies; specialist products emerging</li><li><strong>D&O:</strong> Securities litigation risk from AI-related disclosures and data breaches</li><li><strong>Crime:</strong> Social engineering / funds transfer fraud losses reaching record levels</li></ul>`,
-            sources: ['Gartner — IT Spending Forecast 2025', 'Sophos — State of Ransomware 2024', 'EU Agency for Cybersecurity (ENISA) — Threat Landscape 2024', 'Sonatype — Software Supply Chain Report 2024', 'Marsh — Cyber Risk Report 2025']
+            market: `<p>Global technology sector revenue exceeded $5.5 trillion in 2024, with AI infrastructure investment dominating capex allocation across hyperscalers and enterprise buyers alike. Hyperscalers collectively committed $250B+ to data centre expansion while enterprise software growth moderated to 12% as CFOs imposed stricter AI ROI requirements. The sector is entering a period of AI-driven consolidation where incumbents with proprietary data and distribution advantages are pulling ahead of pure-play software vendors.</p>`,
+            social: `<ul><li>Digital skills gap widening — 90M+ workers will require reskilling by 2030 due to AI automation (WEF)</li><li>Generative AI adoption creating anxiety around job displacement in knowledge work sectors</li><li>Social media platform trust declining; regulatory pressure on algorithmic amplification</li><li>Accessibility obligations expanding as digital services become essential infrastructure</li></ul>`,
+            tech: `<ul><li>Generative AI adoption reached 40% of large enterprises by end-2024; productivity gains variable</li><li>Semiconductor reshoring accelerating (US CHIPS Act, EU Chips Act) — new fab capacity online 2026–28</li><li>65% of enterprise workloads now cloud-native; multi-cloud complexity increasing security risk surface</li><li>Quantum computing: cryptographic threat horizon advancing — NIST post-quantum standards published 2024</li></ul>`,
+            economic: `<ul><li>Global tech sector revenue: $5.5T+ (2024); AI infrastructure capex $250B+ from hyperscalers</li><li>VC investment recovering after 2022–23 correction; AI-focused deals commanding premium valuations</li><li>Software pricing pressure from AI-native competitors displacing legacy vendors</li><li>Average ransomware demand: $2.73M in 2024 (Sophos); cyber insurance claims at record levels</li></ul>`,
+            environmental: `<ul><li>Data centre power consumption projected to double by 2026; water usage for cooling under scrutiny</li><li>AI training runs require significant energy — GPT-4 training estimated at 50 GWh</li><li>E-waste: 62MT generated globally in 2023; circular economy obligations tightening</li><li>Hyperscalers committing to 24/7 carbon-free energy — procurement creating renewable energy price pressure</li></ul>`,
+            political: `<ul><li>US–China tech decoupling intensifying: export controls on advanced chips expanding in scope</li><li>EU Digital Markets Act: gatekeeper obligations reshaping platform competition dynamics</li><li>Data localisation mandates proliferating — 100+ countries now have data sovereignty laws</li><li>Government investment in sovereign AI and cloud capacity as strategic priority</li></ul>`,
+            legal: `<ul><li>EU AI Act: in force August 2024; high-risk system obligations phased from 2026</li><li>NIS2 Directive: expanded critical infrastructure cyber obligations across EU member states</li><li>SEC Cyber Disclosure Rule: material incident 4-day disclosure; CISO personal liability increasing</li><li>UK Online Safety Act: platform content liability obligations from 2025</li></ul>`,
+            ethical: `<ul><li>AI bias and fairness: algorithmic discrimination claims emerging in hiring, credit and healthcare</li><li>Deepfake proliferation creating reputational and electoral integrity risks</li><li>Data privacy vs. AI training: tension between GDPR rights and model development</li><li>Open-source AI governance: safety vs. innovation debate unresolved at international level</li></ul>`,
+            sources: ['Gartner — IT Spending Forecast 2025', 'Sophos — State of Ransomware 2024', 'EU Agency for Cybersecurity (ENISA) — Threat Landscape 2024', 'Sonatype — Software Supply Chain Report 2024', 'WEF — Future of Jobs Report 2025', 'Marsh — Cyber Risk Report 2025']
         }
     };
 
     const INDUSTRY_DEFAULTS = {
-        market: `<p>This sector is experiencing significant structural change driven by technological disruption, regulatory evolution and macroeconomic headwinds. Market participants are adapting strategies to navigate elevated volatility.</p><ul><li>Global revenue growth moderating to 6–8% following post-pandemic normalisation</li><li>Cost pressures from inflation and labour markets persisting into 2025</li><li>M&A activity rebounding as valuations compress and strategic rationale strengthens</li></ul>`,
-        risks: `<ul><li><strong>Macroeconomic:</strong> Higher-for-longer interest rates compressing margins and valuations</li><li><strong>Geopolitical:</strong> Supply chain fragmentation and trade policy uncertainty</li><li><strong>Climate:</strong> Physical and transition risks creating asset stranding and compliance costs</li><li><strong>Cyber:</strong> Escalating threat actor sophistication and regulatory enforcement</li><li><strong>Talent:</strong> Skills shortages in critical technology and sustainability functions</li></ul>`,
-        regulatory: `<ul><li>ESG reporting mandates expanding across major jurisdictions (CSRD, SEC climate rules)</li><li>AI governance frameworks introducing new compliance obligations for tech-enabled operations</li><li>Data privacy regimes tightening globally, following GDPR model</li><li>Sector-specific prudential and conduct regulation intensifying post-pandemic</li></ul>`,
-        insurance: `<ul><li><strong>Property:</strong> Catastrophe reinsurance capacity constrained; risk-adequate pricing required</li><li><strong>Liability:</strong> Long-tail exposures from environmental and product liability evolving</li><li><strong>Cyber:</strong> Demand rising; market capacity stabilising following 2022–23 hardening</li><li><strong>Directors & Officers:</strong> Elevated claims from ESG, cyber and regulatory enforcement actions</li></ul>`,
-        sources: ['WEF — Global Risks Report 2025', 'Swiss Re Institute — Sigma 2024', 'Lloyd\'s — Risk Outlook 2025', 'OECD — Economic Outlook 2025', 'McKinsey Global Institute — State of the Industry Report 2025']
+        market: `<p>This sector is experiencing significant structural change driven by technological disruption, regulatory evolution and macroeconomic headwinds. Market participants are adapting strategies to navigate elevated volatility while positioning for long-term structural tailwinds. Consolidation is accelerating as scale advantages compound and smaller operators face margin pressure from rising input costs and compliance burdens.</p>`,
+        social: `<ul><li>Changing workforce demographics and expectations reshaping talent acquisition and retention</li><li>Consumer preferences shifting toward sustainability-aligned products and services</li><li>Digital adoption accelerating across all customer segments, compressing physical channel economics</li><li>Diversity and inclusion obligations intensifying across major markets</li></ul>`,
+        tech: `<ul><li>AI and automation creating both efficiency opportunities and displacement risks</li><li>Cloud migration enabling new operating models while concentrating third-party dependency risk</li><li>Cybersecurity investment rising as attack surfaces expand with digital transformation</li><li>Data analytics capabilities becoming a core competitive differentiator</li></ul>`,
+        economic: `<ul><li>Revenue growth moderating to 6–8% following post-pandemic normalisation</li><li>Cost pressures from inflation, labour markets and energy prices persisting</li><li>M&A activity rebounding as valuations compress and strategic rationale strengthens</li><li>Capital allocation shifting toward resilience and efficiency over growth investment</li></ul>`,
+        environmental: `<ul><li>Physical climate risk increasing exposure across asset-heavy operations and supply chains</li><li>Net zero transition creating both compliance cost and competitive opportunity</li><li>Biodiversity and nature-related risks emerging as new disclosure and liability frontier</li><li>Carbon pricing mechanisms expanding scope across major jurisdictions</li></ul>`,
+        political: `<ul><li>Geopolitical fragmentation creating supply chain uncertainty and market access risk</li><li>Government industrial policy interventions distorting competitive dynamics</li><li>Trade tariff escalation increasing input costs for globally integrated operations</li><li>Regulatory divergence between jurisdictions raising compliance complexity</li></ul>`,
+        legal: `<ul><li>ESG reporting mandates expanding (CSRD, SEC climate rules, ISSB standards)</li><li>AI governance frameworks introducing new compliance obligations across tech-enabled operations</li><li>Data privacy regimes tightening globally, following GDPR model</li><li>Sector-specific prudential and conduct regulation intensifying post-pandemic</li></ul>`,
+        ethical: `<ul><li>Corporate governance expectations rising from institutional investors and civil society</li><li>Supply chain due diligence obligations expanding into human rights and environmental conduct</li><li>Executive accountability for ESG commitments becoming legally actionable</li><li>Reputational risk from AI deployment increasingly material for brand-sensitive organisations</li></ul>`,
+        sources: ['WEF — Global Risks Report 2025', 'Swiss Re Institute — Sigma 2024', 'Lloyd\'s — Risk Outlook 2025', 'OECD — Economic Outlook 2025', 'McKinsey Global Institute — State of the Industry Report 2025', 'CSRD — Corporate Sustainability Reporting Directive Implementation Guidance 2025']
     };
+
+    const STEEPLE_IDS = ['industryCardMarket','industryCardSocial','industryCardTech','industryCardEconomic','industryCardEnvironmental','industryCardPolitical','industryCardLegal','industryCardEthical'];
 
     function generateIndustryInsights() {
         const industry = document.getElementById('industrySelect').value;
@@ -4533,32 +4635,34 @@
         btn.disabled = true;
         btn.textContent = 'Generating…';
 
-        // Show loading in results area
         document.getElementById('industryEmptyState').style.display = 'none';
         const resultsEl = document.getElementById('industryResults');
         resultsEl.style.display = '';
-        ['industryCardMarket','industryCardRisks','industryCardRegulatory','industryCardInsurance'].forEach(id => {
-            document.getElementById(id).innerHTML = '<div class="intel-loading" style="height:60px"><div class="intel-spinner"></div></div>';
+        STEEPLE_IDS.forEach(id => {
+            document.getElementById(id).innerHTML = '<div class="intel-loading" style="height:48px"><div class="intel-spinner"></div></div>';
         });
         document.getElementById('industrySourcesList').innerHTML = '';
         document.getElementById('industryResultTitle').textContent = '';
         document.getElementById('industryResultMeta').textContent = '';
 
-        // Simulate brief load delay, then populate with placeholder content
         setTimeout(() => {
-            const content = INDUSTRY_CONTENT[industry] || INDUSTRY_DEFAULTS;
+            const c = INDUSTRY_CONTENT[industry] || INDUSTRY_DEFAULTS;
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
             document.getElementById('industryResultTitle').textContent = `${industry} — ${geo}`;
-            document.getElementById('industryResultMeta').textContent = `${type} · Generated ${dateStr} · Indicative analysis`;
+            document.getElementById('industryResultMeta').textContent  = `${type} · Generated ${dateStr} · Indicative analysis`;
 
-            document.getElementById('industryCardMarket').innerHTML     = content.market;
-            document.getElementById('industryCardRisks').innerHTML      = content.risks;
-            document.getElementById('industryCardRegulatory').innerHTML = content.regulatory;
-            document.getElementById('industryCardInsurance').innerHTML  = content.insurance;
+            document.getElementById('industryCardMarket').innerHTML      = c.market;
+            document.getElementById('industryCardSocial').innerHTML      = c.social;
+            document.getElementById('industryCardTech').innerHTML        = c.tech;
+            document.getElementById('industryCardEconomic').innerHTML    = c.economic;
+            document.getElementById('industryCardEnvironmental').innerHTML = c.environmental;
+            document.getElementById('industryCardPolitical').innerHTML   = c.political;
+            document.getElementById('industryCardLegal').innerHTML       = c.legal;
+            document.getElementById('industryCardEthical').innerHTML     = c.ethical;
 
-            const sources = content.sources || INDUSTRY_DEFAULTS.sources;
+            const sources = c.sources || INDUSTRY_DEFAULTS.sources;
             document.getElementById('industrySourcesList').innerHTML = sources.map((s, i) =>
                 `<div class="industry-source-item"><span class="industry-source-num">[${i+1}]</span><span>${s}</span></div>`
             ).join('');
@@ -4569,13 +4673,20 @@
     }
 
     function exportIndustryPDF() {
-        const title    = document.getElementById('industryResultTitle').textContent;
-        const meta     = document.getElementById('industryResultMeta').textContent;
-        const market   = document.getElementById('industryCardMarket').innerHTML;
-        const risks    = document.getElementById('industryCardRisks').innerHTML;
-        const reg      = document.getElementById('industryCardRegulatory').innerHTML;
-        const ins      = document.getElementById('industryCardInsurance').innerHTML;
-        const sources  = document.getElementById('industrySourcesList').innerHTML;
+        const title   = document.getElementById('industryResultTitle').textContent;
+        const meta    = document.getElementById('industryResultMeta').textContent;
+        const sources = document.getElementById('industrySourcesList').innerHTML;
+
+        const steepleLabels = { industryCardMarket: 'Market Overview', industryCardSocial: 'Social', industryCardTech: 'Technological', industryCardEconomic: 'Economic', industryCardEnvironmental: 'Environmental', industryCardPolitical: 'Political', industryCardLegal: 'Legal', industryCardEthical: 'Ethical' };
+        const steepleColors = { industryCardMarket: '#0a1628', industryCardSocial: '#8b5cf6', industryCardTech: '#00aeef', industryCardEconomic: '#10b981', industryCardEnvironmental: '#059669', industryCardPolitical: '#ef4444', industryCardLegal: '#f97316', industryCardEthical: '#6366f1' };
+
+        const sections = STEEPLE_IDS.map(id => {
+            const el = document.getElementById(id);
+            return `<div class="section" style="border-left:3px solid ${steepleColors[id]};padding-left:12px;">
+                <div class="section-label" style="color:${steepleColors[id]}">${steepleLabels[id]}</div>
+                <div class="section-body">${el ? el.innerHTML : ''}</div>
+            </div>`;
+        }).join('');
 
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
         <title>${title}</title>
@@ -4585,29 +4696,28 @@
             .cover-eyebrow { font-size: 10px; letter-spacing: 2px; color: #00aeef; text-transform: uppercase; margin-bottom: 12px; }
             .cover-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
             .cover-meta { font-size: 12px; color: #8898aa; }
-            .body { padding: 32px 40px; }
-            .section { margin-bottom: 28px; page-break-inside: avoid; }
-            .section-label { font-size: 9px; letter-spacing: 1.5px; color: #00aeef; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #e0eaf4; padding-bottom: 6px; }
-            .section-body { font-size: 12px; line-height: 1.65; color: #3d4f6a; }
-            .section-body ul { margin: 6px 0 0 16px; }
-            .section-body li { margin-bottom: 4px; }
-            .sources { background: #f8fafc; border: 1px solid #e0eaf4; border-radius: 8px; padding: 14px; font-size: 11px; color: #6b7a90; }
-            .disclaimer { margin-top: 32px; font-size: 10px; color: #aaa; border-top: 1px solid #e0eaf4; padding-top: 12px; }
-            @media print { .no-print { display: none; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+            .body { padding: 28px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+            .body .section:first-child { grid-column: 1 / -1; }
+            .section { margin-bottom: 0; page-break-inside: avoid; }
+            .section-label { font-size: 9px; letter-spacing: 1.5px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+            .section-body { font-size: 11px; line-height: 1.65; color: #3d4f6a; }
+            .section-body ul { margin: 4px 0 0 14px; }
+            .section-body li { margin-bottom: 3px; }
+            .sources-wrap { padding: 0 40px 28px; }
+            .sources { background: #f8fafc; border: 1px solid #e0eaf4; border-radius: 8px; padding: 12px 14px; font-size: 11px; color: #6b7a90; }
+            .disclaimer { margin: 0 40px 28px; font-size: 10px; color: #aaa; border-top: 1px solid #e0eaf4; padding-top: 10px; }
+            @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
         </style></head><body>
         <div class="cover">
-            <div class="cover-eyebrow">Lockton · Market Intelligence</div>
+            <div class="cover-eyebrow">Lockton · Market Intelligence · STEEPLE Analysis</div>
             <div class="cover-title">${title}</div>
             <div class="cover-meta">${meta}</div>
         </div>
-        <div class="body">
-            <div class="section"><div class="section-label">Market Overview</div><div class="section-body">${market}</div></div>
-            <div class="section"><div class="section-label">Risk Landscape</div><div class="section-body">${risks}</div></div>
-            <div class="section"><div class="section-label">Regulatory Environment</div><div class="section-body">${reg}</div></div>
-            <div class="section"><div class="section-label">Insurance Implications</div><div class="section-body">${ins}</div></div>
+        <div class="body">${sections}</div>
+        <div class="sources-wrap">
             <div class="sources"><strong style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8898aa;">Sources &amp; References</strong><br><br>${sources}</div>
-            <div class="disclaimer">This brief is generated for internal exploratory analysis only. Outputs must be independently reviewed and validated before any external use. Powered by Lockton AI Foresight Scanner.</div>
         </div>
+        <div class="disclaimer">This brief is generated for internal exploratory analysis only. Outputs must be independently reviewed and validated before any external use. Powered by Lockton AI Foresight Scanner.</div>
         <script>window.onload = function() { window.print(); }<\/script>
         </body></html>`;
 

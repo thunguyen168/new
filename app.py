@@ -364,6 +364,9 @@ For each phenomenon, provide:
 9. **Source Confidence**: Assess the overall quality of sources backing this phenomenon. Return "High" (backed by multiple tier-1 sources such as Reuters, BBC, peer-reviewed journals, WEF, OECD), "Medium" (supported by a credible mix of sources), or "Low" (primarily weaker sources, single references, or speculation-heavy content).
 10. **Emerging Risks**: 2-3 sentences identifying potential risks that could emerge from this phenomenon over the coming years — risks that are not yet fully formed but that this phenomenon could give rise to.
 11. **Insurance Impact**: 2-3 sentences explaining the specific implications of this phenomenon for insurance brokers and their clients — covering which lines of coverage are most affected, potential claims exposure, and any client advisory actions brokers should consider.
+12. **Meaning**: 2-3 sentences explaining what this phenomenon actually means and why it matters — written in plain language accessible to a non-specialist reader with no prior knowledge of the topic.
+13. **Emerging Risk Implications**: 2-3 sentences on the emerging risk implications of this phenomenon — what new or accelerated risks does it create for organisations, societies or markets?
+14. **Potential Consequences**: 2-3 sentences on the potential consequences if this phenomenon continues on its current trajectory — what could plausibly happen in 5–10 years?
 
 Format your response as a JSON array like this:
 [
@@ -378,7 +381,10 @@ Format your response as a JSON array like this:
     "additional_information": ["Article Title (https://example.com/article): description of what it covers", "Another Article (https://example.com/article2): description"],
     "source_confidence": "High",
     "emerging_risks": "Description of potential risks not yet fully formed that this phenomenon could give rise to over the coming years...",
-    "insurance_impact": "Implications for insurance brokers and clients, including which lines of coverage are most affected, potential claims exposure, and advisory actions brokers should consider..."
+    "insurance_impact": "Implications for insurance brokers and clients, including which lines of coverage are most affected, potential claims exposure, and advisory actions brokers should consider...",
+    "meaning": "2-3 sentences in plain language explaining what this phenomenon actually means and why it matters to a non-specialist reader...",
+    "emerging_risk_implications": "2-3 sentences on the new or accelerated risks this phenomenon creates for organisations, societies or markets...",
+    "potential_consequences": "2-3 sentences on what could plausibly happen in 5-10 years if this phenomenon continues on its current trajectory..."
   }}
 ]
 
