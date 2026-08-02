@@ -1303,6 +1303,84 @@ Return ONLY valid JSON, no markdown or extra text."""
         return jsonify({'error': f'Error: {str(e)}'}), 500
 
 
+@app.route('/api/industry-insights')
+@require_auth
+def get_industry_insights():
+    """Generate AI-powered industry insights grounded in live search results."""
+    industry = request.args.get('industry', '').strip()[:100]
+    geography = request.args.get('geography', 'Global').strip()[:100]
+
+    if not industry:
+        return jsonify({'error': 'Industry parameter is required'}), 400
+
+    if not ANTHROPIC_API_KEY:
+        return jsonify({'error': 'Anthropic API key not configured'}), 500
+    if not SERPER_API_KEY and not BRAVE_API_KEY:
+        return jsonify({'error': 'No search API key configured'}), 500
+
+    queries = [
+        f'{industry} industry news today 2025',
+        f'{industry} {geography} market developments 2025',
+        f'global events impact {industry} sector today',
+        f'{industry} regulatory changes 2025',
+    ]
+
+    try:
+        search_results = parallel_search(queries, num_results=8)
+
+        news_text = '\n'.join(
+            f"- {r['title']}: {r['snippet']}"
+            for r in search_results[:24]
+        )
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, timeout=120.0)
+
+        prompt = f"""You are a senior industry analyst at a global insurance brokerage. Based on the live search results below, generate a comprehensive industry intelligence report for the {industry} industry in {geography}.
+
+LIVE SEARCH RESULTS (current news and market developments):
+{news_text}
+
+Generate a JSON response with the structure below. All fields are required. Write each section as 2-4 sentences of high-quality analytical prose. You MUST factor in the live developments above — do not produce generic boilerplate. The "current_context" field must reference specific recent events from the search results.
+
+{{
+  "current_context": "2-3 sentences summarising the most significant live global developments currently affecting the {industry} industry, referencing specific recent events and their implications.",
+  "market_overview": "3-4 sentences covering market size, growth dynamics, key players, and current trajectory for {industry} in {geography}, informed by the live developments above.",
+  "steeple": {{
+    "social": "2-3 sentences on social and demographic trends shaping the {industry} industry, with reference to current events.",
+    "tech": "2-3 sentences on technological developments and disruptions relevant to {industry}.",
+    "economic": "2-3 sentences on macroeconomic conditions, cost pressures, and financial dynamics affecting {industry} in {geography}.",
+    "environmental": "2-3 sentences on environmental risks, climate-related exposures, and sustainability pressures on {industry}.",
+    "political": "2-3 sentences on political dynamics, geopolitical risks, and government priorities affecting {industry} in {geography}.",
+    "legal": "2-3 sentences on the current regulatory and legal landscape for {industry}, including recent or anticipated changes.",
+    "ethical": "2-3 sentences on ethical considerations, ESG pressures, and reputational risks relevant to {industry}."
+  }}
+}}
+
+Return ONLY valid JSON matching the structure above, no markdown or extra text."""
+
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=3000,
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+
+        data = json.loads(extract_json_object(response.content[0].text))
+        data['sources'] = [
+            {'title': r.get('title', ''), 'link': r.get('link', ''), 'snippet': r.get('snippet', '')}
+            for r in search_results[:12]
+            if r.get('title') and r.get('link')
+        ]
+        data['industry'] = industry
+        data['geography'] = geography
+
+        return jsonify({'success': True, **data})
+
+    except anthropic.APIError as e:
+        return jsonify({'error': f'AI API error: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Error: {str(e)}'}), 500
+
+
 @app.route('/api/regional-news')
 @require_auth
 def get_regional_news():

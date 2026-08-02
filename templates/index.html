@@ -2402,6 +2402,12 @@
                     <button class="industry-export-btn" onclick="exportIndustryPDF()">Export PDF ↗</button>
                 </div>
 
+                <!-- Current Global Context (live intelligence) -->
+                <div class="industry-market-card" id="industryContextCard" style="display:none;border-left:3px solid #00aeef;">
+                    <div class="industry-card-eyebrow" style="color:#00aeef;">&#9679; Current Global Context</div>
+                    <div class="industry-card-body" id="industryCardContext"></div>
+                </div>
+
                 <!-- Market Overview (full width) -->
                 <div class="industry-market-card" id="industryMarketCard">
                     <div class="industry-card-eyebrow">Market Overview</div>
@@ -4657,69 +4663,94 @@
 
         const btn = document.getElementById('industryGenerateBtn');
         btn.disabled = true;
-        btn.textContent = 'Generating…';
+        btn.textContent = 'Searching live data…';
 
         const marketCard   = document.getElementById('industryMarketCard');
         const steepleGrid  = document.getElementById('industrySteepleGrid');
+        const contextCard  = document.getElementById('industryContextCard');
+        const spinner      = '<div class="intel-loading" style="height:48px"><div class="intel-spinner"></div></div>';
 
         document.getElementById('industryEmptyState').style.display = 'none';
         document.getElementById('industryResults').style.display = '';
-        document.getElementById('industryCardMarket').innerHTML = '<div class="intel-loading" style="height:48px"><div class="intel-spinner"></div></div>';
-        STEEPLE_IDS.forEach(id => {
-            document.getElementById(id).innerHTML = '<div class="intel-loading" style="height:48px"><div class="intel-spinner"></div></div>';
-        });
+        contextCard.style.display = '';
+        document.getElementById('industryCardContext').innerHTML = spinner;
+        document.getElementById('industryCardMarket').innerHTML  = spinner;
+        STEEPLE_IDS.forEach(id => { document.getElementById(id).innerHTML = spinner; });
         document.getElementById('industrySourcesList').innerHTML = '';
         document.getElementById('industryResultTitle').textContent = '';
-        document.getElementById('industryResultMeta').textContent = '';
+        document.getElementById('industryResultMeta').textContent  = '';
 
-        setTimeout(() => {
-            const c = INDUSTRY_CONTENT[industry] || INDUSTRY_DEFAULTS;
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        const params = new URLSearchParams({ industry, geography: geo, type });
+        fetch(`/api/industry-insights?${params}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('industryCardContext').innerHTML = `<p style="color:#c62828;">${data.error}</p>`;
+                    btn.disabled = false;
+                    btn.textContent = 'Generate Insights →';
+                    return;
+                }
 
-            document.getElementById('industryResultTitle').textContent = `${industry} — ${geo}`;
-            document.getElementById('industryResultMeta').textContent  = `${type} · Generated ${dateStr} · Indicative analysis`;
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+                document.getElementById('industryResultTitle').textContent = `${industry} — ${geo}`;
+                document.getElementById('industryResultMeta').textContent  = `${type} · Generated ${dateStr} · Live intelligence`;
 
-            if (type === 'Market Overview') {
-                // Market card only — full detailed version
-                marketCard.style.display  = '';
-                steepleGrid.style.display = 'none';
-                document.getElementById('industryCardMarket').innerHTML = c.marketFull || c.market;
+                // Current Global Context — always shown
+                document.getElementById('industryCardContext').innerHTML = data.current_context
+                    ? `<p style="color:#3d4f6a;line-height:1.7;">${data.current_context}</p>`
+                    : '';
 
-            } else if (type === 'STEEPLE Analysis') {
-                // STEEPLE cards only — full bullet content
-                marketCard.style.display  = 'none';
-                steepleGrid.style.display = '';
-                document.getElementById('industryCardSocial').innerHTML       = c.social;
-                document.getElementById('industryCardTech').innerHTML         = c.tech;
-                document.getElementById('industryCardEconomic').innerHTML     = c.economic;
-                document.getElementById('industryCardEnvironmental').innerHTML = c.environmental;
-                document.getElementById('industryCardPolitical').innerHTML    = c.political;
-                document.getElementById('industryCardLegal').innerHTML        = c.legal;
-                document.getElementById('industryCardEthical').innerHTML      = c.ethical;
+                const s = data.steeple || {};
 
-            } else {
-                // Full Overview — brief market + brief STEEPLE per dimension
-                marketCard.style.display  = '';
-                steepleGrid.style.display = '';
-                document.getElementById('industryCardMarket').innerHTML       = c.market;
-                document.getElementById('industryCardSocial').innerHTML       = c.socialBrief       || c.social;
-                document.getElementById('industryCardTech').innerHTML         = c.techBrief         || c.tech;
-                document.getElementById('industryCardEconomic').innerHTML     = c.economicBrief     || c.economic;
-                document.getElementById('industryCardEnvironmental').innerHTML = c.environmentalBrief || c.environmental;
-                document.getElementById('industryCardPolitical').innerHTML    = c.politicalBrief    || c.political;
-                document.getElementById('industryCardLegal').innerHTML        = c.legalBrief        || c.legal;
-                document.getElementById('industryCardEthical').innerHTML      = c.ethicalBrief      || c.ethical;
-            }
+                if (type === 'Market Overview') {
+                    marketCard.style.display  = '';
+                    steepleGrid.style.display = 'none';
+                    document.getElementById('industryCardMarket').innerHTML = data.market_overview
+                        ? `<p style="color:#3d4f6a;line-height:1.7;">${data.market_overview}</p>`
+                        : '';
 
-            const sources = c.sources || INDUSTRY_DEFAULTS.sources;
-            document.getElementById('industrySourcesList').innerHTML = sources.map((s, i) =>
-                `<div class="industry-source-item"><span class="industry-source-num">[${i+1}]</span><span>${s}</span></div>`
-            ).join('');
+                } else if (type === 'STEEPLE Analysis') {
+                    marketCard.style.display  = 'none';
+                    steepleGrid.style.display = '';
+                    const steepleMap = { industryCardSocial: 'social', industryCardTech: 'tech', industryCardEconomic: 'economic', industryCardEnvironmental: 'environmental', industryCardPolitical: 'political', industryCardLegal: 'legal', industryCardEthical: 'ethical' };
+                    Object.entries(steepleMap).forEach(([id, key]) => {
+                        document.getElementById(id).innerHTML = s[key]
+                            ? `<p style="color:#3d4f6a;line-height:1.7;">${s[key]}</p>`
+                            : '';
+                    });
 
-            btn.disabled = false;
-            btn.textContent = 'Generate Insights →';
-        }, 800);
+                } else {
+                    // Full Overview
+                    marketCard.style.display  = '';
+                    steepleGrid.style.display = '';
+                    document.getElementById('industryCardMarket').innerHTML = data.market_overview
+                        ? `<p style="color:#3d4f6a;line-height:1.7;">${data.market_overview}</p>`
+                        : '';
+                    const steepleMap = { industryCardSocial: 'social', industryCardTech: 'tech', industryCardEconomic: 'economic', industryCardEnvironmental: 'environmental', industryCardPolitical: 'political', industryCardLegal: 'legal', industryCardEthical: 'ethical' };
+                    Object.entries(steepleMap).forEach(([id, key]) => {
+                        document.getElementById(id).innerHTML = s[key]
+                            ? `<p style="color:#3d4f6a;line-height:1.7;">${s[key]}</p>`
+                            : '';
+                    });
+                }
+
+                // Sources from live search
+                const sources = data.sources || [];
+                document.getElementById('industrySourcesList').innerHTML = sources.length
+                    ? sources.map((s, i) =>
+                        `<div class="industry-source-item"><span class="industry-source-num">[${i+1}]</span><span>${s.link ? `<a href="${s.link}" target="_blank" rel="noopener" style="color:#0a1628;text-decoration:none;">${s.title}</a>` : s.title}</span></div>`
+                    ).join('')
+                    : '<div class="industry-source-item" style="color:#8898aa;">Sources retrieved from live search.</div>';
+
+                btn.disabled = false;
+                btn.textContent = 'Generate Insights →';
+            })
+            .catch(err => {
+                document.getElementById('industryCardContext').innerHTML = `<p style="color:#c62828;">Failed to load insights. Please try again.</p>`;
+                btn.disabled = false;
+                btn.textContent = 'Generate Insights →';
+            });
     }
 
     function exportIndustryPDF() {
