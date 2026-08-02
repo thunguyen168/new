@@ -2970,67 +2970,39 @@
                         : '';
                     const categoryHtml = category ? `<span class="tag">${category}</span>` : '';
 
-                    const backgroundHtml = phenomenon.background
+                    const meaningHtml = phenomenon.meaning
                         ? `<div class="phenomenon-section">
-                            <div class="phenomenon-section-title">Background</div>
-                            <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.background}</p>
+                            <div class="phenomenon-section-title">Phenomenon Description</div>
+                            <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.meaning}</p>
                            </div>`
                         : '';
 
-                    const impactHtml = phenomenon.impact
+                    const emergingRiskImplicationsHtml = phenomenon.emerging_risk_implications
                         ? `<div class="phenomenon-section">
-                            <div class="phenomenon-section-title">Impact</div>
-                            <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.impact}</p>
-                           </div>`
-                        : '';
-
-                    const emergingRisksHtml = phenomenon.emerging_risks
-                        ? `<div class="phenomenon-section">
-                            <div class="phenomenon-section-title">Potential Emerging Risks</div>
-                            <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.emerging_risks}</p>
+                            <div class="phenomenon-section-title">Emerging Risk Implications</div>
+                            <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.emerging_risk_implications}</p>
                            </div>`
                         : '';
 
                     const insuranceImpactHtml = phenomenon.insurance_impact
                         ? `<div class="phenomenon-section">
-                            <div class="phenomenon-section-title">Insurance Impact</div>
+                            <div class="phenomenon-section-title">Potential Insurance Developments</div>
                             <p style="color:#3d4f6a;line-height:1.6;">${phenomenon.insurance_impact}</p>
                            </div>`
                         : '';
 
-                    const additionalInfoHtml = phenomenon.additional_information && phenomenon.additional_information.length > 0
-                        ? `<div class="phenomenon-section">
-                            <div class="phenomenon-section-title">Additional Information</div>
-                            <ul class="phenomenon-list">
-                                ${phenomenon.additional_information.map(i => `<li>${linkifyAdditionalInfo(i)}</li>`).join('')}
-                            </ul>
-                           </div>`
-                        : '';
-
                     const refId = index + 1;
-                    const confidenceClass = {
-                        'High': 'confidence-high',
-                        'Medium': 'confidence-medium',
-                        'Low': 'confidence-low'
-                    }[phenomenon.source_confidence] || 'confidence-medium';
-                    const confidenceHtml = phenomenon.source_confidence
-                        ? `<span class="confidence-badge ${confidenceClass}">Source: ${phenomenon.source_confidence}</span>`
-                        : '';
 
                     card.innerHTML = `
                         <h3 class="phenomenon-title"><span class="ref-id">${refId}</span>${phenomenon.title || 'Untitled'}</h3>
                         <div class="phenomenon-tags">
                             ${phenomenon.type ? `<span class="tag type">${phenomenon.type}</span>` : ''}
-                            ${phenomenon.timing ? `<span class="tag horizon">${phenomenon.timing}</span>` : ''}
                             ${categoryHtml}
-                            ${confidenceHtml}
+                            ${phenomenon.timing ? `<span class="tag horizon">${phenomenon.timing}</span>` : ''}
                         </div>
-                        <p class="phenomenon-summary">${phenomenon.summary || ''}</p>
-                        ${backgroundHtml}
-                        ${impactHtml}
-                        ${emergingRisksHtml}
+                        ${meaningHtml}
+                        ${emergingRiskImplicationsHtml}
                         ${insuranceImpactHtml}
-                        ${additionalInfoHtml}
                     `;
 
                     list.appendChild(card);
@@ -3112,46 +3084,27 @@
 
             overview.innerHTML = `<strong>Summary:</strong> ${item.summary || 'No summary available yet.'}`;
 
-            if (item.background) {
-                drivers.innerHTML = `
-                    <strong>Background:</strong>
-                    <p style="margin-top:6px;">${item.background}</p>
-                `;
-            } else {
-                drivers.innerHTML = '';
-            }
-
-            if (item.impact) {
+            drivers.innerHTML = '';
+            if (item.meaning) {
                 drivers.innerHTML += `
-                    <strong style="display:block;margin-top:12px;">Impact:</strong>
-                    <p style="margin-top:6px;">${item.impact}</p>
+                    <strong>Phenomenon Description:</strong>
+                    <p style="margin-top:6px;">${item.meaning}</p>
                 `;
             }
-
-            if (item.emerging_risks) {
+            if (item.emerging_risk_implications) {
                 drivers.innerHTML += `
-                    <strong style="display:block;margin-top:12px;">Potential Emerging Risks:</strong>
-                    <p style="margin-top:6px;">${item.emerging_risks}</p>
+                    <strong style="display:block;margin-top:12px;">Emerging Risk Implications:</strong>
+                    <p style="margin-top:6px;">${item.emerging_risk_implications}</p>
                 `;
             }
-
             if (item.insurance_impact) {
                 drivers.innerHTML += `
-                    <strong style="display:block;margin-top:12px;">Insurance Impact:</strong>
+                    <strong style="display:block;margin-top:12px;">Potential Insurance Developments:</strong>
                     <p style="margin-top:6px;">${item.insurance_impact}</p>
                 `;
             }
 
-            if (item.additional_information && item.additional_information.length > 0) {
-                implications.innerHTML = `
-                    <strong>Additional Information:</strong>
-                    <ul class="scorecard-list">
-                        ${item.additional_information.map(info => `<li>${linkifyAdditionalInfo(info)}</li>`).join('')}
-                    </ul>
-                `;
-            } else {
-                implications.innerHTML = '';
-            }
+            implications.innerHTML = '';
 
             const scanSources = (window.latestScanData && window.latestScanData.sources) ? window.latestScanData.sources : [];
             const topSources = getTopSources(scanSources);
@@ -3342,6 +3295,35 @@
                     yearLabel.textContent = interval.label;
                     svg.appendChild(yearLabel);
                 }
+            });
+
+            // Time horizon zone rings (Near / Mid / Long-term)
+            const horizonZones = [
+                { radius: 0.20, label: 'Near-term (0–5 yrs)' },
+                { radius: 0.40, label: 'Mid-term (5–10 yrs)' },
+                { radius: 0.72, label: 'Long-term (10–20 yrs)' }
+            ];
+            horizonZones.forEach(zone => {
+                const zr = maxRadius * zone.radius;
+                const zc = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                zc.setAttribute('cx', center);
+                zc.setAttribute('cy', center);
+                zc.setAttribute('r', zr);
+                zc.setAttribute('fill', 'none');
+                zc.setAttribute('stroke', '#d0dce8');
+                zc.setAttribute('stroke-width', '1.5');
+                zc.setAttribute('stroke-dasharray', '5 4');
+                svg.appendChild(zc);
+                // Label at top of circle (12 o'clock)
+                const zt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                zt.setAttribute('x', center);
+                zt.setAttribute('y', center - zr - 5);
+                zt.setAttribute('fill', '#8898aa');
+                zt.setAttribute('font-size', '10');
+                zt.setAttribute('font-weight', '500');
+                zt.setAttribute('text-anchor', 'middle');
+                zt.textContent = zone.label;
+                svg.appendChild(zt);
             });
 
             // Center current year label

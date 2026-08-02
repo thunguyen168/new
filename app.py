@@ -313,7 +313,7 @@ def analyze_with_claude(topic: str, search_results: list) -> dict:
     for i, result in enumerate(search_results, 1):
         sources_text += f"\n{i}. {result['title']}\n   {result['snippet']}\n   Source: {result['link']}\n"
 
-    prompt = f"""You are a strategic foresight analyst following a systematic methodology for identifying phenomena. Based on the search results below about "{topic}", identify exactly 10 key phenomena.
+    prompt = f"""You are a strategic foresight analyst following a systematic methodology for identifying phenomena. Based on the search results below about "{topic}", identify exactly 20 key phenomena. You MUST identify exactly 20 phenomena — no more, no fewer.
 
 PHENOMENON CRITERIA - Each phenomenon must meet ALL of these:
 1. It must have a significant impact on several industries in the future.
