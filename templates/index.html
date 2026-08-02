@@ -1882,14 +1882,14 @@
             overflow: hidden;
             background: #ffffff;
             border-bottom: 1px solid #e0eaf4;
-            padding: 20px 24px 16px;
+            padding: 14px 24px 10px;
         }
 
         .hero-top-row {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             position: relative;
             z-index: 1;
         }
@@ -1943,7 +1943,8 @@
 
         .hero-filter-row {
             display: flex;
-            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
             gap: 8px;
             margin-bottom: 8px;
             position: relative;
@@ -2066,20 +2067,22 @@
                     <div class="hero-eyebrow">Real-Time Global Risk Monitor</div>
                     <div style="font-size:11px;color:#6b7a90;margin-top:4px;">Live intelligence across geopolitical, macroeconomic, regulatory and climate dimensions</div>
                 </div>
+            </div>
+
+            <!-- Filter buttons + score pill -->
+            <div class="hero-filter-row">
+                <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                    <button class="intel-filter-btn active" data-filter="all"           onclick="setIntelFilter('all')">All</button>
+                    <button class="intel-filter-btn"        data-filter="geopolitical"  onclick="setIntelFilter('geopolitical')">Geopolitical</button>
+                    <button class="intel-filter-btn"        data-filter="macroeconomic" onclick="setIntelFilter('macroeconomic')">Macroeconomic</button>
+                    <button class="intel-filter-btn"        data-filter="regulatory"    onclick="setIntelFilter('regulatory')">Regulatory</button>
+                    <button class="intel-filter-btn"        data-filter="climate_natcat" onclick="setIntelFilter('climate_natcat')">Climate &amp; Nat Cat</button>
+                </div>
                 <div class="hero-score-pill">
                     <div class="hero-score-number" id="heroRiskScore">—</div>
                     <div class="hero-score-label">Risk Score</div>
                     <div class="hero-score-trend" id="heroRiskTrend">&nbsp;</div>
                 </div>
-            </div>
-
-            <!-- Filter buttons (moved here) -->
-            <div class="hero-filter-row">
-                <button class="intel-filter-btn active" data-filter="all"           onclick="setIntelFilter('all')">All</button>
-                <button class="intel-filter-btn"        data-filter="geopolitical"  onclick="setIntelFilter('geopolitical')">Geopolitical</button>
-                <button class="intel-filter-btn"        data-filter="macroeconomic" onclick="setIntelFilter('macroeconomic')">Macroeconomic</button>
-                <button class="intel-filter-btn"        data-filter="regulatory"    onclick="setIntelFilter('regulatory')">Regulatory</button>
-                <button class="intel-filter-btn"        data-filter="climate_natcat" onclick="setIntelFilter('climate_natcat')">Climate &amp; Nat Cat</button>
             </div>
 
             <!-- Globe canvas -->
