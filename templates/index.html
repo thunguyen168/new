@@ -1714,6 +1714,136 @@
             background: #e0eaf4;
         }
 
+        /* ============================================================
+           Dashboard Hero — Globe section
+           ============================================================ */
+        .dashboard-hero {
+            position: relative;
+            overflow: hidden;
+            background: #ffffff;
+            border-bottom: 1px solid #e0eaf4;
+            padding: 20px 24px 16px;
+        }
+
+        .hero-top-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-label-group {}
+        .hero-eyebrow {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #00aeef;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .hero-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0a1628;
+            margin-bottom: 4px;
+        }
+        .hero-subtitle {
+            font-size: 11px;
+            color: #6b7a90;
+        }
+
+        .hero-score-pill {
+            background: #ffffff;
+            border: 1px solid #e0eaf4;
+            border-radius: 10px;
+            padding: 8px 14px;
+            text-align: center;
+            flex-shrink: 0;
+            min-width: 80px;
+        }
+        .hero-score-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0a1628;
+            line-height: 1.1;
+        }
+        .hero-score-label {
+            font-size: 8px;
+            letter-spacing: 1px;
+            color: #8898aa;
+            text-transform: uppercase;
+            margin: 2px 0;
+        }
+        .hero-score-trend {
+            font-size: 10px;
+            font-weight: 600;
+            color: #c45e00;
+        }
+
+        .hero-filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .globe-breadcrumb {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #0a1628;
+            margin: 8px 0 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .globe-status {
+            text-align: center;
+            font-size: 10px;
+            color: #8898aa;
+            margin-bottom: 10px;
+            min-height: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .globe-region-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .globe-region-btn {
+            padding: 5px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #3d4f6a;
+            background: #f0f4f8;
+            border: 1px solid #d0daea;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .globe-region-btn:hover,
+        .globe-region-btn.active {
+            color: #00aeef;
+            background: rgba(0,174,239,0.08);
+            border-color: rgba(0,174,239,0.4);
+        }
+
+        .globe-canvas-wrap {
+            position: relative;
+            z-index: 1;
+        }
+
     </style>
 </head>
 <body>
@@ -1759,16 +1889,60 @@
              Intelligence Dashboard view
              ====================================================== -->
         <div id="view-intelligence">
-        <div class="intel-dashboard" id="intelDashboard">
 
-            <!-- Filter bar -->
-            <div class="intel-filter-bar">
+        <!-- ===== Globe Hero ===== -->
+        <div class="dashboard-hero">
+            <!-- Particle background -->
+            <canvas id="heroParticleBg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+
+            <!-- Top row -->
+            <div class="hero-top-row">
+                <div class="hero-label-group">
+                    <div class="hero-eyebrow">Real-Time Global Risk Monitor</div>
+                    <div class="hero-title">Strategic Intelligence Dashboard</div>
+                    <div class="hero-subtitle">Live analysis &middot; Click the globe to explore regions and countries</div>
+                </div>
+                <div class="hero-score-pill">
+                    <div class="hero-score-number" id="heroRiskScore">—</div>
+                    <div class="hero-score-label">Risk Score</div>
+                    <div class="hero-score-trend" id="heroRiskTrend">&nbsp;</div>
+                </div>
+            </div>
+
+            <!-- Filter buttons (moved here) -->
+            <div class="hero-filter-row">
                 <button class="intel-filter-btn active" data-filter="all"           onclick="setIntelFilter('all')">All</button>
                 <button class="intel-filter-btn"        data-filter="geopolitical"  onclick="setIntelFilter('geopolitical')">Geopolitical</button>
                 <button class="intel-filter-btn"        data-filter="macroeconomic" onclick="setIntelFilter('macroeconomic')">Macroeconomic</button>
                 <button class="intel-filter-btn"        data-filter="regulatory"    onclick="setIntelFilter('regulatory')">Regulatory</button>
                 <button class="intel-filter-btn"        data-filter="climate_natcat" onclick="setIntelFilter('climate_natcat')">Climate &amp; Nat Cat</button>
             </div>
+
+            <!-- Globe canvas -->
+            <div class="globe-canvas-wrap">
+                <canvas id="dashboardGlobe" width="640" height="260" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;cursor:pointer;"></canvas>
+            </div>
+
+            <!-- Breadcrumb -->
+            <div class="globe-breadcrumb" id="globeBreadcrumb">🌍 Global</div>
+
+            <!-- Status -->
+            <div class="globe-status" id="globeStatus"></div>
+
+            <!-- Region strip -->
+            <div class="globe-region-strip" id="globeRegionStrip">
+                <button class="globe-region-btn active" onclick="selectGlobeRegion('global')">Global</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('europe')">Europe</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('namerica')">N. America</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('mideast')">Middle East</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('indopac')">Indo-Pacific</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('africa')">Africa</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('latam')">Lat. America</button>
+            </div>
+        </div><!-- /.dashboard-hero -->
+
+        <div class="intel-dashboard" id="intelDashboard">
+
             <div id="intelContextIndicator" style="font-size:11px;color:#8898aa;margin:4px 0 6px;letter-spacing:0.03em;">Global View</div>
 
             <!-- World Map -->
@@ -2592,6 +2766,7 @@
                 <div class="risk-methodology">Score 0&ndash;100 derived from AI analysis of current news across conflict intensity, diplomatic tensions, economic instability, and humanitarian conditions. <span class="risk-band-normal">0&ndash;24 Normal</span> &middot; <span class="risk-band-heightened">25&ndash;49 Heightened</span> &middot; <span class="risk-band-elevated">50&ndash;74 Elevated</span> &middot; <span class="risk-band-critical">75&ndash;100 Critical</span></div>
                 <div class="risk-summary">${risk.summary || ''}</div>
                 <div class="risk-list">${risksHtml}</div>`;
+            updateHeroRiskDisplay(score, trend);
         }
 
         function buildGaugeSvg(score, color) {
@@ -4386,6 +4561,421 @@
                 displayResults(latest.topic, latest.data);
             }
         })();
+    </script>
+
+    <!-- ================================================================
+         Dashboard Globe + Particle Background
+         ================================================================ -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ── Hero risk score updater ──────────────────────────────────────
+        window.updateHeroRiskDisplay = function(score, trend) {
+            const scoreEl = document.getElementById('heroRiskScore');
+            const trendEl = document.getElementById('heroRiskTrend');
+            if (scoreEl) scoreEl.textContent = score;
+            if (trendEl) {
+                const icons = { ESCALATING: '↑ ESCALATING', STABLE: '→ STABLE', 'DE-ESCALATING': '↓ DE-ESCALATING' };
+                trendEl.textContent = icons[trend] || trend;
+                trendEl.style.color = trend === 'ESCALATING' ? '#c45e00' : trend === 'DE-ESCALATING' ? '#10b981' : '#6b7a90';
+            }
+        };
+
+        // ── Continent polygon data ───────────────────────────────────────
+        const CONTINENTS = [
+            { name: 'North America', coords: [[71,-141],[70,-130],[68,-114],[60,-94],[60,-78],[47,-53],[45,-64],[44,-66],[41,-70],[35,-76],[25,-80],[18,-88],[10,-83],[8,-77],[8,-75],[10,-62],[14,-61],[18,-66],[22,-80],[24,-82],[28,-82],[30,-81],[32,-80],[35,-75],[38,-75],[40,-74],[41,-72],[42,-70],[43,-67],[44,-65],[46,-60],[48,-54],[50,-56],[52,-56],[54,-58],[56,-60],[58,-62],[60,-64],[62,-64],[64,-62],[66,-62],[68,-60],[70,-65],[72,-78],[72,-94],[70,-110],[70,-130],[71,-141]] },
+            { name: 'South America', coords: [[12,-72],[10,-62],[8,-60],[5,-52],[2,-50],[0,-48],[-5,-35],[-10,-37],[-14,-38],[-20,-40],[-24,-43],[-28,-48],[-30,-50],[-34,-52],[-38,-57],[-40,-62],[-42,-64],[-44,-65],[-46,-66],[-50,-68],[-54,-68],[-56,-68],[-55,-65],[-52,-70],[-48,-74],[-42,-72],[-36,-72],[-30,-71],[-24,-70],[-18,-70],[-14,-76],[-8,-80],[-2,-80],[2,-78],[6,-77],[8,-76],[10,-73],[12,-72]] },
+            { name: 'Europe', coords: [[71,28],[70,20],[68,14],[65,14],[62,5],[58,5],[56,8],[54,8],[52,14],[50,14],[48,16],[46,13],[44,14],[42,18],[40,18],[38,16],[36,6],[36,-5],[38,-9],[40,-8],[43,-9],[44,-1],[46,2],[48,2],[50,2],[52,2],[54,8],[56,8],[58,5],[60,5],[62,10],[64,14],[66,14],[68,14],[70,20],[71,28]] },
+            { name: 'Africa', coords: [[38,10],[36,10],[35,24],[30,32],[22,37],[12,44],[0,42],[-5,40],[-12,38],[-18,36],[-26,33],[-34,27],[-35,20],[-32,18],[-28,16],[-24,14],[-20,13],[-16,12],[-12,14],[-8,14],[-4,8],[0,2],[4,-2],[8,-4],[12,-16],[18,-18],[22,-17],[26,-15],[30,-17],[34,-12],[36,-1],[38,4],[38,10]] },
+            { name: 'Asia', coords: [[72,130],[70,142],[68,142],[64,142],[60,140],[56,140],[52,140],[50,142],[46,136],[42,132],[40,128],[38,122],[36,120],[34,118],[32,120],[28,120],[24,116],[20,110],[16,108],[12,108],[8,100],[4,102],[0,104],[-4,108],[-8,116],[-5,114],[0,106],[4,100],[8,80],[10,76],[14,80],[18,78],[22,68],[24,68],[28,70],[30,64],[32,62],[34,60],[36,56],[38,52],[38,44],[36,36],[38,28],[38,18],[40,28],[42,26],[44,32],[46,38],[48,42],[50,42],[52,50],[56,56],[60,60],[64,60],[68,58],[72,68],[76,86],[78,100],[76,120],[72,130]] },
+            { name: 'Australia', coords: [[-15,130],[-12,136],[-14,141],[-18,146],[-22,150],[-28,154],[-34,151],[-38,146],[-38,140],[-36,136],[-32,134],[-30,115],[-22,114],[-18,122],[-15,128],[-15,130]] },
+            { name: 'Greenland', coords: [[83,-38],[82,-24],[78,-18],[72,-22],[68,-28],[66,-38],[68,-50],[72,-56],[76,-58],[80,-52],[83,-38]] }
+        ];
+
+        // ── Region hotspots (global level) ──────────────────────────────
+        const REGIONS = [
+            { id: 'europe',   label: 'Europe',     lat: 54,  lon: 15,   color: '#f97316', status: 'ELEVATED' },
+            { id: 'namerica', label: 'N. America',  lat: 44,  lon: -100, color: '#10b981', status: 'NORMAL' },
+            { id: 'mideast',  label: 'Mid East',    lat: 28,  lon: 44,   color: '#ef4444', status: 'HEIGHTENED' },
+            { id: 'indopac',  label: 'Indo-Pac',    lat: 25,  lon: 116,  color: '#f97316', status: 'ELEVATED' },
+            { id: 'africa',   label: 'Africa',      lat: 5,   lon: 20,   color: '#f97316', status: 'ELEVATED' },
+            { id: 'latam',    label: 'Lat. America',lat: -12, lon: -62,  color: '#10b981', status: 'NORMAL' }
+        ];
+
+        // ── Countries per region ─────────────────────────────────────────
+        const COUNTRIES = {
+            europe:   [
+                { label: 'UK',       lat: 54, lon: -3,  color: '#ef4444', status: 'ELEVATED' },
+                { label: 'France',   lat: 46, lon: 2,   color: '#f97316', status: 'ELEVATED' },
+                { label: 'Germany',  lat: 52, lon: 10,  color: '#10b981', status: 'NORMAL' },
+                { label: 'Ukraine',  lat: 50, lon: 32,  color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'Spain',    lat: 40, lon: -4,  color: '#10b981', status: 'NORMAL' },
+                { label: 'Poland',   lat: 52, lon: 20,  color: '#f97316', status: 'ELEVATED' }
+            ],
+            namerica: [
+                { label: 'USA',      lat: 38, lon: -97,  color: '#10b981', status: 'NORMAL' },
+                { label: 'Canada',   lat: 58, lon: -98,  color: '#10b981', status: 'NORMAL' },
+                { label: 'Mexico',   lat: 23, lon: -104, color: '#f97316', status: 'ELEVATED' }
+            ],
+            mideast:  [
+                { label: 'Israel',   lat: 32, lon: 35,  color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'Iran',     lat: 33, lon: 54,  color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'UAE',      lat: 24, lon: 54,  color: '#f97316', status: 'ELEVATED' },
+                { label: 'KSA',      lat: 24, lon: 45,  color: '#f97316', status: 'ELEVATED' },
+                { label: 'Turkey',   lat: 39, lon: 34,  color: '#f97316', status: 'ELEVATED' }
+            ],
+            indopac:  [
+                { label: 'China',     lat: 36,  lon: 104, color: '#f97316', status: 'ELEVATED' },
+                { label: 'Japan',     lat: 36,  lon: 138, color: '#f97316', status: 'ELEVATED' },
+                { label: 'India',     lat: 22,  lon: 78,  color: '#10b981', status: 'NORMAL' },
+                { label: 'Taiwan',    lat: 24,  lon: 121, color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'Australia', lat: -28, lon: 134, color: '#10b981', status: 'NORMAL' },
+                { label: 'S.Korea',   lat: 36,  lon: 128, color: '#f97316', status: 'ELEVATED' }
+            ],
+            africa:   [
+                { label: 'Nigeria',   lat: 10,  lon: 8,  color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'S.Africa',  lat: -30, lon: 26, color: '#f97316', status: 'ELEVATED' },
+                { label: 'Kenya',     lat: 1,   lon: 38, color: '#f97316', status: 'ELEVATED' },
+                { label: 'Egypt',     lat: 27,  lon: 30, color: '#f97316', status: 'ELEVATED' }
+            ],
+            latam:    [
+                { label: 'Brazil',    lat: -10, lon: -52, color: '#10b981', status: 'NORMAL' },
+                { label: 'Argentina', lat: -36, lon: -65, color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'Colombia',  lat: 5,   lon: -74, color: '#f97316', status: 'ELEVATED' },
+                { label: 'Chile',     lat: -30, lon: -70, color: '#10b981', status: 'NORMAL' }
+            ]
+        };
+
+        // ── Globe state ──────────────────────────────────────────────────
+        let globeLon = 0;          // current rotation longitude offset
+        let globeLevel = 'global'; // 'global' | 'region'
+        let activeRegionId = null;
+        let rotationSpeed = 0.28;
+        let pauseRotation = false;
+        let animFrameId = null;
+        let pulseT = 0;
+
+        // ── 3D projection helpers ────────────────────────────────────────
+        const CX = 320, CY = 130, R = 108;
+
+        function toXY(lat, lon) {
+            const latR = lat * Math.PI / 180;
+            const lonR = (lon - globeLon) * Math.PI / 180;
+            const x = R * Math.cos(latR) * Math.sin(lonR);
+            const y = -R * Math.sin(latR);
+            const z = R * Math.cos(latR) * Math.cos(lonR);
+            return { x: CX + x, y: CY + y, z };
+        }
+
+        function isVisible(lat, lon) {
+            return toXY(lat, lon).z > 0;
+        }
+
+        // ── Draw globe frame ─────────────────────────────────────────────
+        function drawGlobe(ctx) {
+            ctx.clearRect(0, 0, 640, 260);
+
+            // Ocean base
+            const grad = ctx.createRadialGradient(CX - 20, CY - 20, 10, CX, CY, R);
+            grad.addColorStop(0, 'rgba(230,242,255,0.9)');
+            grad.addColorStop(1, 'rgba(215,232,250,0.65)');
+            ctx.beginPath();
+            ctx.arc(CX, CY, R, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0,100,180,0.18)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Lat/lon grid
+            ctx.strokeStyle = 'rgba(0,120,200,0.08)';
+            ctx.lineWidth = 0.5;
+            // Latitude lines every 20°
+            for (let lat = -80; lat <= 80; lat += 20) {
+                ctx.beginPath();
+                let first = true;
+                for (let lon = -180; lon <= 180; lon += 3) {
+                    const p = toXY(lat, lon);
+                    if (p.z > 0) {
+                        if (first) { ctx.moveTo(p.x, p.y); first = false; }
+                        else ctx.lineTo(p.x, p.y);
+                    } else { first = true; }
+                }
+                ctx.stroke();
+            }
+            // Longitude lines every 20°
+            for (let lon = -180; lon < 180; lon += 20) {
+                ctx.beginPath();
+                let first = true;
+                for (let lat = -90; lat <= 90; lat += 3) {
+                    const p = toXY(lat, lon);
+                    if (p.z > 0) {
+                        if (first) { ctx.moveTo(p.x, p.y); first = false; }
+                        else ctx.lineTo(p.x, p.y);
+                    } else { first = true; }
+                }
+                ctx.stroke();
+            }
+
+            // Clip to globe circle for continents
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(CX, CY, R - 0.5, 0, Math.PI * 2);
+            ctx.clip();
+
+            // Continents
+            ctx.fillStyle = 'rgba(160,200,235,0.5)';
+            ctx.strokeStyle = 'rgba(0,100,180,0.3)';
+            ctx.lineWidth = 0.8;
+            for (const cont of CONTINENTS) {
+                drawContinent(ctx, cont.coords);
+            }
+            ctx.restore();
+
+            // Hotspots
+            const spots = globeLevel === 'global' ? REGIONS : (COUNTRIES[activeRegionId] || []);
+            const fontSize = globeLevel === 'global' ? 9 : 10;
+
+            for (const spot of spots) {
+                const p = toXY(spot.lat, spot.lon);
+                if (p.z <= 0) continue;
+
+                // Pulsing ring
+                const pulse = 0.5 + 0.5 * Math.sin(pulseT * 0.05);
+                const ringR = 6 + pulse * 5;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, ringR, 0, Math.PI * 2);
+                ctx.strokeStyle = spot.color + '55';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Dot
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = spot.color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Label
+                const labelText = spot.label;
+                ctx.font = `600 ${fontSize}px -apple-system, sans-serif`;
+                const tw = ctx.measureText(labelText).width;
+                const lx = p.x + 8, ly = p.y - 6;
+                const pad = 3;
+                ctx.fillStyle = 'rgba(238,244,252,0.88)';
+                ctx.beginPath();
+                ctx.roundRect(lx - pad, ly - fontSize + 1, tw + pad * 2, fontSize + pad * 2, 3);
+                ctx.fill();
+                ctx.fillStyle = '#0a1628';
+                ctx.fillText(labelText, lx, ly + pad);
+            }
+        }
+
+        function drawContinent(ctx, coords) {
+            if (!coords || coords.length < 3) return;
+            ctx.beginPath();
+            let started = false;
+            for (const [lat, lon] of coords) {
+                const p = toXY(lat, lon);
+                if (p.z > 0) {
+                    if (!started) { ctx.moveTo(p.x, p.y); started = true; }
+                    else ctx.lineTo(p.x, p.y);
+                }
+            }
+            if (started) { ctx.closePath(); ctx.fill(); ctx.stroke(); }
+        }
+
+        // ── Hit testing ──────────────────────────────────────────────────
+        function hitTest(mx, my) {
+            const spots = globeLevel === 'global' ? REGIONS : (COUNTRIES[activeRegionId] || []);
+            for (const spot of spots) {
+                const p = toXY(spot.lat, spot.lon);
+                if (p.z <= 0) continue;
+                const dx = mx - p.x, dy = my - p.y;
+                if (Math.sqrt(dx * dx + dy * dy) <= 10) return spot;
+            }
+            return null;
+        }
+
+        // ── Globe interaction ────────────────────────────────────────────
+        function handleGlobeClick(e) {
+            const canvas = document.getElementById('dashboardGlobe');
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = 640 / rect.width;
+            const scaleY = 260 / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+
+            const hit = hitTest(mx, my);
+            if (hit) {
+                if (globeLevel === 'global') {
+                    // Zoom into region
+                    setGlobeLevel('region', hit.id, hit.label);
+                    if (typeof loadRegionalIntelligence === 'function') {
+                        loadRegionalIntelligence(hit.id, hit.label);
+                    }
+                } else {
+                    // Country click
+                    if (typeof loadCountryIntelligence === 'function') {
+                        loadCountryIntelligence(hit.label);
+                    }
+                    const crumb = document.getElementById('globeBreadcrumb');
+                    const base = REGIONS.find(r => r.id === activeRegionId);
+                    if (crumb && base) crumb.textContent = `🌍 Global › ${base.label} › ${hit.label}`;
+                    setGlobeStatus(`Loading ${hit.label} intelligence…`);
+                }
+            } else if (globeLevel === 'region') {
+                // Click ocean → back to global
+                setGlobeLevel('global', null, null);
+            }
+        }
+
+        function handleGlobeMouseMove(e) {
+            const canvas = document.getElementById('dashboardGlobe');
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = 640 / rect.width;
+            const scaleY = 260 / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+            const hit = hitTest(mx, my);
+            pauseRotation = !!hit;
+            canvas.style.cursor = hit ? 'pointer' : 'default';
+            if (hit) setGlobeStatus(hit.label + ' — ' + hit.status);
+            else if (globeLevel === 'global') setGlobeStatus('');
+        }
+
+        function setGlobeLevel(level, regionId, regionLabel) {
+            globeLevel = level;
+            activeRegionId = regionId;
+            rotationSpeed = level === 'global' ? 0.28 : 0.12;
+
+            const crumb = document.getElementById('globeBreadcrumb');
+            if (crumb) {
+                crumb.textContent = level === 'global' ? '🌍 Global' : `🌍 Global › ${regionLabel}`;
+            }
+            setGlobeStatus(level === 'global' ? '' : `Showing countries in ${regionLabel} — click ocean to return`);
+
+            // Sync region strip pills
+            document.querySelectorAll('.globe-region-btn').forEach(btn => {
+                const btnRegion = btn.getAttribute('onclick').match(/'([^']+)'/)?.[1];
+                btn.classList.toggle('active', btnRegion === (regionId || 'global'));
+            });
+        }
+
+        function setGlobeStatus(msg) {
+            const el = document.getElementById('globeStatus');
+            if (el) el.textContent = msg;
+        }
+
+        // ── Public API for region strip buttons ──────────────────────────
+        window.selectGlobeRegion = function(regionId) {
+            if (regionId === 'global') {
+                setGlobeLevel('global', null, null);
+                if (typeof returnToGlobalView === 'function') returnToGlobalView();
+            } else {
+                const region = REGIONS.find(r => r.id === regionId);
+                if (!region) return;
+                setGlobeLevel('region', regionId, region.label);
+                if (typeof loadRegionalIntelligence === 'function') {
+                    loadRegionalIntelligence(region.id, region.label);
+                }
+                // Spin globe to face the region center
+                globeLon = region.lon - 10;
+            }
+        };
+
+        // ── Animation loop ───────────────────────────────────────────────
+        function globeLoop() {
+            const canvas = document.getElementById('dashboardGlobe');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!pauseRotation) globeLon += rotationSpeed;
+            pulseT++;
+            drawGlobe(ctx);
+            animFrameId = requestAnimationFrame(globeLoop);
+        }
+
+        // ── Particle background ──────────────────────────────────────────
+        function initParticles() {
+            const canvas = document.getElementById('heroParticleBg');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const COUNT = 40;
+            const CONNECT = 80;
+            let particles = [];
+            let W, H;
+
+            function resize() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                W = canvas.width = rect.width || 800;
+                H = canvas.height = rect.height || 320;
+            }
+
+            function spawn() {
+                particles = Array.from({ length: COUNT }, () => ({
+                    x: Math.random() * W,
+                    y: Math.random() * H,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4
+                }));
+            }
+
+            function tick() {
+                ctx.clearRect(0, 0, W, H);
+                for (const p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0,120,200,0.12)';
+                    ctx.fill();
+                }
+                for (let i = 0; i < COUNT; i++) {
+                    for (let j = i + 1; j < COUNT; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < CONNECT) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(0,120,200,${0.07 * (1 - d / CONNECT)})`;
+                            ctx.lineWidth = 0.6;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(tick);
+            }
+
+            resize();
+            spawn();
+            tick();
+            window.addEventListener('resize', () => { resize(); spawn(); });
+        }
+
+        // ── Boot ─────────────────────────────────────────────────────────
+        function boot() {
+            const canvas = document.getElementById('dashboardGlobe');
+            if (!canvas) return;
+            canvas.addEventListener('click', handleGlobeClick);
+            canvas.addEventListener('mousemove', handleGlobeMouseMove);
+            canvas.addEventListener('mouseleave', () => { pauseRotation = false; setGlobeStatus(''); });
+            initParticles();
+            globeLoop();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+        } else {
+            boot();
+        }
+    })();
     </script>
 </body>
 </html>
