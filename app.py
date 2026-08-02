@@ -12,7 +12,7 @@ from functools import wraps
 
 import httpx
 import anthropic
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, Response
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -791,6 +791,192 @@ def scan_topic():
         return jsonify({'error': 'Search timed out. Please try again.'}), 500
     except Exception as e:
         return jsonify({'error': f'Error: {str(e)}'}), 500
+
+
+@app.route('/scan/stream', methods=['POST'])
+@require_auth
+def scan_stream():
+    """Streaming scan using SSE — phenomena appear progressively as Claude generates them."""
+    topic = request.form.get('topic', '').strip()
+    attestation = request.form.get('attestation', '')
+
+    # All validation in request context before generator starts
+    if not topic:
+        return jsonify({'error': 'Please enter a topic to scan'}), 400
+    if attestation != 'confirmed':
+        return jsonify({'error': 'You must confirm the public-data attestation before submitting.'}), 400
+
+    attestation_time = datetime.now(timezone.utc).isoformat()
+    app.logger.info(f"Stream scan attestation at {attestation_time} for topic: {topic[:50]}")
+
+    validation_error = validate_topic_input(topic)
+    if validation_error:
+        return jsonify({'error': validation_error}), 400
+
+    if not ANTHROPIC_API_KEY:
+        return jsonify({'error': 'Anthropic API key not configured'}), 500
+    if not SERPER_API_KEY and not BRAVE_API_KEY:
+        return jsonify({'error': 'No search API key configured'}), 500
+
+    # Run searches synchronously before streaming starts (captures results in closure)
+    search_queries = [
+        f"{topic} trends 2024 2025",
+        f"{topic} future predictions emerging",
+        f"{topic} risk factors",
+        f"{topic} regulatory changes",
+        f"{topic} industry disruption"
+    ]
+    unique_results = []
+    seen_links = set()
+    for q in search_queries:
+        results = search_web(q, num_results=3)
+        if isinstance(results, list):
+            for r in results:
+                if isinstance(r, dict) and r.get('link') and r['link'] not in seen_links:
+                    seen_links.add(r['link'])
+                    unique_results.append(r)
+
+    if not unique_results:
+        return jsonify({'error': 'No search results found. Please try a different topic.'}), 400
+
+    sources_text = ""
+    for i, result in enumerate(unique_results[:15], 1):
+        sources_text += f"\n{i}. {result['title']}\n   {result['snippet']}\n   Source: {result['link']}\n"
+
+    stream_prompt = f"""You are a strategic foresight analyst. Based on the search results below about "{topic}", identify exactly 20 key phenomena. You MUST identify exactly 20 phenomena — no more, no fewer.
+
+PHENOMENON CRITERIA - Each phenomenon must meet ALL of these:
+1. It must have a significant impact on several industries in the future.
+2. Its potential impact is informed by the available evidence (not speculation alone).
+3. It must have a direction: either getting stronger, broader, deeper, or weaker, or merging with other phenomena.
+4. It must have a sufficiently independent and robust core description that can be verified.
+
+COLOUR-CODED SIGNAL TYPES - You MUST include at least one of each:
+- "Strengthening": The issue is becoming more common or acute. Most of its change potential is still ahead.
+- "Weakening": The issue is becoming more unusual. Most of its change potential has already occurred.
+- "Established": The issue has stabilised. It has future relevance but will not significantly strengthen or weaken.
+- "Weak Signal": A small emerging issue. Still hard to say whether it will become a trend or fade away.
+- "Wild Card": A possible but not probable event. Probability within timeframe is 5%-30%.
+
+TIMING: Use one of:
+- "Near-term (0-5 years)"
+- "Mid-term (5-10 years)"
+- "Long-term (10-20 years)"
+Set timing to null for Weak Signals.
+
+THEME TAGS: Each phenomenon MUST be assigned exactly one category: "Strategic", "Regulatory", "Operational", or "Financial". The theme_tags array should contain only this single category.
+
+SEARCH RESULTS:
+{sources_text}
+
+For each phenomenon provide exactly these fields:
+1. title — clear concise name
+2. theme_tags — exactly one of ["Strategic"], ["Regulatory"], ["Operational"], ["Financial"]
+3. type — one of: Strengthening, Weakening, Established, Weak Signal, Wild Card
+4. timing — Near-term / Mid-term / Long-term (null for Weak Signals)
+5. summary — 2-3 sentences: what this phenomenon means in plain language and why it matters
+6. emerging_risk_implications — 2-3 sentences on new or accelerated risks this phenomenon creates
+7. insurance_impact — 2-3 sentences on implications for insurance brokers and their clients
+
+Return ONLY a JSON array of exactly 20 objects. Output each object on its own line as soon as it is complete. No other text.
+[
+  {{
+    "title": "Example",
+    "theme_tags": ["Strategic"],
+    "type": "Strengthening",
+    "timing": "Near-term (0-5 years)",
+    "summary": "...",
+    "emerging_risk_implications": "...",
+    "insurance_impact": "..."
+  }}
+]"""
+
+    def extract_complete_objects(buffer, scan_pos):
+        """Extract complete JSON objects from buffer, handling strings correctly."""
+        objects = []
+        pos = scan_pos
+        while pos < len(buffer):
+            start = buffer.find('{', pos)
+            if start == -1:
+                break
+            depth = 0
+            in_string = False
+            escape_next = False
+            i = start
+            end = -1
+            while i < len(buffer):
+                c = buffer[i]
+                if escape_next:
+                    escape_next = False
+                elif c == '\\' and in_string:
+                    escape_next = True
+                elif c == '"':
+                    in_string = not in_string
+                elif not in_string:
+                    if c == '{':
+                        depth += 1
+                    elif c == '}':
+                        depth -= 1
+                        if depth == 0:
+                            end = i
+                            break
+                i += 1
+            if end == -1:
+                break  # incomplete object — wait for more text
+            obj_str = buffer[start:end + 1]
+            try:
+                obj = json.loads(obj_str)
+                if isinstance(obj, dict) and obj.get('title'):
+                    objects.append(obj)
+            except json.JSONDecodeError:
+                pass
+            pos = end + 1
+        return objects, pos
+
+    def generate():
+        client = anthropic.Anthropic(
+            api_key=ANTHROPIC_API_KEY,
+            timeout=httpx.Timeout(180.0, connect=10.0, read=180.0, write=10.0)
+        )
+        buffer = ''
+        scan_pos = 0
+        phenomena = []
+
+        try:
+            with client.messages.stream(
+                model=MODEL,
+                max_tokens=16000,
+                messages=[{"role": "user", "content": stream_prompt}]
+            ) as stream:
+                for text in stream.text_stream:
+                    buffer += text
+                    new_objects, scan_pos = extract_complete_objects(buffer, scan_pos)
+                    for obj in new_objects:
+                        phenomena.append(obj)
+                        event = json.dumps({
+                            'type': 'phenomenon',
+                            'index': len(phenomena) - 1,
+                            'phenomenon': obj
+                        })
+                        yield f"data: {event}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            return
+
+        # Executive summary (fast Haiku call — runs after streaming completes)
+        try:
+            exec_summary = generate_executive_summary(topic, phenomena)
+        except Exception:
+            exec_summary = {}
+
+        yield f"data: {json.dumps({'type': 'executive_summary', 'executive_summary': exec_summary, 'sources': unique_results, 'phenomena_count': len(phenomena), 'topic': topic})}\n\n"
+        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+    resp = Response(generate(), mimetype='text/event-stream')
+    resp.headers['Cache-Control'] = 'no-cache'
+    resp.headers['X-Accel-Buffering'] = 'no'
+    resp.headers['Connection'] = 'keep-alive'
+    return resp
 
 
 REGION_NEWS_QUERIES = {
