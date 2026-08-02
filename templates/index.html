@@ -1882,14 +1882,14 @@
             overflow: hidden;
             background: #ffffff;
             border-bottom: 1px solid #e0eaf4;
-            padding: 14px 24px 10px;
+            padding: 10px 24px 10px;
         }
 
         .hero-top-row {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 4px;
+            margin-bottom: 0px;
             position: relative;
             z-index: 1;
         }
@@ -2087,7 +2087,7 @@
 
             <!-- Globe canvas -->
             <div class="globe-canvas-wrap">
-                <canvas id="dashboardGlobe" width="640" height="260" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;cursor:pointer;"></canvas>
+                <canvas id="dashboardGlobe" width="640" height="300" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;cursor:pointer;"></canvas>
             </div>
 
             <!-- Breadcrumb -->
@@ -4918,7 +4918,7 @@
         let pulseT = 0;
 
         // ── 3D projection helpers ────────────────────────────────────────
-        const CX = 320, CY = 130, R = 108;
+        const CX = 320, CY = 150, R = 124;
 
         function toXY(lat, lon) {
             const latR = lat * Math.PI / 180;
@@ -5066,7 +5066,7 @@
             const canvas = document.getElementById('dashboardGlobe');
             const rect = canvas.getBoundingClientRect();
             const scaleX = 640 / rect.width;
-            const scaleY = 260 / rect.height;
+            const scaleY = 300 / rect.height;
             const mx = (e.clientX - rect.left) * scaleX;
             const my = (e.clientY - rect.top) * scaleY;
 
@@ -5098,7 +5098,7 @@
             const canvas = document.getElementById('dashboardGlobe');
             const rect = canvas.getBoundingClientRect();
             const scaleX = 640 / rect.width;
-            const scaleY = 260 / rect.height;
+            const scaleY = 300 / rect.height;
             const mx = (e.clientX - rect.left) * scaleX;
             const my = (e.clientY - rect.top) * scaleY;
             const hit = hitTest(mx, my);
