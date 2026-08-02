@@ -1818,11 +1818,11 @@
 
         .steeple-watermark {
             position: absolute;
-            top: -4px;
-            right: 8px;
-            font-size: 52px;
+            bottom: 6px;
+            right: 10px;
+            font-size: 48px;
             font-weight: 900;
-            color: rgba(0,0,0,0.04);
+            color: rgba(0,0,0,0.06);
             line-height: 1;
             pointer-events: none;
             user-select: none;
@@ -2364,12 +2364,11 @@
                 <div class="industry-dropdown-group">
                     <label class="industry-dropdown-label">Insight Type</label>
                     <select class="industry-dropdown" id="industryTypeSelect">
-                        <option value="">Select type…</option>
-                        <option value="Full overview">Full overview</option>
-                        <option value="Risk landscape">Risk landscape</option>
-                        <option value="Regulatory environment">Regulatory environment</option>
-                        <option value="Market trends">Market trends</option>
-                        <option value="Insurance implications">Insurance implications</option>
+                        <option value="STEEPLE Analysis" selected>STEEPLE Analysis</option>
+                        <option value="Market Overview & STEEPLE">Market Overview &amp; STEEPLE</option>
+                        <option value="Risk Landscape">Risk Landscape</option>
+                        <option value="Insurance Implications">Insurance Implications</option>
+                        <option value="Regulatory Environment">Regulatory Environment</option>
                     </select>
                 </div>
                 <button class="industry-generate-btn" id="industryGenerateBtn" onclick="generateIndustryInsights()">Generate Insights →</button>
