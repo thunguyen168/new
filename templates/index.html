@@ -4988,44 +4988,44 @@
         // ── Countries per region ─────────────────────────────────────────
         const COUNTRIES = {
             europe: [
-                { label: 'UK',       lat: 54, lon: -3,  color: '#ef4444', status: 'ELEVATED' },
-                { label: 'France',   lat: 46, lon: 2,   color: '#f97316', status: 'ELEVATED' },
-                { label: 'Germany',  lat: 52, lon: 10,  color: '#10b981', status: 'NORMAL' },
-                { label: 'Ukraine',  lat: 50, lon: 32,  color: '#ef4444', status: 'HEIGHTENED' },
-                { label: 'Spain',    lat: 40, lon: -4,  color: '#10b981', status: 'NORMAL' },
-                { label: 'Poland',   lat: 52, lon: 20,  color: '#f97316', status: 'ELEVATED' }
+                { label: 'UK',       lat: 56,  lon: -4,  color: '#ef4444', status: 'ELEVATED' },
+                { label: 'France',   lat: 46,  lon: 1,   color: '#f97316', status: 'ELEVATED' },
+                { label: 'Germany',  lat: 52,  lon: 12,  color: '#10b981', status: 'NORMAL' },
+                { label: 'Ukraine',  lat: 49,  lon: 33,  color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'Spain',    lat: 39,  lon: -4,  color: '#10b981', status: 'NORMAL' },
+                { label: 'Poland',   lat: 52,  lon: 22,  color: '#f97316', status: 'ELEVATED' }
             ],
             'us': [
-                { label: 'USA',      lat: 38, lon: -97,  color: '#10b981', status: 'NORMAL' },
-                { label: 'Canada',   lat: 58, lon: -98,  color: '#10b981', status: 'NORMAL' },
-                { label: 'Mexico',   lat: 23, lon: -104, color: '#f97316', status: 'ELEVATED' }
+                { label: 'USA',      lat: 37,  lon: -95,  color: '#10b981', status: 'NORMAL' },
+                { label: 'Canada',   lat: 62,  lon: -100, color: '#10b981', status: 'NORMAL' },
+                { label: 'Mexico',   lat: 22,  lon: -103, color: '#f97316', status: 'ELEVATED' }
             ],
             'middle-east': [
-                { label: 'Israel',   lat: 32, lon: 35,  color: '#ef4444', status: 'HEIGHTENED' },
-                { label: 'Iran',     lat: 33, lon: 54,  color: '#ef4444', status: 'HEIGHTENED' },
-                { label: 'UAE',      lat: 24, lon: 54,  color: '#f97316', status: 'ELEVATED' },
-                { label: 'KSA',      lat: 24, lon: 45,  color: '#f97316', status: 'ELEVATED' },
-                { label: 'Turkey',   lat: 39, lon: 34,  color: '#f97316', status: 'ELEVATED' }
+                { label: 'Israel',   lat: 33,  lon: 33,  color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'Iran',     lat: 34,  lon: 56,  color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'UAE',      lat: 22,  lon: 56,  color: '#f97316', status: 'ELEVATED' },
+                { label: 'KSA',      lat: 25,  lon: 43,  color: '#f97316', status: 'ELEVATED' },
+                { label: 'Turkey',   lat: 40,  lon: 32,  color: '#f97316', status: 'ELEVATED' }
             ],
             'asia-pacific': [
-                { label: 'China',     lat: 36,  lon: 104, color: '#f97316', status: 'ELEVATED' },
-                { label: 'Japan',     lat: 36,  lon: 138, color: '#f97316', status: 'ELEVATED' },
-                { label: 'India',     lat: 22,  lon: 78,  color: '#10b981', status: 'NORMAL' },
-                { label: 'Taiwan',    lat: 24,  lon: 121, color: '#ef4444', status: 'HEIGHTENED' },
-                { label: 'Australia', lat: -28, lon: 134, color: '#10b981', status: 'NORMAL' },
-                { label: 'S.Korea',   lat: 36,  lon: 128, color: '#f97316', status: 'ELEVATED' }
+                { label: 'China',     lat: 37,  lon: 102, color: '#f97316', status: 'ELEVATED' },
+                { label: 'Japan',     lat: 38,  lon: 142, color: '#f97316', status: 'ELEVATED' },
+                { label: 'India',     lat: 21,  lon: 76,  color: '#10b981', status: 'NORMAL' },
+                { label: 'Taiwan',    lat: 22,  lon: 122, color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'Australia', lat: -30, lon: 136, color: '#10b981', status: 'NORMAL' },
+                { label: 'S.Korea',   lat: 37,  lon: 126, color: '#f97316', status: 'ELEVATED' }
             ],
             africa: [
-                { label: 'Nigeria',   lat: 10,  lon: 8,  color: '#ef4444', status: 'HEIGHTENED' },
-                { label: 'S.Africa',  lat: -30, lon: 26, color: '#f97316', status: 'ELEVATED' },
-                { label: 'Kenya',     lat: 1,   lon: 38, color: '#f97316', status: 'ELEVATED' },
-                { label: 'Egypt',     lat: 27,  lon: 30, color: '#f97316', status: 'ELEVATED' }
+                { label: 'Nigeria',   lat: 10,  lon: 6,  color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'S.Africa',  lat: -32, lon: 25, color: '#f97316', status: 'ELEVATED' },
+                { label: 'Kenya',     lat: 1,   lon: 40, color: '#f97316', status: 'ELEVATED' },
+                { label: 'Egypt',     lat: 28,  lon: 29, color: '#f97316', status: 'ELEVATED' }
             ],
             'latin-america': [
-                { label: 'Brazil',    lat: -10, lon: -52, color: '#10b981', status: 'NORMAL' },
-                { label: 'Argentina', lat: -36, lon: -65, color: '#ef4444', status: 'HEIGHTENED' },
-                { label: 'Colombia',  lat: 5,   lon: -74, color: '#f97316', status: 'ELEVATED' },
-                { label: 'Chile',     lat: -30, lon: -70, color: '#10b981', status: 'NORMAL' }
+                { label: 'Brazil',    lat: -9,  lon: -50, color: '#10b981', status: 'NORMAL' },
+                { label: 'Argentina', lat: -38, lon: -66, color: '#ef4444', status: 'HEIGHTENED' },
+                { label: 'Colombia',  lat: 6,   lon: -73, color: '#f97316', status: 'ELEVATED' },
+                { label: 'Chile',     lat: -32, lon: -69, color: '#10b981', status: 'NORMAL' }
             ]
         };
 
@@ -5185,7 +5185,7 @@
                 const p = toXY(spot.lat, spot.lon);
                 if (p.z <= 0) continue;
                 const dx = mx - p.x, dy = my - p.y;
-                if (Math.sqrt(dx * dx + dy * dy) <= 10) return spot;
+                if (Math.sqrt(dx * dx + dy * dy) <= 22) return spot;
             }
             return null;
         }
@@ -5288,6 +5288,16 @@
                 }
             }
         };
+
+        // ── Expose full reset (globe animation + intelligence panels) ─────
+        // The outer-scope returnToGlobalView() only resets intelligence panels.
+        // Override it here so the reset button also triggers the globe animation.
+        window.returnToGlobalView = (function(orig) {
+            return function() {
+                setGlobeLevel('global', null, null);
+                if (typeof orig === 'function') orig();
+            };
+        })(window.returnToGlobalView);
 
         // ── Animation loop ───────────────────────────────────────────────
         function globeLoop() {
