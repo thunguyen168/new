@@ -2023,6 +2023,22 @@
             border-color: rgba(0,174,239,0.4);
         }
 
+        .globe-reset-btn {
+            display: none;
+            background: #f0f4f8;
+            border: 1px solid #d0dce8;
+            color: #6b7a90;
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+            position: relative;
+            z-index: 1;
+            margin-top: 4px;
+        }
+        .globe-reset-btn:hover { border-color: #00aeef; color: #00aeef; }
+
         .globe-canvas-wrap {
             position: relative;
             z-index: 1;
@@ -2116,6 +2132,7 @@
 
             <!-- Breadcrumb -->
             <div class="globe-breadcrumb" id="globeBreadcrumb">🌍 Global</div>
+            <button class="globe-reset-btn" id="globeResetBtn" onclick="returnToGlobalView()">↺ Reset view</button>
 
             <!-- Status -->
             <div class="globe-status" id="globeStatus"></div>
@@ -2124,11 +2141,11 @@
             <div class="globe-region-strip" id="globeRegionStrip">
                 <button class="globe-region-btn active" onclick="selectGlobeRegion('global')">Global</button>
                 <button class="globe-region-btn" onclick="selectGlobeRegion('europe')">Europe</button>
-                <button class="globe-region-btn" onclick="selectGlobeRegion('namerica')">N. America</button>
-                <button class="globe-region-btn" onclick="selectGlobeRegion('mideast')">Middle East</button>
-                <button class="globe-region-btn" onclick="selectGlobeRegion('indopac')">Indo-Pacific</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('us')">N. America</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('middle-east')">Middle East</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('asia-pacific')">Indo-Pacific</button>
                 <button class="globe-region-btn" onclick="selectGlobeRegion('africa')">Africa</button>
-                <button class="globe-region-btn" onclick="selectGlobeRegion('latam')">Lat. America</button>
+                <button class="globe-region-btn" onclick="selectGlobeRegion('latin-america')">Lat. America</button>
             </div>
         </div><!-- /.dashboard-hero -->
 
@@ -5055,17 +5072,17 @@
 
         // ── Region hotspots (global level) ──────────────────────────────
         const REGIONS = [
-            { id: 'europe',   label: 'Europe',     lat: 54,  lon: 15,   color: '#f97316', status: 'ELEVATED' },
-            { id: 'namerica', label: 'N. America',  lat: 44,  lon: -100, color: '#10b981', status: 'NORMAL' },
-            { id: 'mideast',  label: 'Mid East',    lat: 28,  lon: 44,   color: '#ef4444', status: 'HEIGHTENED' },
-            { id: 'indopac',  label: 'Indo-Pac',    lat: 25,  lon: 116,  color: '#f97316', status: 'ELEVATED' },
-            { id: 'africa',   label: 'Africa',      lat: 5,   lon: 20,   color: '#f97316', status: 'ELEVATED' },
-            { id: 'latam',    label: 'Lat. America',lat: -12, lon: -62,  color: '#10b981', status: 'NORMAL' }
+            { id: 'europe',        label: 'Europe',      lat: 54,  lon: 15,   color: '#f97316', status: 'ELEVATED' },
+            { id: 'us',            label: 'N. America',  lat: 44,  lon: -100, color: '#10b981', status: 'NORMAL' },
+            { id: 'middle-east',   label: 'Mid East',    lat: 28,  lon: 44,   color: '#ef4444', status: 'HEIGHTENED' },
+            { id: 'asia-pacific',  label: 'Indo-Pac',    lat: 25,  lon: 116,  color: '#f97316', status: 'ELEVATED' },
+            { id: 'africa',        label: 'Africa',      lat: 5,   lon: 20,   color: '#f97316', status: 'ELEVATED' },
+            { id: 'latin-america', label: 'Lat. America',lat: -12, lon: -62,  color: '#10b981', status: 'NORMAL' }
         ];
 
         // ── Countries per region ─────────────────────────────────────────
         const COUNTRIES = {
-            europe:   [
+            europe: [
                 { label: 'UK',       lat: 54, lon: -3,  color: '#ef4444', status: 'ELEVATED' },
                 { label: 'France',   lat: 46, lon: 2,   color: '#f97316', status: 'ELEVATED' },
                 { label: 'Germany',  lat: 52, lon: 10,  color: '#10b981', status: 'NORMAL' },
@@ -5073,19 +5090,19 @@
                 { label: 'Spain',    lat: 40, lon: -4,  color: '#10b981', status: 'NORMAL' },
                 { label: 'Poland',   lat: 52, lon: 20,  color: '#f97316', status: 'ELEVATED' }
             ],
-            namerica: [
+            'us': [
                 { label: 'USA',      lat: 38, lon: -97,  color: '#10b981', status: 'NORMAL' },
                 { label: 'Canada',   lat: 58, lon: -98,  color: '#10b981', status: 'NORMAL' },
                 { label: 'Mexico',   lat: 23, lon: -104, color: '#f97316', status: 'ELEVATED' }
             ],
-            mideast:  [
+            'middle-east': [
                 { label: 'Israel',   lat: 32, lon: 35,  color: '#ef4444', status: 'HEIGHTENED' },
                 { label: 'Iran',     lat: 33, lon: 54,  color: '#ef4444', status: 'HEIGHTENED' },
                 { label: 'UAE',      lat: 24, lon: 54,  color: '#f97316', status: 'ELEVATED' },
                 { label: 'KSA',      lat: 24, lon: 45,  color: '#f97316', status: 'ELEVATED' },
                 { label: 'Turkey',   lat: 39, lon: 34,  color: '#f97316', status: 'ELEVATED' }
             ],
-            indopac:  [
+            'asia-pacific': [
                 { label: 'China',     lat: 36,  lon: 104, color: '#f97316', status: 'ELEVATED' },
                 { label: 'Japan',     lat: 36,  lon: 138, color: '#f97316', status: 'ELEVATED' },
                 { label: 'India',     lat: 22,  lon: 78,  color: '#10b981', status: 'NORMAL' },
@@ -5093,13 +5110,13 @@
                 { label: 'Australia', lat: -28, lon: 134, color: '#10b981', status: 'NORMAL' },
                 { label: 'S.Korea',   lat: 36,  lon: 128, color: '#f97316', status: 'ELEVATED' }
             ],
-            africa:   [
+            africa: [
                 { label: 'Nigeria',   lat: 10,  lon: 8,  color: '#ef4444', status: 'HEIGHTENED' },
                 { label: 'S.Africa',  lat: -30, lon: 26, color: '#f97316', status: 'ELEVATED' },
                 { label: 'Kenya',     lat: 1,   lon: 38, color: '#f97316', status: 'ELEVATED' },
                 { label: 'Egypt',     lat: 27,  lon: 30, color: '#f97316', status: 'ELEVATED' }
             ],
-            latam:    [
+            'latin-america': [
                 { label: 'Brazil',    lat: -10, lon: -52, color: '#10b981', status: 'NORMAL' },
                 { label: 'Argentina', lat: -36, lon: -65, color: '#ef4444', status: 'HEIGHTENED' },
                 { label: 'Colombia',  lat: 5,   lon: -74, color: '#f97316', status: 'ELEVATED' },
@@ -5115,16 +5132,24 @@
         let pauseRotation = false;
         let animFrameId = null;
         let pulseT = 0;
+        let globeR = 124;          // animated globe radius (124 global, 136 zoomed)
+        let _lonAnim = null;       // { from, to, start } — lon spin animation
+        let _rAnim   = null;       // { from, to, start } — radius animation
+        const GLOBE_ANIM_MS = 1000;
+
+        function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+        function animateLonTo(targetLon) { _lonAnim = { from: globeLon, to: targetLon, start: performance.now() }; }
+        function animateRTo(targetR)     { _rAnim   = { from: globeR,   to: targetR,   start: performance.now() }; }
 
         // ── 3D projection helpers ────────────────────────────────────────
-        const CX = 320, CY = 150, R = 124;
+        const CX = 320, CY = 150;
 
         function toXY(lat, lon) {
             const latR = lat * Math.PI / 180;
             const lonR = (lon - globeLon) * Math.PI / 180;
-            const x = R * Math.cos(latR) * Math.sin(lonR);
-            const y = -R * Math.sin(latR);
-            const z = R * Math.cos(latR) * Math.cos(lonR);
+            const x = globeR * Math.cos(latR) * Math.sin(lonR);
+            const y = -globeR * Math.sin(latR);
+            const z = globeR * Math.cos(latR) * Math.cos(lonR);
             return { x: CX + x, y: CY + y, z };
         }
 
@@ -5137,11 +5162,11 @@
             ctx.clearRect(0, 0, 640, 260);
 
             // Ocean base
-            const grad = ctx.createRadialGradient(CX - 20, CY - 20, 10, CX, CY, R);
+            const grad = ctx.createRadialGradient(CX - 20, CY - 20, 10, CX, CY, globeR);
             grad.addColorStop(0, 'rgba(230,242,255,0.9)');
             grad.addColorStop(1, 'rgba(215,232,250,0.65)');
             ctx.beginPath();
-            ctx.arc(CX, CY, R, 0, Math.PI * 2);
+            ctx.arc(CX, CY, globeR, 0, Math.PI * 2);
             ctx.fillStyle = grad;
             ctx.fill();
             ctx.strokeStyle = 'rgba(0,100,180,0.18)';
@@ -5181,7 +5206,7 @@
             // Clip to globe circle for continents
             ctx.save();
             ctx.beginPath();
-            ctx.arc(CX, CY, R - 0.5, 0, Math.PI * 2);
+            ctx.arc(CX, CY, globeR - 0.5, 0, Math.PI * 2);
             ctx.clip();
 
             // Continents
@@ -5282,6 +5307,7 @@
                     if (typeof loadCountryIntelligence === 'function') {
                         loadCountryIntelligence(hit.label);
                     }
+                    animateLonTo(hit.lon);
                     const crumb = document.getElementById('globeBreadcrumb');
                     const base = REGIONS.find(r => r.id === activeRegionId);
                     if (crumb && base) crumb.textContent = `🌍 Global › ${base.label} › ${hit.label}`;
@@ -5310,12 +5336,24 @@
         function setGlobeLevel(level, regionId, regionLabel) {
             globeLevel = level;
             activeRegionId = regionId;
-            rotationSpeed = level === 'global' ? 0.28 : 0.12;
+
+            if (level === 'global') {
+                rotationSpeed = 0.28;
+                _lonAnim = null; // let rotation resume naturally
+                animateRTo(124);
+            } else {
+                rotationSpeed = 0;
+                const region = REGIONS.find(r => r.id === regionId);
+                if (region) animateLonTo(region.lon);
+                animateRTo(136);
+            }
 
             const crumb = document.getElementById('globeBreadcrumb');
             if (crumb) {
                 crumb.textContent = level === 'global' ? '🌍 Global' : `🌍 Global › ${regionLabel}`;
             }
+            const resetBtn = document.getElementById('globeResetBtn');
+            if (resetBtn) resetBtn.style.display = level === 'global' ? 'none' : 'inline-block';
             setGlobeStatus(level === 'global' ? '' : `Showing countries in ${regionLabel} — click ocean to return`);
 
             // Sync region strip pills
@@ -5342,8 +5380,6 @@
                 if (typeof loadRegionalIntelligence === 'function') {
                     loadRegionalIntelligence(region.id, region.label);
                 }
-                // Spin globe to face the region center
-                globeLon = region.lon - 10;
             }
         };
 
@@ -5352,7 +5388,24 @@
             const canvas = document.getElementById('dashboardGlobe');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            if (!pauseRotation) globeLon += rotationSpeed;
+            const now = performance.now();
+
+            // Longitude — animation takes priority, otherwise free rotation
+            if (_lonAnim) {
+                const t = Math.min((now - _lonAnim.start) / GLOBE_ANIM_MS, 1);
+                globeLon = _lonAnim.from + (_lonAnim.to - _lonAnim.from) * easeInOut(t);
+                if (t >= 1) _lonAnim = null;
+            } else if (!pauseRotation) {
+                globeLon += rotationSpeed;
+            }
+
+            // Radius animation
+            if (_rAnim) {
+                const t = Math.min((now - _rAnim.start) / GLOBE_ANIM_MS, 1);
+                globeR = _rAnim.from + (_rAnim.to - _rAnim.from) * easeInOut(t);
+                if (t >= 1) { globeR = _rAnim.to; _rAnim = null; }
+            }
+
             pulseT++;
             drawGlobe(ctx);
             animFrameId = requestAnimationFrame(globeLoop);
