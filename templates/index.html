@@ -5213,12 +5213,12 @@
         }
 
         const REGION_CENTRE = {
-            'europe':        { lon: 15,   lat: 0   },
-            'us':            { lon: -97,  lat: 10  },
-            'middle-east':   { lon: 44,   lat: 10  },
-            'asia-pacific':  { lon: 115,  lat: 10  },
-            'africa':        { lon: 20,   lat: -5  },
-            'latin-america': { lon: -60,  lat: -15 }
+            'europe':        { lon: 15,   lat: 5   },
+            'us':            { lon: -97,  lat: 45  },
+            'middle-east':   { lon: 42,   lat: 25  },
+            'asia-pacific':  { lon: 115,  lat: 20  },
+            'africa':        { lon: 18,   lat: 5   },
+            'latin-america': { lon: -58,  lat: -10 }
         };
 
         function setGlobeLevel(level, regionId, regionLabel) {
@@ -5235,7 +5235,7 @@
                 const centre = REGION_CENTRE[regionId] || { lon: (REGIONS.find(r => r.id === regionId)?.lon ?? 0), lat: 0 };
                 animateLonTo(centre.lon);
                 animateLatTo(centre.lat);
-                animateRTo(260);
+                animateRTo(180);
             }
 
             const crumb = document.getElementById('globeBreadcrumb');
