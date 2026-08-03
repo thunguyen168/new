@@ -2095,9 +2095,6 @@
 
         <!-- ===== Globe Hero ===== -->
         <div class="dashboard-hero">
-            <!-- Particle background -->
-            <canvas id="heroParticleBg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
-
             <!-- Top row -->
             <div class="hero-top-row">
                 <div class="hero-label-group">
@@ -5014,7 +5011,11 @@
         const GLOBE_ANIM_MS = 1000;
 
         function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
-        function animateLonTo(targetLon) { _lonAnim = { from: globeLon,    to: targetLon, start: performance.now() }; }
+        function animateLonTo(targetLon) {
+            const curNorm = ((globeLon % 360) + 360) % 360;
+            const delta   = ((targetLon - curNorm + 540) % 360) - 180;
+            _lonAnim = { from: globeLon, to: globeLon + delta, start: performance.now() };
+        }
         function animateRTo(targetR)     { _rAnim   = { from: globeR,      to: targetR,   start: performance.now() }; }
         function animateLatTo(target)    { _latAnim  = { from: _latOffset,  to: target,    start: performance.now() }; }
 
@@ -5318,66 +5319,6 @@
         }
 
         // ── Particle background ──────────────────────────────────────────
-        function initParticles() {
-            const canvas = document.getElementById('heroParticleBg');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const COUNT = 40;
-            const CONNECT = 80;
-            let particles = [];
-            let W, H;
-
-            function resize() {
-                const rect = canvas.parentElement.getBoundingClientRect();
-                W = canvas.width = rect.width || 800;
-                H = canvas.height = rect.height || 320;
-            }
-
-            function spawn() {
-                particles = Array.from({ length: COUNT }, () => ({
-                    x: Math.random() * W,
-                    y: Math.random() * H,
-                    vx: (Math.random() - 0.5) * 0.4,
-                    vy: (Math.random() - 0.5) * 0.4
-                }));
-            }
-
-            function tick() {
-                ctx.clearRect(0, 0, W, H);
-                for (const p of particles) {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    if (p.x < 0 || p.x > W) p.vx *= -1;
-                    if (p.y < 0 || p.y > H) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(0,120,200,0.12)';
-                    ctx.fill();
-                }
-                for (let i = 0; i < COUNT; i++) {
-                    for (let j = i + 1; j < COUNT; j++) {
-                        const dx = particles[i].x - particles[j].x;
-                        const dy = particles[i].y - particles[j].y;
-                        const d = Math.sqrt(dx * dx + dy * dy);
-                        if (d < CONNECT) {
-                            ctx.beginPath();
-                            ctx.moveTo(particles[i].x, particles[i].y);
-                            ctx.lineTo(particles[j].x, particles[j].y);
-                            ctx.strokeStyle = `rgba(0,120,200,${0.07 * (1 - d / CONNECT)})`;
-                            ctx.lineWidth = 0.6;
-                            ctx.stroke();
-                        }
-                    }
-                }
-                requestAnimationFrame(tick);
-            }
-
-            resize();
-            spawn();
-            tick();
-            window.addEventListener('resize', () => { resize(); spawn(); });
-        }
-
         // ── Boot ─────────────────────────────────────────────────────────
         function boot() {
             const canvas = document.getElementById('dashboardGlobe');
@@ -5385,7 +5326,6 @@
             canvas.addEventListener('click', handleGlobeClick);
             canvas.addEventListener('mousemove', handleGlobeMouseMove);
             canvas.addEventListener('mouseleave', () => { pauseRotation = false; setGlobeStatus(''); });
-            initParticles();
             globeLoop();
         }
 
