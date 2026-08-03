@@ -5124,7 +5124,8 @@
                     const fontSize = isRegion ? 11 : 9;
                     ctx.font = `600 ${fontSize}px -apple-system, sans-serif`;
                     const tw = ctx.measureText(labelText).width;
-                    const lx = p.x + dotR + 3, ly = p.y - 4;
+                    const lx = isRegion ? p.x - tw / 2 : p.x + dotR + 3;
+                    const ly = isRegion ? p.y - dotR - fontSize - pad : p.y - 4;
                     const pad = 4;
                     ctx.fillStyle = isRegion ? 'rgba(10,22,40,0.92)' : 'rgba(238,244,252,0.88)';
                     ctx.beginPath();
