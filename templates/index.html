@@ -2033,9 +2033,6 @@
             border-radius: 10px;
             cursor: pointer;
             transition: border-color 0.15s, color 0.15s;
-            position: relative;
-            z-index: 1;
-            margin-top: 4px;
         }
         .globe-reset-btn:hover { border-color: #00aeef; color: #00aeef; }
 
@@ -2130,9 +2127,11 @@
                 <canvas id="dashboardGlobe" width="640" height="300" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;cursor:pointer;"></canvas>
             </div>
 
-            <!-- Breadcrumb -->
-            <div class="globe-breadcrumb" id="globeBreadcrumb">🌍 Global</div>
-            <button class="globe-reset-btn" id="globeResetBtn" onclick="returnToGlobalView()">↺ Reset view</button>
+            <!-- Breadcrumb + reset -->
+            <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;">
+                <div class="globe-breadcrumb" id="globeBreadcrumb">🌍 Global</div>
+                <button class="globe-reset-btn" id="globeResetBtn" onclick="returnToGlobalView()">↺ Reset view</button>
+            </div>
 
             <!-- Status -->
             <div class="globe-status" id="globeStatus"></div>
