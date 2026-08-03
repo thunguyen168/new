@@ -1283,7 +1283,7 @@ Return ONLY valid JSON matching the structure above, no markdown or extra text."
 
         response = client.messages.create(
             model=MODEL_FAST,
-            max_tokens=2048,
+            max_tokens=3500,
             messages=[{'role': 'user', 'content': prompt}]
         )
 
