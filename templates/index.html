@@ -5006,20 +5006,23 @@
         let pauseRotation = false;
         let animFrameId = null;
         let pulseT = 0;
-        let globeR = 124;          // animated globe radius (124 global, 136 zoomed)
+        let globeR = 124;          // animated globe radius (124 global, 260 zoomed)
         let _lonAnim = null;       // { from, to, start } — lon spin animation
         let _rAnim   = null;       // { from, to, start } — radius animation
+        let _latOffset = 0;        // latitude tilt offset for recentering
+        let _latAnim   = null;     // { from, to, start } — lat offset animation
         const GLOBE_ANIM_MS = 1000;
 
         function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
-        function animateLonTo(targetLon) { _lonAnim = { from: globeLon, to: targetLon, start: performance.now() }; }
-        function animateRTo(targetR)     { _rAnim   = { from: globeR,   to: targetR,   start: performance.now() }; }
+        function animateLonTo(targetLon) { _lonAnim = { from: globeLon,    to: targetLon, start: performance.now() }; }
+        function animateRTo(targetR)     { _rAnim   = { from: globeR,      to: targetR,   start: performance.now() }; }
+        function animateLatTo(target)    { _latAnim  = { from: _latOffset,  to: target,    start: performance.now() }; }
 
         // ── 3D projection helpers ────────────────────────────────────────
         const CX = 320, CY = 150;
 
         function toXY(lat, lon) {
-            const latR = lat * Math.PI / 180;
+            const latR = (lat + _latOffset) * Math.PI / 180;
             const lonR = (lon - globeLon) * Math.PI / 180;
             const x = globeR * Math.cos(latR) * Math.sin(lonR);
             const y = -globeR * Math.sin(latR);
@@ -5036,12 +5039,9 @@
             ctx.clearRect(0, 0, 640, 260);
 
             // Ocean base
-            const grad = ctx.createRadialGradient(CX - 20, CY - 20, 10, CX, CY, globeR);
-            grad.addColorStop(0, 'rgba(230,242,255,0.9)');
-            grad.addColorStop(1, 'rgba(215,232,250,0.65)');
             ctx.beginPath();
             ctx.arc(CX, CY, globeR, 0, Math.PI * 2);
-            ctx.fillStyle = grad;
+            ctx.fillStyle = 'rgba(220,236,252,0.8)';
             ctx.fill();
             ctx.strokeStyle = 'rgba(0,100,180,0.18)';
             ctx.lineWidth = 1;
@@ -5094,7 +5094,10 @@
 
             // Hotspots
             const spots = globeLevel === 'global' ? REGIONS : (COUNTRIES[activeRegionId] || []);
-            const fontSize = globeLevel === 'global' ? 9 : 10;
+            const isZoomed = globeLevel !== 'global';
+            const fontSize  = isZoomed ? 11 : 9;
+            const dotR      = isZoomed ? 10 : 5;
+            const ringBase  = isZoomed ? 12 : 6;
 
             for (const spot of spots) {
                 const p = toXY(spot.lat, spot.lon);
@@ -5102,7 +5105,7 @@
 
                 // Pulsing ring
                 const pulse = 0.5 + 0.5 * Math.sin(pulseT * 0.05);
-                const ringR = 6 + pulse * 5;
+                const ringR = ringBase + pulse * 5;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, ringR, 0, Math.PI * 2);
                 ctx.strokeStyle = spot.color + '55';
@@ -5111,7 +5114,7 @@
 
                 // Dot
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
                 ctx.fillStyle = spot.color;
                 ctx.fill();
                 ctx.strokeStyle = '#fff';
@@ -5208,6 +5211,15 @@
             else if (globeLevel === 'global') setGlobeStatus('');
         }
 
+        const REGION_CENTRE = {
+            'europe':        { lon: 15,   lat: 0   },
+            'us':            { lon: -97,  lat: 10  },
+            'middle-east':   { lon: 44,   lat: 10  },
+            'asia-pacific':  { lon: 115,  lat: 10  },
+            'africa':        { lon: 20,   lat: -5  },
+            'latin-america': { lon: -60,  lat: -15 }
+        };
+
         function setGlobeLevel(level, regionId, regionLabel) {
             globeLevel = level;
             activeRegionId = regionId;
@@ -5216,11 +5228,13 @@
                 rotationSpeed = 0.28;
                 _lonAnim = null; // let rotation resume naturally
                 animateRTo(124);
+                animateLatTo(0);
             } else {
                 rotationSpeed = 0;
-                const region = REGIONS.find(r => r.id === regionId);
-                if (region) animateLonTo(region.lon);
-                animateRTo(136);
+                const centre = REGION_CENTRE[regionId] || { lon: (REGIONS.find(r => r.id === regionId)?.lon ?? 0), lat: 0 };
+                animateLonTo(centre.lon);
+                animateLatTo(centre.lat);
+                animateRTo(260);
             }
 
             const crumb = document.getElementById('globeBreadcrumb');
@@ -5289,6 +5303,13 @@
                 const t = Math.min((now - _rAnim.start) / GLOBE_ANIM_MS, 1);
                 globeR = _rAnim.from + (_rAnim.to - _rAnim.from) * easeInOut(t);
                 if (t >= 1) { globeR = _rAnim.to; _rAnim = null; }
+            }
+
+            // Latitude offset animation
+            if (_latAnim) {
+                const t = Math.min((now - _latAnim.start) / GLOBE_ANIM_MS, 1);
+                _latOffset = _latAnim.from + (_latAnim.to - _latAnim.from) * easeInOut(t);
+                if (t >= 1) { _latOffset = _latAnim.to; _latAnim = null; }
             }
 
             pulseT++;
