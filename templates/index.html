@@ -5120,24 +5120,36 @@
                 // Labels: always at global level; hover-only at region level
                 const showLabel = !isRegion || spot === hoveredSpot;
                 if (showLabel) {
-                    const labelText = isRegion ? `${spot.label} · ${spot.status}` : spot.label;
-                    const fontSize = isRegion ? 11 : 9;
-                    ctx.font = `600 ${fontSize}px -apple-system, sans-serif`;
-                    const tw = ctx.measureText(labelText).width;
-                    const lx = isRegion ? p.x - tw / 2 : p.x + dotR + 3;
-                    const ly = isRegion ? p.y - dotR - fontSize - pad : p.y - 4;
-                    const pad = 4;
-                    ctx.fillStyle = isRegion ? 'rgba(10,22,40,0.92)' : 'rgba(238,244,252,0.88)';
-                    ctx.beginPath();
-                    ctx.roundRect(lx - pad, ly - fontSize + 1, tw + pad * 2, fontSize + pad * 2, 4);
-                    ctx.fill();
                     if (isRegion) {
-                        ctx.strokeStyle = spot.color + 'aa';
-                        ctx.lineWidth = 1;
-                        ctx.stroke();
+                        // Hover tooltip: bold white, name only, above the dot
+                        const fontSize = 12;
+                        const pad = 6;
+                        ctx.font = `700 ${fontSize}px -apple-system, sans-serif`;
+                        const tw = ctx.measureText(spot.label).width;
+                        const bw = tw + pad * 2;
+                        const bh = fontSize + pad * 2;
+                        const bx = p.x - bw / 2;
+                        const by = Math.max(14, p.y - dotR - 6 - bh);
+                        ctx.fillStyle = 'rgba(10,22,40,0.90)';
+                        ctx.beginPath();
+                        ctx.roundRect(bx, by, bw, bh, 4);
+                        ctx.fill();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillText(spot.label, p.x - tw / 2, by + pad + fontSize - 2);
+                    } else {
+                        // Global: right-side pill label
+                        const fontSize = 9;
+                        const pad = 3;
+                        ctx.font = `600 ${fontSize}px -apple-system, sans-serif`;
+                        const tw = ctx.measureText(spot.label).width;
+                        const lx = p.x + dotR + 3, ly = p.y - 4;
+                        ctx.fillStyle = 'rgba(238,244,252,0.88)';
+                        ctx.beginPath();
+                        ctx.roundRect(lx - pad, ly - fontSize + 1, tw + pad * 2, fontSize + pad * 2, 3);
+                        ctx.fill();
+                        ctx.fillStyle = '#0a1628';
+                        ctx.fillText(spot.label, lx, ly + pad);
                     }
-                    ctx.fillStyle = isRegion ? '#ffffff' : '#0a1628';
-                    ctx.fillText(labelText, lx, ly + pad);
                 }
             }
         }
@@ -5267,14 +5279,13 @@
         };
 
         // ── Expose full reset (globe animation + intelligence panels) ─────
-        // The outer-scope returnToGlobalView() only resets intelligence panels.
-        // Override it here so the reset button also triggers the globe animation.
-        window.returnToGlobalView = (function(orig) {
-            return function() {
-                setGlobeLevel('global', null, null);
-                if (typeof orig === 'function') orig();
-            };
-        })(window.returnToGlobalView);
+        // Capture outer returnToGlobalView (intel panel reset), then override so
+        // the reset button also triggers the globe animation.
+        const _origReturnToGlobalView = window.returnToGlobalView;
+        window.returnToGlobalView = function() {
+            setGlobeLevel('global', null, null);
+            if (typeof _origReturnToGlobalView === 'function') _origReturnToGlobalView();
+        };
 
         // ── Animation loop ───────────────────────────────────────────────
         function globeLoop() {
