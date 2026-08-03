@@ -2586,7 +2586,7 @@
             // Show loading state in panels
             const loadingFocusHtml = `<div class="intel-loading"><div class="intel-spinner"></div>Loading ${regionLabel} intelligence&hellip;</div>`;
             PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingFocusHtml; });
-            document.getElementById('intelExportPdfBtn').disabled = true;
+            const exportBtnR = document.getElementById('intelExportPdfBtn'); if (exportBtnR) exportBtnR.disabled = true;
 
             try {
                 const resp = await fetch('/api/regional-intelligence?region=' + encodeURIComponent(regionKey) + '&filter_type=' + encodeURIComponent(_activeIntelFilter), {
@@ -2602,7 +2602,7 @@
                 renderRisk(intel.strategic_risk);
                 updateIntelContext('region', regionLabel);
                 _currentIntelData = intel;
-                document.getElementById('intelExportPdfBtn').disabled = false;
+                const exportBtnRE = document.getElementById('intelExportPdfBtn'); if (exportBtnRE) exportBtnRE.disabled = false;
             } catch (err) {
                 PANEL_IDS.forEach(id => {
                     document.getElementById(id).innerHTML = errorHTML('Unable to load regional intelligence: ' + err.message);
@@ -2626,7 +2626,7 @@
         async function loadCountryIntelligence(locationName) {
             const loadingFocusHtml = `<div class="intel-loading"><div class="intel-spinner"></div>Loading ${locationName} intelligence&hellip;</div>`;
             PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingFocusHtml; });
-            document.getElementById('intelExportPdfBtn').disabled = true;
+            const exportBtnC = document.getElementById('intelExportPdfBtn'); if (exportBtnC) exportBtnC.disabled = true;
 
             try {
                 const resp = await fetch(
@@ -2643,7 +2643,7 @@
                 renderRisk(intel.strategic_risk);
                 updateIntelContext('country', locationName);
                 _currentIntelData = intel;
-                document.getElementById('intelExportPdfBtn').disabled = false;
+                const exportBtnCE = document.getElementById('intelExportPdfBtn'); if (exportBtnCE) exportBtnCE.disabled = false;
             } catch (err) {
                 PANEL_IDS.forEach(id => {
                     document.getElementById(id).innerHTML = errorHTML('Unable to load country intelligence: ' + err.message);
@@ -2665,7 +2665,7 @@
         async function loadIntelligence() {
             const btn = document.getElementById('intelRefreshBtn');
             if (btn) btn.disabled = true;
-            document.getElementById('intelExportPdfBtn').disabled = true;
+            const exportBtnG = document.getElementById('intelExportPdfBtn'); if (exportBtnG) exportBtnG.disabled = true;
 
             PANEL_IDS.forEach(id => { document.getElementById(id).innerHTML = loadingHTML(); });
 
@@ -2690,7 +2690,7 @@
                     renderRisk(intel.strategic_risk);
                     updateIntelContext('global', '');
                     _currentIntelData = intel;
-                    document.getElementById('intelExportPdfBtn').disabled = false;
+                    const exportBtnGE = document.getElementById('intelExportPdfBtn'); if (exportBtnGE) exportBtnGE.disabled = false;
                 }
 
                 if (intel.timestamp) {
@@ -2699,9 +2699,7 @@
                         'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 }
 
-                if (intel.strategic_posture && intel.strategic_posture.theaters) {
-                    updateMapMarkers(intel.strategic_posture.theaters);
-                }
+
             } catch (err) {
                 PANEL_IDS.forEach(id => {
                     document.getElementById(id).innerHTML = errorHTML('Unable to load: ' + err.message);
