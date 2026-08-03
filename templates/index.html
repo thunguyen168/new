@@ -2695,8 +2695,8 @@
 
                 if (intel.timestamp) {
                     const d = new Date(intel.timestamp);
-                    document.getElementById('intelTimestamp').textContent =
-                        'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const tsEl = document.getElementById('intelTimestamp');
+                    if (tsEl) tsEl.textContent = 'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 }
 
 
